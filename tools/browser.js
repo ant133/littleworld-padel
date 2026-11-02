@@ -42,6 +42,7 @@ async function run(o) {
     };
     const send = (method, params) => new Promise(res => { const i = ++id; pend[i] = res; ws.send(JSON.stringify({ id: i, method: method, params: params || {} })); });
     await send('Runtime.enable'); await send('Log.enable'); await send('Page.enable');
+    if (o.offline) { await send('Network.enable'); await send('Network.emulateNetworkConditions', { offline: true, latency: 0, downloadThroughput: 0, uploadThroughput: 0 }); }
     await send('Emulation.setDeviceMetricsOverride', { width: o.width, height: o.height, deviceScaleFactor: 1, mobile: !!o.mobile });
     await send('Page.navigate', { url: o.url });
     await sleep(o.waitMs);

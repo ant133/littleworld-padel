@@ -1,5 +1,16 @@
 # Testing summary
 
+## Visitor players and gameplay update — 2 November 2026
+
+- `node tools/dupcheck.js`: 22 modules, all event declarations valid.
+- `node tools/physics_tests.js`: 20/20, including immediate exterior-ground termination and swept exterior-item collision at 60 m/s; prediction agrees with live physics.
+- `node tools/scoring_tests.js`: 119/119, including immediate outside-contact scoring before/after a legal bounce, during retrieval, with one point awarded per contact.
+- `node tools/matrix.js`: 18/18 full matches across all three formats, both scoring modes, all match types, and rotating venues; no watchdogs or application errors. This is an 18-case matrix, not the full Cartesian product of every venue and presentation setting.
+- `node tools/player_ai_tests.js`: custom-player validation, repeatable stats/appearance after restoration, gender restrictions, duplicate prevention, reachable deep-lob kick smashes on both ends, and overhead interception preference.
+- Seeded high-ball comparison (200 identical situations): previous AI 41 smash choices; new balanced AI 101; new More Smashes preset 173. This measures tactical selection, not smash success rate.
+- `node tools/features_browser.js`: female/male creation, IndexedDB write and exact roster restoration after reload, team-up with Annetta, mixed match start, parallel court edges at eight camera angles, obstructing floodlight visibility near 5%, desktop/mobile screenshots, and rendering with network disabled. No application errors. IndexedDB is asynchronous; the test waits for restored records rather than assuming a fixed refresh delay.
+- Both HTML files rebuilt. Desktop and mobile screenshots inspected. Real GPU frame rate and real touch input were not measured in this update.
+
 ## Integration (CP2–CP5, browser)
 Headless Chrome (SwiftShader WebGL) via tools/browser.js:
 - `node tools/build.js --check`: dupcheck OK, offline file loads with no console errors, drawCalls ≈ 200, no network needed (only the optional Google Fonts link is requested when online).

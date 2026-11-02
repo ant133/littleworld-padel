@@ -26,6 +26,9 @@
         else if (cfg.type === 'W') { ta = [wom[0].id, wom[1].id]; tb = [wom[2].id, wom[3].id]; }
         else { ta = [men[0].id, wom[0].id]; tb = [men[2].id, wom[2].id]; }
       }
+      const ids = ta.concat(tb);
+      if (ta.length !== 2 || tb.length !== 2 || new Set(ids).size !== 4 || ids.some(id => !pool.some(p => p.id === id))) throw new Error('Choose four different players eligible for this match type.');
+      if (cfg.type === 'X' && [ta, tb].some(team => team.filter(id => roster.find(p => p.id === id).gender === 'F').length !== 1)) throw new Error('Mixed teams require one woman and one man.');
       cfg.teamA = ta; cfg.teamB = tb;
       M.cfg = cfg;
       P().setup(ta, tb); A().reset(); Bl().reset();

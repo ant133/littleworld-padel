@@ -26,6 +26,11 @@ jobs:
         run: node tools/dupcheck.js
       - name: Build online and offline pages
         run: node tools/build.js
+      - name: Check physics, scoring, and player AI
+        run: |
+          node tools/physics_tests.js
+          node tools/scoring_tests.js
+          node tools/player_ai_tests.js
       - name: Prepare published files
         run: |
           mkdir -p _site

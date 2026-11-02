@@ -95,6 +95,12 @@
     const surf = hit.surf, n = hit.n, v = S.v, B = HPO.cfg.BALL;
     const vn = v.x * n.x + v.y * n.y + v.z * n.z;
     if (vn >= 0) return;
+    if (surf === 'ground' || surf === 'outsideItem') {
+      const info = { surf, p: copy3(hit.p), vIn: copy3(v), vOut: { x: 0, y: 0, z: 0 }, t: S.t, normal: copy3(n) };
+      if (X.rec) X.rec(info, S);
+      if (X.emit) HPO.BUS.emit('ball:contact', info);
+      die(S, X, 'outsideContact'); return;
+    }
     const floorish = surf === 'floor' || surf === 'ground';
     if (floorish && -vn < PRM.restVn) {
       S.resting = true; S.restY = hit.c.y; S.restSurf = surf; v.y = 0;
@@ -149,6 +155,7 @@
       p.x = hit.c.x; p.y = hit.c.y; p.z = hit.c.z;
       rem *= 1 - hit.t;
       contact(S, hit, X, C);
+      if (S.state !== 'live') return;
       if (++n >= PRM.maxCollisions) { S.v.x *= 0.5; S.v.y *= 0.5; S.v.z *= 0.5; break; }
     }
     if (S.resting) { p.y = S.restY; S.v.y = 0; }

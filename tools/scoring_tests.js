@@ -480,22 +480,24 @@ fsmTest('own-wall defensive shot is legal; second bounce on a side ends the poin
   h.contact('glassBack', 10, 0); h.bounce(3, 0);        // second bounce on B's side
   const e = h.end(); eq([e.winner, e.reason, e.kind], ['A', 'doubleBounce', 'winner']);
 });
-fsmTest('ball leaves the court after a valid bounce: retrieval, then play on or lost', function (h) {
-  h.H.cfg.RULES.outOfCourtRetrieval = true; // default is off (ball leaving after a bounce = point for the hitter)
-  const S = h.start(); h.goodServe(); h.shot('b1'); h.bounce(-4, 1); h.shot('a1'); h.bounce(4, 1);
-  h.contact('ground', 9, 6);
-  eq(h.all('ball:out_retrieve').length, 1); ok(!h.end(), 'point still alive during retrieval');
-  h.bounce(12, 6); ok(!h.end(), 'bounces outside are ignored while retrieving');
-  h.shot('b2'); h.bounce(-3, 2); eq(h.last('rally:stroke').n, 4); ok(!h.end());
-  h.R.startPoint(); h.goodServe(); h.shot('b1'); h.bounce(-4, 1); h.shot('a1'); h.bounce(4, 1); h.contact('ground', 9, 6);   // not played back in time
-  h.R.update(5); ok(!h.end()); h.R.update(8);
-  let e = h.end(); eq([e.winner, e.reason, e.kind], ['A', 'retrieveFailed', 'winner']);
-  h.R.startPoint(); h.goodServe(); h.shot('b1'); h.bounce(-4, 1); h.dead('ballLeftCourt');       // a "left" reason also starts retrieval
-  eq(h.all('ball:out_retrieve').length, 3); const ne = h.all('point:end').length; h.dead('outOfBounds'); eq(h.all('point:end').length, ne, 'dead ball while retrieving waits for the timer'); h.R.update(13); e = h.end(); eq(e.reason, 'retrieveFailed');
-  h.R.startPoint(); h.goodServe(); h.shot('b1'); h.contact('ground', -12, 1); e = h.end(); eq([e.winner, e.reason], ['A', 'out']);   // before any bounce
-  h.H.cfg.RULES.outOfCourtRetrieval = false;
-  h.R.startPoint(); h.goodServe(); h.shot('b1'); h.bounce(-4, 1); h.contact('ground', -12, 1); e = h.end(); eq([e.winner, e.reason], ['B', 'lost']);
-  ok(S.log.length >= 4);
+fsmTest('outside ground and items finish immediately before/after a legal bounce, including retrieval', function (h) {
+  ['ground', 'outsideItem'].forEach(surf => {
+    [false, true].forEach(retrieval => {
+      h.H.cfg.RULES.outOfCourtRetrieval = retrieval;
+      h.start(); h.goodServe(); h.shot('b1'); h.bounce(-4, 1); h.shot('a1'); h.bounce(4, 1);
+      h.contact(surf, 9, 6);
+      eq([h.end().winner, h.end().reason], ['A', 'lost']);
+      eq(h.all('ball:out_retrieve').length, 0);
+      const count = h.all('point:end').length; h.dead('outsideContact'); h.contact(surf, 9, 6);
+      eq(h.all('point:end').length, count, 'exactly one point');
+      h.start(); h.goodServe(); h.shot('b1'); h.contact(surf, -12, 1);
+      eq([h.end().winner, h.end().reason], ['A', 'out']);
+    });
+    h.H.cfg.RULES.outOfCourtRetrieval = true;
+    h.start(); h.goodServe(); h.shot('b1'); h.bounce(-4, 1); h.dead('ballLeftCourt');
+    ok(!h.end(), 'an airborne exit can still be retrieved');
+    h.contact(surf, -12, 1); eq([h.end().winner, h.end().reason], ['B', 'lost']);
+  });
 });
 fsmTest('ball:dead cases', function (h) {
   h.start(); h.goodServe(); h.dead('rest'); let e = h.end(); eq([e.winner, e.kind], ['A', 'ace']);

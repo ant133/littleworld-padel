@@ -385,10 +385,15 @@
   }
 
   function onContact(e) {
-    if (!live() || pt.retrieving || pt.phase === 'tossed') return;
+    if (!live() || pt.phase === 'tossed') return;
     const surf = e.surf, st = pt.stroke;
     if (e.p) pt.lastP = e.p;
     if (surf === 'floor' || !st) return;
+    if (surf === 'ground' || surf === 'outsideItem') {
+      if (pt.phase === 'serveFlight') return serveFault('long');
+      return finish(st.bounced ? st.team : other(st.team), st.bounced ? 'lost' : 'out');
+    }
+    if (pt.retrieving) return;
     if (pt.phase === 'serveFlight') {
       if (NET[surf]) pt.netTouched = true;
       else serveFault(surf === 'ceiling' || surf === 'ground' ? 'long' : 'wallFirst');
@@ -396,7 +401,6 @@
     }
     if (surf === 'ceiling') return finish(other(st.team), 'ceiling');
     if (NET[surf]) { if (!st.bounced) st.net = true; return; }
-    if (surf === 'ground') return leaving(e.p);
     if (pt.phase === 'serve' && MESH[surf]) return serveFault('mesh'); // serve fault after bounce
     if (!st.bounced) finish(other(st.team), 'wallFirst');
   }

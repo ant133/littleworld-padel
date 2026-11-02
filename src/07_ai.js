@@ -6,12 +6,12 @@
   const rgn = () => HPO.streams.ai;
 
   // tunable weights (cfg.TUNE.ai can override)
-  const T = CFG.TUNE.ai = Object.assign({ sharp: 0.6, smashDepthMax: 7.0, lobBase: 0.8, aimNoise: 1.0, riskMargin: 1.0, volleyWilling: 1.0 }, CFG.TUNE.ai || {});
+  const T = CFG.TUNE.ai = Object.assign({ sharp: 0.6, smashDepthMax: 9.8, lobBase: 0.45, aimNoise: 1.0, riskMargin: 1.0, volleyWilling: 1.0 }, CFG.TUNE.ai || {});
 
   const PRESETS = {
     balanced: {}, aggressive: { smash: 1.4, vibora: 1.4, flat: 1.25, lob: 0.7, risk: 0.7 }, safe: { smash: 0.6, vibora: 0.6, lob: 1.3, slice: 1.3, risk: 1.5, flat: 0.8 },
     controlNet: { bandeja: 1.4, volley: 1.25, chiquita: 1.2, lob: 0.85, netBias: 1 }, defensive: { lob: 2.0, wallDef: 1.4, smash: 0.7, risk: 1.3, netBias: -1 },
-    targetMiddle: { middle: 1 }, targetGlass: { glass: 1 }, rushNet: { netBias: 2, volley: 1.15 }, focusOne: { focus: 1 }, moreChiquitas: { chiquita: 2.6 }, moreSmashes: { smash: 2.2 }
+    targetMiddle: { middle: 1 }, targetGlass: { glass: 1 }, rushNet: { netBias: 2, volley: 1.15 }, focusOne: { focus: 1 }, moreChiquitas: { chiquita: 2.6 }, moreSmashes: { smash: 3.2, lob: 0.35 }
   };
 
   const teams = {
@@ -26,6 +26,13 @@
   function opp(team) { return team === 'A' ? 'B' : 'A'; }
   function depthOf(team, x) { return Math.abs(x); } // distance from the net plane
   function pr(id) { return HPO.mod.players.byId[id]; }
+  function backGlassLob(p) {
+    if (!lastShot || !LOB[lastShot.kind] || lastShot.team === p.team) return false;
+    const B = HPO.mod.ball, st = B.state;
+    const bounced = st.touchedSinceHit.find(c => c.surf === 'floor');
+    const hit = bounced ? { p: { x: bounced.x, z: bounced.z } } : B.predict(st, 5, 30).contacts.find(c => c.surf === 'floor');
+    return !!hit && hit.p.x * HPO.court.sides[p.team] >= 8 && Math.abs(hit.p.x) <= 10 && Math.abs(hit.p.z) <= 5;
+  }
   function mods(team) { return Object.assign({ smash: 1, vibora: 1, flat: 1, lob: 1, slice: 1, bandeja: 1, volley: 1, chiquita: 1, wallDef: 1, risk: 1, netBias: 0 }, PRESETS[teams[team].orders.preset] || {}); }
 
   const AI = HPO.mod.ai = {
@@ -68,7 +75,7 @@
 
     // --- choose among strike candidates (volley vs let it bounce vs after the glass) ---
     chooseStrike(p, cands) {
-      const t = teams[p.team], m = mods(p.team);
+      const t = teams[p.team], m = mods(p.team), deepLob = backGlassLob(p);
       const depth = Math.abs(p.pos.x);
       const atNet = depth < 4.2;
       let best = null, bs = -1e9;
@@ -78,7 +85,7 @@
         let s = 0;
         s += Math.min(c.slack, 0.8) * 1.2;                         // time to set up
         s -= Math.abs(y - (atNet ? 1.35 : 1.0)) * 0.9;              // comfortable contact height
-        if (c.p.y > 2.1 && d > 7) s -= 0.7;                         // overhead from the deep corner is hard
+        if (y >= 2.1 && y <= 2.95) s += (deepLob ? 4.0 : 1.8) * m.smash;
         if (c.ownBounces === 0) s += atNet ? 0.9 * T.volleyWilling * (1 + (m.netBias > 0 ? 0.3 : 0)) : -0.5; // volley when at the net
         if (c.afterWall) s += lvl(p.attrs.wallRead) * 0.6 - (atNet ? 0.5 : 0);   // wall specialists let it come back
         if (c.ownBounces === 0 && c.dt < 0.25) s -= 0.5;              // too rushed
@@ -113,10 +120,15 @@
       const w = {};
       const high = h >= 1.85, low = h < 0.95;
       const near = depth < 4.5, mid = depth >= 4.5 && depth < 6.5, deep = depth >= 6.5;
+      const deepLob = backGlassLob(p);
+      if (deepLob && h >= 2.1 && h <= 3.0) {
+        const kick = aimFor(p, 'smashKick', info, ops, oppNet, press, m, tm);
+        if (S.nominal(info.p, kick.kind, kick.target, { effort: kick.effort }).feasible) { tm.aim = null; kick.reason = 'back-glass-lob'; return kick; }
+      }
 
       if (high) {
         const okSmash = (depth <= T.smashDepthMax && h >= 2.05) ? 1 : 0.03;
-        w.smashFlat = 1.5 * okSmash * m.smash; w.smashKick = 0.8 * okSmash * m.smash;
+        w.smashFlat = 3.6 * okSmash * m.smash; w.smashKick = 2.8 * okSmash * m.smash;
         w.bandeja = 2.6 * m.bandeja * (deep ? 1.1 : 1); w.vibora = 1.5 * m.vibora * (near ? 1.2 : 0.7);
         w.lobOff = deep ? 1.0 * m.lob : 0.35 * m.lob;
         if (info.afterWall && deep) w.bajada = 1.2;
@@ -137,6 +149,7 @@
         if (info.walls >= 2 && info.slack > 0.12) w.counterDW = 1.3;
         if (mid && h > 0.6) w.volleyFH = w.volleyBH = 0.8 * m.volley;
       }
+      Object.keys(w).forEach(k => { if (LOB[k]) w[k] *= deepLob ? 0 : 0.55; });
       if (oppNet >= 2) { if (w.flatGround) w.flatGround *= 0.55; if (w.topGround) w.topGround *= 0.7; }
       if (w.volleyFH !== undefined) { if (info.fh) w.volleyBH = 0; else w.volleyFH = 0; }
 
@@ -175,7 +188,7 @@
       const S2 = HPO.mod.shots;
       let nom = S2.nominal(info.p, pick.kind, pick.target, { effort: pick.effort, netMargin: pick.netMargin });
       if (!nom.feasible) {
-        const fb = high && depth > 5 ? ['bandeja', 'lobOff'] : (near ? ['volley', 'chiquita', 'lobDef'] : ['lobDef', 'slice', 'flatGround']);
+        const fb = high ? ['smashKick', 'smashFlat', 'bandeja', 'vibora'] : (near ? ['volley', 'chiquita', 'flatGround'] : ['slice', 'flatGround', 'topGround']);
         for (let i = 0; i < fb.length; i++) {
           let k = fb[i]; if (k === 'volley') k = info.fh ? 'volleyFH' : 'volleyBH';
           const alt = aimFor(p, k, info, ops, oppNet, press, m, tm);

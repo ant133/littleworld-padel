@@ -4,7 +4,7 @@
 (function (HPO) {
   'use strict';
   const U = HPO.util;
-  const EL = 31 * Math.PI / 180;
+  const EL = 40 * Math.PI / 180;
   const YAW0 = Math.PI / 4;           // yaw of quarter-turn index 0
   const CAM_D = 140;                  // camera distance from its target (orthographic: only affects clipping/fog)
   const MODES = ['follow', 'club', 'close', 'top', 'free'];
@@ -227,7 +227,30 @@
       R.resize();
       window.addEventListener('resize', R.resize);
       if (typeof ResizeObserver !== 'undefined') new ResizeObserver(R.resize).observe(cont);
-      HPO.BUS.on('boot:ready', function () { R.ready = true; R._forwardTod(); R._last = performance.now(); requestAnimationFrame(R._loop); });
+      HPO.BUS.on('boot:ready', function () { R.ready = true; R._forwardTod(); R._syncOutsideCollisions(); R._last = performance.now(); requestAnimationFrame(R._loop); });
+    },
+
+    _syncOutsideCollisions() {
+      const T = R.THREE, triangles = [], v = new T.Vector3(), instance = new T.Matrix4(), world = new T.Matrix4();
+      R.groups.world.updateWorldMatrix(true, true);
+      ['court', 'island', 'club'].forEach(key => R.groups[key].traverseVisible(o => {
+        if (!o.isMesh || !o.geometry || !o.geometry.attributes.position || o.isSkinnedMesh) return;
+        const mat = o.material;
+        if (Array.isArray(mat) || mat.opacity < 0.9 || (mat.userData && mat.userData.glass)) return;
+        const g = o.geometry, pos = g.attributes.position, index = g.index, count = index ? index.count : pos.count;
+        for (let j = 0; j < (o.isInstancedMesh ? o.count : 1); j++) {
+          if (o.isInstancedMesh) { o.getMatrixAt(j, instance); world.multiplyMatrices(o.matrixWorld, instance); } else world.copy(o.matrixWorld);
+          for (let i = 0; i + 2 < count; i += 3) {
+            const tri = [];
+            for (let k = 0; k < 3; k++) { v.fromBufferAttribute(pos, index ? index.getX(i + k) : i + k).applyMatrix4(world); tri.push(v.x, v.y, v.z); }
+            const xs = [tri[0], tri[3], tri[6]], ys = [tri[1], tri[4], tri[7]], zs = [tri[2], tri[5], tri[8]];
+            if (Math.min(...xs) > 18 || Math.max(...xs) < -18 || Math.min(...zs) > 12 || Math.max(...zs) < -12 || Math.max(...ys) < -0.3) continue;
+            if (xs.every(x => Math.abs(x) < 9.95) && zs.every(z => Math.abs(z) < 4.95)) continue;
+            triangles.push(tri);
+          }
+        }
+      }));
+      HPO.mod.court.setOutsideTriangles(triangles);
     },
 
     // ================= materials =================
@@ -278,7 +301,7 @@
       enabled: true,
       add(obj, o) {
         o = o || {};
-        const role = o.role || 'prop', D = { stand: 0.22, building: 0.25, wall: 0.2, tree: 0.3, prop: 0.55, roof: 0.15 };
+        const role = o.role || 'prop', D = { stand: 0.22, building: 0.25, wall: 0.2, tree: 0.3, prop: 0.55, light: 0.05, roof: 0.15 };
         for (let i = 0; i < R._cutEntries.length; i++) if (R._cutEntries[i].obj === obj) { R._cutEntries[i].role = role; return; }
         const e = { obj: obj, role: role, fadeTo: o.fadeTo === undefined ? (D[role] === undefined ? 0.4 : D[role]) : o.fadeTo, lift: o.lift === undefined ? (role === 'roof' ? 9 : 0) : o.lift,
           fade: 1, liftCur: 0, baseY: obj.position.y, box: new R.THREE.Box3(), boxAge: 1e9, meshes: [], swapped: false, skip: false, nChildren: -1 };
@@ -374,7 +397,7 @@
             if (ok) { if (Math.abs(dz) < 1e-9) { if (pz < b.min.z || pz > b.max.z) ok = false; } else { t1 = (b.min.z - pz) / dz; t2 = (b.max.z - pz) / dz; if (t1 > t2) { sw = t1; t1 = t2; t2 = sw; } if (t1 > tmin) tmin = t1; if (t2 < tmax) tmax = t2; } }
             if (ok && tmax > 0.05 && tmin < tmax) { if (s < nFixed) hits++; else liveHit = true; }
           }
-          need = liveHit ? 1 : Math.min(1, hits / nFixed * 4);
+          need = liveHit || (e.role === 'light' && hits > 0) ? 1 : Math.min(1, hits / nFixed * 4);
         }
         const fT = 1 - need * (1 - e.fadeTo), lT = need * e.lift;
         e.fade += (fT - e.fade) * kf; if (e.fade > 0.995) e.fade = 1;
@@ -502,16 +525,16 @@
       if (!R.renderer) return;
       const T = R.THREE, c = R.container, w = Math.max(16, c.clientWidth), h = Math.max(16, c.clientHeight), N = R.pixelSize;
       const lw = Math.ceil(w / N), lh = Math.ceil(h / N);
-      if (lw === R._lw && lh === R._lh && R._rt) { R._cssN = N; R.renderer.domElement.style.width = lw * N + 'px'; R.renderer.domElement.style.height = lh * N + 'px'; return; }
+      if (lw === R._lw && lh === R._lh && R._rt) { R._cssN = N; R.aspect = w / h; R.renderer.domElement.style.width = w + 'px'; R.renderer.domElement.style.height = h + 'px'; return; }
       R._lw = lw; R._lh = lh;
       R.renderer.setSize(lw, lh, false);
-      const cv = R.renderer.domElement; cv.style.width = lw * N + 'px'; cv.style.height = lh * N + 'px';
+      const cv = R.renderer.domElement; cv.style.width = w + 'px'; cv.style.height = h + 'px';
       if (R._rt) { R._rt.dispose(); if (R._rt.depthTexture) R._rt.depthTexture.dispose(); }
       const rt = new T.WebGLRenderTarget(lw, lh, { minFilter: T.NearestFilter, magFilter: T.NearestFilter, format: T.RGBAFormat, type: T.UnsignedByteType, depthBuffer: true, stencilBuffer: false });
       if (R._hasDepth) { const dt = new T.DepthTexture(lw, lh); dt.type = T.UnsignedIntType; dt.format = T.DepthFormat; dt.minFilter = T.NearestFilter; dt.magFilter = T.NearestFilter; rt.depthTexture = dt; }
       R._rt = rt;
       R._postU.tColor.value = rt.texture; R._postU.tDepth.value = rt.depthTexture; R._postU.uRes.value.set(lw, lh);
-      R.aspect = lw / lh;
+      R.aspect = w / h;
     },
 
     // ================= camera update =================

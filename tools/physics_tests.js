@@ -404,6 +404,22 @@ T('venues: terracotta slower/lower bounce than fast blue; indoor ceiling and no 
   assert(EV.contact.length === 0 || EV.contact[0].surf !== 'ceiling', 'no ceiling outdoors');
 });
 
+T('outside ground and swept exterior props stop the ball at first contact', () => {
+  fresh();
+  fly({ p: { x: 11, y: 0.2, z: 6 }, v: { x: 0, y: -1, z: 0 } }, 1);
+  assert(ball.state.state === 'dead' && ball.state.deadReason === 'outsideContact', 'ground is terminal');
+  assert(EV.contact.length === 1 && EV.contact[0].surf === 'ground', 'one ground event');
+  court.setOutsideTriangles([[11, 0, 5.5, 11, 3, 5.5, 11, 0, 8], [11, 3, 5.5, 11, 3, 8, 11, 0, 8]]);
+  fresh();
+  const shot = { p: { x: 10.7, y: 1, z: 6 }, v: { x: 60, y: 0, z: 0 } };
+  ball.launch(shot); const pred = ball.predict(null, 1, 60);
+  assert(pred.end.reason === 'outsideContact' && pred.contacts[0].surf === 'outsideItem', 'predict sees the prop');
+  fly(shot, 1);
+  assert(ball.state.deadReason === 'outsideContact' && EV.contact[0].surf === 'outsideItem', 'CCD catches fast prop hit');
+  near(ball.state.p.x, 11 - R, 0.001, 'contact before passing the item');
+  court.setOutsideTriangles([]);
+});
+
 // ---------------------------------------------------------------- runner
 let failed = 0;
 const t0 = Date.now();

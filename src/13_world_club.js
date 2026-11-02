@@ -770,7 +770,7 @@
       const im = new T.InstancedMesh(lensGeo, lm, 9); let n = 0;
       for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) { tm.makeTranslation((c - 1) * 1.02, -0.5 - r * 0.8, -0.3); im.setMatrixAt(n++, tm); }
       im.frustumCulled = false; head.add(im);
-      G.add(grp); S.masts.push(grp); cut(grp, 'prop');
+      G.add(grp); S.masts.push(grp); cut(grp, 'light');
       // glow
       if (R.addPointGlow) { const p = new T.Vector3(0, -1.3, -0.6).applyMatrix4(head.matrix).add(new T.Vector3(x, 13.9, z)); try { S.glows.push(R.addPointGlow({ x: p.x, y: p.y, z: p.z }, 0xfff2c0, 5.5, { intensity: 0.9, parent: G })); } catch (e) { U.logError('worldClub.glow', e); } }
     });

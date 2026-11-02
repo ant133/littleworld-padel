@@ -130,6 +130,7 @@
     EL.debug = h('div', { id: 'debug', hidden: true }); EL.stage.appendChild(EL.debug);
     buildScoreboard();
     buildPanel();
+    loadSavedPlayers();
     const help = document.getElementById('btn-help'); if (help) help.addEventListener('click', showKeys);
     // events
     bindBus();
@@ -365,6 +366,7 @@
     });
     b.push(h('div', { class: 'field' }, h('div', { class: 'lbl' }, 'Players'), pk));
     refillPickers();
+    b.push(buildCreatePlayer());
     const seedIn = h('input', { type: 'text', inputmode: 'numeric', placeholder: 'random', id: 'in-seed', 'aria-label': 'Seed' });
     seedIn.addEventListener('input', () => { S.seed = seedIn.value.replace(/[^0-9]/g, ''); });
     syncs.push(() => { if (document.activeElement !== seedIn) seedIn.value = S.seed; });
@@ -374,6 +376,61 @@
       sw('Auto-next match', () => S.autoNext, v => { S.autoNext = v; if (!v) { nextAt = 0; } }, 'sw-auto').root));
     b.push(h('details', { class: 'adv' }, h('summary', null, 'Advanced'), field('Seed (same seed = same match)', seedIn), ff.root));
     return section('01', 'Match', 'Match setup', true, b, 'sec-match');
+  }
+
+  let playerDB;
+  function openPlayerDB() {
+    if (!playerDB) playerDB = new Promise((resolve, reject) => {
+      if (!window.indexedDB) return reject(new Error('Storage unavailable'));
+      const request = window.indexedDB.open('littleworld-padel', 1);
+      request.onupgradeneeded = () => request.result.createObjectStore('players', { keyPath: 'id' });
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+      request.onblocked = () => reject(new Error('Storage blocked'));
+    });
+    return playerDB;
+  }
+  async function loadSavedPlayers() {
+    try {
+      const db = await openPlayerDB();
+      const saved = await new Promise((resolve, reject) => {
+        const tx = db.transaction('players', 'readonly'), req = tx.objectStore('players').getAll();
+        req.onsuccess = () => resolve(req.result); req.onerror = () => reject(req.error);
+      });
+      saved.forEach(def => { try { mod('players').restoreCustom(def); } catch (e) { /* skip invalid records */ } });
+      refillPickers();
+      if (EL.playerStatus && saved.length) EL.playerStatus.textContent = 'Saved players loaded. Select them above, or create another player.';
+    } catch (e) {
+      if (EL.playerStatus) EL.playerStatus.textContent = 'Local saving is unavailable. You can still create a player for this visit.';
+    }
+  }
+  function buildCreatePlayer() {
+    const name = h('input', { id: 'create-name', type: 'text', maxlength: '40', placeholder: 'Your name', 'aria-label': 'Player name', autocomplete: 'nickname' });
+    const nationality = h('select', { id: 'create-nationality', 'aria-label': 'Nationality' }, h('option', { value: 'IDN' }, 'Indonesia'));
+    const gender = h('select', { id: 'create-gender', 'aria-label': 'Player gender' }, h('option', { value: 'F' }, 'Woman'), h('option', { value: 'M' }, 'Man'));
+    EL.playerStatus = h('p', { class: 'hint', role: 'status', id: 'create-status' }, 'Random stats and appearance. Saved on this device and browser.');
+    const submit = h('button', { class: 'btn primary block', type: 'submit', id: 'btn-create-player' }, 'Create player & team up with Annetta');
+    const form = h('form', { id: 'create-player', onsubmit: async e => {
+      e.preventDefault(); submit.disabled = true;
+      try {
+        const seed = window.crypto.getRandomValues(new Uint32Array(1))[0] || 1;
+        const def = mod('players').createCustom({ name: name.value, gender: gender.value, seed });
+        S.type = def.gender === 'M' ? 'X' : 'W'; applyDefaults(S.type);
+        S.teamA = [def.id, 'p5']; refillPickers(); sync();
+        let saved = true;
+        try {
+          const db = await openPlayerDB();
+          await new Promise((resolve, reject) => {
+            const tx = db.transaction('players', 'readwrite'); tx.objectStore('players').put(def);
+            tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); tx.onabort = () => reject(tx.error);
+          });
+        } catch (err) { saved = false; }
+        EL.playerStatus.textContent = def.name + ' · ' + ARCH[def.archetype] + ' · Power ' + def.attrs.power + ', accuracy ' + def.attrs.accuracy + '. ' +
+          (saved ? 'Saved on this device. ' : 'Available this visit; local saving failed. ') + 'Team A is ready with Annetta. Press New Match to play.';
+      } catch (err) { EL.playerStatus.textContent = err.message; }
+      finally { submit.disabled = false; }
+    } }, field('Name', name), field('Nationality', nationality), field('Gender', gender), submit, EL.playerStatus);
+    return h('details', { class: 'adv', id: 'create-player-section' }, h('summary', null, 'Create player · Play with Annetta'), form);
   }
 
   function refillPickers() {

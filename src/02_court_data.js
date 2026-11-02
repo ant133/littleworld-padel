@@ -107,6 +107,54 @@
 
   let venue = 'classicBlue', def = VENUES.classicBlue, ceilOn = false;
   const cap_out = { t: 0, nx: 0, ny: 0, nz: 0 };
+  const outsideGrid = new Map();
+  function setOutsideTriangles(triangles) {
+    outsideGrid.clear();
+    triangles.forEach(v => {
+      const a = v.slice(0, 3), b = v.slice(3, 6), c = v.slice(6, 9);
+      const ab = b.map((x, i) => x - a[i]), ac = c.map((x, i) => x - a[i]);
+      const n = [ab[1] * ac[2] - ab[2] * ac[1], ab[2] * ac[0] - ab[0] * ac[2], ab[0] * ac[1] - ab[1] * ac[0]], len = Math.hypot(...n);
+      if (len < 1e-8) return;
+      const tri = { a, b, c, n: n.map(x => x / len), edges: [[a, b], [b, c], [c, a]].map(e => ({ a: e[0], b: e[1], r: 0 })) };
+      const x0 = Math.max(-18, Math.min(a[0], b[0], c[0])), x1 = Math.min(18, Math.max(a[0], b[0], c[0]));
+      const z0 = Math.max(-12, Math.min(a[2], b[2], c[2])), z1 = Math.min(12, Math.max(a[2], b[2], c[2]));
+      if (x0 > x1 || z0 > z1 || Math.max(a[1], b[1], c[1]) < -0.3 || (x0 > -9.95 && x1 < 9.95 && z0 > -4.95 && z1 < 4.95)) return;
+      for (let x = Math.floor((x0 - 0.04) / 2); x <= Math.floor((x1 + 0.04) / 2); x++) for (let z = Math.floor((z0 - 0.04) / 2); z <= Math.floor((z1 + 0.04) / 2); z++) {
+        const key = x + ':' + z; if (!outsideGrid.has(key)) outsideGrid.set(key, []); outsideGrid.get(key).push(tri);
+      }
+    });
+  }
+  function outsideHit(P, D, r) {
+    if (!outsideGrid.size) return null;
+    const Q = P.map((x, i) => x + D[i]);
+    if (Math.max(Math.abs(P[0]), Math.abs(Q[0])) < 10 - r && Math.max(Math.abs(P[2]), Math.abs(Q[2])) < 5 - r) return null;
+    let best = null; const seen = new Set();
+    function accept(t, n) {
+      const c = P.map((x, i) => x + D[i] * t), p = c.map((x, i) => x - n[i] * r);
+      if (inCourt(p[0], p[2]) || (best && t >= best.t)) return;
+      best = { t, surf: 'outsideItem', n: { x: n[0], y: n[1], z: n[2] }, c: { x: c[0], y: c[1], z: c[2] }, p: { x: p[0], y: p[1], z: p[2] } };
+    }
+    for (let x = Math.floor(Math.min(P[0], Q[0]) / 2); x <= Math.floor(Math.max(P[0], Q[0]) / 2); x++) for (let z = Math.floor(Math.min(P[2], Q[2]) / 2); z <= Math.floor(Math.max(P[2], Q[2]) / 2); z++) {
+      const list = outsideGrid.get(x + ':' + z) || [];
+      list.forEach(tri => {
+        if (seen.has(tri)) return; seen.add(tri);
+        const n = tri.n, dist = n.reduce((s, v, i) => s + v * (P[i] - tri.a[i]), 0), dir = n.reduce((s, v, i) => s + v * D[i], 0), sg = dist >= 0 ? 1 : -1;
+        if (dir * sg < -1e-10) {
+          const t = Math.max(0, (r - Math.abs(dist)) / (dir * sg));
+          if (t <= 1) {
+            const p = P.map((v, i) => v + D[i] * t - n[i] * sg * r);
+            const inside = tri.edges.every(e => {
+              const u = e.b.map((v, i) => v - e.a[i]), w = p.map((v, i) => v - e.a[i]);
+              return (u[1] * w[2] - u[2] * w[1]) * n[0] + (u[2] * w[0] - u[0] * w[2]) * n[1] + (u[0] * w[1] - u[1] * w[0]) * n[2] >= -1e-8;
+            });
+            if (inside) accept(t, n.map(v => v * sg));
+          }
+        }
+        tri.edges.forEach(e => { if (rayCapsule(P, D, e, r, cap_out)) accept(cap_out.t, [cap_out.nx, cap_out.ny, cap_out.nz]); });
+      });
+    }
+    return best;
+  }
 
   // earliest hit of sphere (radius r) moving p0->p1. Returns {t, surf, n, p (surface point), c (sphere centre at hit)} | null
   function raycastSphere(p0, p1, r) {
@@ -131,6 +179,8 @@
         if (rayCapsule(P, D, q, r, cap_out) && cap_out.t < bt) { bt = cap_out.t; bid = q.id; bn = [cap_out.nx, cap_out.ny, cap_out.nz]; }
       }
     }
+    const exterior = outsideHit(P, D, r);
+    if (exterior && exterior.t < bt) return exterior;
     if (!bid) return null;
     const c = { x: P[0] + D[0] * bt, y: P[1] + D[1] * bt, z: P[2] + D[2] * bt };
     const n = { x: bn[0], y: bn[1], z: bn[2] };
@@ -169,7 +219,7 @@
     SURFACES, SURF, VENUES, venue, def, surf: SURF[venue],
     DIM: { L: 20, W: 10, serviceX: SVC, netY: 0.88, netPostY: 0.92, postZ: POST_Z, tapeR: TAPE_R, wallH: 4, glassH: 3, doorH: DOOR_H },
     LINES: { service: [-SVC, SVC], center: { z: 0, x: [-SVC, SVC] }, boundary: { x: [-10, 10], z: [-5, 5] } },
-    setVenue, raycastSphere, inCourt, regionOf, serviceBox, nearLine, rightSign, sideOf,
+    setVenue, setOutsideTriangles, raycastSphere, inCourt, regionOf, serviceBox, nearLine, rightSign, sideOf,
     netHeight: hNet,
     params(id) { return SURF[venue][id]; },
     isWall(id) { return !!WALL[id]; },

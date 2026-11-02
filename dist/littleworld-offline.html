@@ -689,6 +689,54 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
 
   let venue = 'classicBlue', def = VENUES.classicBlue, ceilOn = false;
   const cap_out = { t: 0, nx: 0, ny: 0, nz: 0 };
+  const outsideGrid = new Map();
+  function setOutsideTriangles(triangles) {
+    outsideGrid.clear();
+    triangles.forEach(v => {
+      const a = v.slice(0, 3), b = v.slice(3, 6), c = v.slice(6, 9);
+      const ab = b.map((x, i) => x - a[i]), ac = c.map((x, i) => x - a[i]);
+      const n = [ab[1] * ac[2] - ab[2] * ac[1], ab[2] * ac[0] - ab[0] * ac[2], ab[0] * ac[1] - ab[1] * ac[0]], len = Math.hypot(...n);
+      if (len < 1e-8) return;
+      const tri = { a, b, c, n: n.map(x => x / len), edges: [[a, b], [b, c], [c, a]].map(e => ({ a: e[0], b: e[1], r: 0 })) };
+      const x0 = Math.max(-18, Math.min(a[0], b[0], c[0])), x1 = Math.min(18, Math.max(a[0], b[0], c[0]));
+      const z0 = Math.max(-12, Math.min(a[2], b[2], c[2])), z1 = Math.min(12, Math.max(a[2], b[2], c[2]));
+      if (x0 > x1 || z0 > z1 || Math.max(a[1], b[1], c[1]) < -0.3 || (x0 > -9.95 && x1 < 9.95 && z0 > -4.95 && z1 < 4.95)) return;
+      for (let x = Math.floor((x0 - 0.04) / 2); x <= Math.floor((x1 + 0.04) / 2); x++) for (let z = Math.floor((z0 - 0.04) / 2); z <= Math.floor((z1 + 0.04) / 2); z++) {
+        const key = x + ':' + z; if (!outsideGrid.has(key)) outsideGrid.set(key, []); outsideGrid.get(key).push(tri);
+      }
+    });
+  }
+  function outsideHit(P, D, r) {
+    if (!outsideGrid.size) return null;
+    const Q = P.map((x, i) => x + D[i]);
+    if (Math.max(Math.abs(P[0]), Math.abs(Q[0])) < 10 - r && Math.max(Math.abs(P[2]), Math.abs(Q[2])) < 5 - r) return null;
+    let best = null; const seen = new Set();
+    function accept(t, n) {
+      const c = P.map((x, i) => x + D[i] * t), p = c.map((x, i) => x - n[i] * r);
+      if (inCourt(p[0], p[2]) || (best && t >= best.t)) return;
+      best = { t, surf: 'outsideItem', n: { x: n[0], y: n[1], z: n[2] }, c: { x: c[0], y: c[1], z: c[2] }, p: { x: p[0], y: p[1], z: p[2] } };
+    }
+    for (let x = Math.floor(Math.min(P[0], Q[0]) / 2); x <= Math.floor(Math.max(P[0], Q[0]) / 2); x++) for (let z = Math.floor(Math.min(P[2], Q[2]) / 2); z <= Math.floor(Math.max(P[2], Q[2]) / 2); z++) {
+      const list = outsideGrid.get(x + ':' + z) || [];
+      list.forEach(tri => {
+        if (seen.has(tri)) return; seen.add(tri);
+        const n = tri.n, dist = n.reduce((s, v, i) => s + v * (P[i] - tri.a[i]), 0), dir = n.reduce((s, v, i) => s + v * D[i], 0), sg = dist >= 0 ? 1 : -1;
+        if (dir * sg < -1e-10) {
+          const t = Math.max(0, (r - Math.abs(dist)) / (dir * sg));
+          if (t <= 1) {
+            const p = P.map((v, i) => v + D[i] * t - n[i] * sg * r);
+            const inside = tri.edges.every(e => {
+              const u = e.b.map((v, i) => v - e.a[i]), w = p.map((v, i) => v - e.a[i]);
+              return (u[1] * w[2] - u[2] * w[1]) * n[0] + (u[2] * w[0] - u[0] * w[2]) * n[1] + (u[0] * w[1] - u[1] * w[0]) * n[2] >= -1e-8;
+            });
+            if (inside) accept(t, n.map(v => v * sg));
+          }
+        }
+        tri.edges.forEach(e => { if (rayCapsule(P, D, e, r, cap_out)) accept(cap_out.t, [cap_out.nx, cap_out.ny, cap_out.nz]); });
+      });
+    }
+    return best;
+  }
 
   function raycastSphere(p0, p1, r) {
     const P = [p0.x, p0.y, p0.z], D = [p1.x - p0.x, p1.y - p0.y, p1.z - p0.z];
@@ -712,6 +760,8 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
         if (rayCapsule(P, D, q, r, cap_out) && cap_out.t < bt) { bt = cap_out.t; bid = q.id; bn = [cap_out.nx, cap_out.ny, cap_out.nz]; }
       }
     }
+    const exterior = outsideHit(P, D, r);
+    if (exterior && exterior.t < bt) return exterior;
     if (!bid) return null;
     const c = { x: P[0] + D[0] * bt, y: P[1] + D[1] * bt, z: P[2] + D[2] * bt };
     const n = { x: bn[0], y: bn[1], z: bn[2] };
@@ -748,7 +798,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     SURFACES, SURF, VENUES, venue, def, surf: SURF[venue],
     DIM: { L: 20, W: 10, serviceX: SVC, netY: 0.88, netPostY: 0.92, postZ: POST_Z, tapeR: TAPE_R, wallH: 4, glassH: 3, doorH: DOOR_H },
     LINES: { service: [-SVC, SVC], center: { z: 0, x: [-SVC, SVC] }, boundary: { x: [-10, 10], z: [-5, 5] } },
-    setVenue, raycastSphere, inCourt, regionOf, serviceBox, nearLine, rightSign, sideOf,
+    setVenue, setOutsideTriangles, raycastSphere, inCourt, regionOf, serviceBox, nearLine, rightSign, sideOf,
     netHeight: hNet,
     params(id) { return SURF[venue][id]; },
     isWall(id) { return !!WALL[id]; },
@@ -890,6 +940,12 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     const surf = hit.surf, n = hit.n, v = S.v, B = HPO.cfg.BALL;
     const vn = v.x * n.x + v.y * n.y + v.z * n.z;
     if (vn >= 0) return;
+    if (surf === 'ground' || surf === 'outsideItem') {
+      const info = { surf, p: copy3(hit.p), vIn: copy3(v), vOut: { x: 0, y: 0, z: 0 }, t: S.t, normal: copy3(n) };
+      if (X.rec) X.rec(info, S);
+      if (X.emit) HPO.BUS.emit('ball:contact', info);
+      die(S, X, 'outsideContact'); return;
+    }
     const floorish = surf === 'floor' || surf === 'ground';
     if (floorish && -vn < PRM.restVn) {
       S.resting = true; S.restY = hit.c.y; S.restSurf = surf; v.y = 0;
@@ -943,6 +999,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       p.x = hit.c.x; p.y = hit.c.y; p.z = hit.c.z;
       rem *= 1 - hit.t;
       contact(S, hit, X, C);
+      if (S.state !== 'live') return;
       if (++n >= PRM.maxCollisions) { S.v.x *= 0.5; S.v.y *= 0.5; S.v.z *= 0.5; break; }
     }
     if (S.resting) { p.y = S.restY; S.v.y = 0; }
@@ -1202,7 +1259,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       attrs: { power: 95, accuracy: 70, reflexes: 70, coverage: 68, stamina: 72, net: 82, defense: 56, wallRead: 62, tactics: 66 }, look: { skin: 0, hair: 0xd8b25c, hairStyle: 'short', outfit: [0xf28c28, 0x222222], racket: 0x222222 } },
     { id: 'p4', name: 'Camila Ferreyra', nick: 'Cami', gender: 'F', country: { code: 'ARG', name: 'Argentina' }, ranking: 3, hand: 'R', side: 'either', archetype: 'allRound',
       attrs: { power: 74, accuracy: 84, reflexes: 82, coverage: 80, stamina: 84, net: 80, defense: 80, wallRead: 82, tactics: 86 }, look: { skin: 1, hair: 0x4a2a16, hairStyle: 'ponytail', outfit: [0x8a5cf6, 0xffffff], racket: 0xff7ab6 } },
-    { id: 'p5', name: 'Sari Wulandari', nick: 'Sari Sprint', gender: 'F', country: { code: 'IDN', name: 'Indonesia' }, ranking: 6, hand: 'R', side: 'reves', archetype: 'counterpuncher',
+    { id: 'p5', name: 'Annetta Arslan H', nick: 'Annetta', gender: 'F', country: { code: 'IDN', name: 'Indonesia' }, ranking: 6, hand: 'R', side: 'reves', archetype: 'counterpuncher',
       attrs: { power: 62, accuracy: 82, reflexes: 90, coverage: 90, stamina: 86, net: 66, defense: 88, wallRead: 90, tactics: 84 }, look: { skin: 3, hair: 0x0b0b0d, hairStyle: 'bun', outfit: [0xe5484d, 0xfff4b3], racket: 0xfff4b3 } },
     { id: 'p6', name: 'Hana Kobayashi', nick: 'Glass Hana', gender: 'F', country: { code: 'JPN', name: 'Japan' }, ranking: 8, hand: 'L', side: 'reves', archetype: 'wallSpecialist',
       attrs: { power: 58, accuracy: 80, reflexes: 82, coverage: 78, stamina: 90, net: 60, defense: 90, wallRead: 92, tactics: 78 }, look: { skin: 1, hair: 0x14100c, hairStyle: 'bob', outfit: [0x14b8a6, 0xffffff], racket: 0x1e6bd6 } },
@@ -1218,6 +1275,28 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   const P = HPO.mod.players = {
     now: 0, list: [], byId: {}, ROSTER: ROSTER,
     roster() { return ROSTER; },
+    createCustom(input) {
+      const name = typeof input.name === 'string' ? input.name.trim().replace(/\s+/g, ' ') : '';
+      if (!name || name.length > 40 || /[\u0000-\u001f\u007f]/.test(name)) throw new Error('Enter a name of 1–40 characters.');
+      if (input.gender !== 'M' && input.gender !== 'F') throw new Error('Choose a gender.');
+      if (!Number.isInteger(input.seed) || input.seed < 1 || input.seed > 4294967295) throw new Error('Invalid player seed.');
+      const id = 'custom-' + input.seed.toString(16), existing = ROSTER.find(r => r.id === id);
+      if (existing) return existing;
+      const rg = HPO.makeRng(input.seed), attrs = {};
+      ['power', 'accuracy', 'reflexes', 'coverage', 'stamina', 'net', 'defense', 'wallRead', 'tactics'].forEach(k => { attrs[k] = rg.int(55, 95); });
+      const colors = [0x177dc5, 0xe5484d, 0x14b8a6, 0x8a5cf6, 0xf28c28, 0x123954];
+      const def = { id, name, nick: name.split(' ')[0], gender: input.gender, country: { code: 'IDN', name: 'Indonesia' },
+        seed: input.seed, custom: true, ranking: rg.int(10, 99), hand: rg.pick(['R', 'R', 'L']), side: 'either',
+        archetype: rg.pick(['netAttacker', 'wallSpecialist', 'allRound', 'smasher', 'precision', 'counterpuncher']), attrs,
+        look: { skin: rg.int(0, 3), hair: rg.pick([0x15110e, 0x4a2a16, 0x2a1d14]),
+          hairStyle: rg.pick(input.gender === 'F' ? ['ponytail', 'bun', 'bob', 'short'] : ['short', 'crop', 'long']),
+          outfit: [rg.pick(colors), rg.pick([0xffffff, 0xfff4b3, 0x123954])], racket: rg.pick(colors) } };
+      ROSTER.push(def); return def;
+    },
+    restoreCustom(def) {
+      if (!def || def.custom !== true || def.id !== 'custom-' + Number(def.seed).toString(16)) throw new Error('Invalid saved player.');
+      return P.createCustom(def);
+    },
     get(id) { return P.byId[id]; },
     team(t) { return P.list.filter(p => p.team === t); },
     other(p) { return P.list.find(q => q.team === p.team && q !== p); },
@@ -1530,12 +1609,12 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   const lvl = a => U.clamp((a - 30) / 65, 0.02, 1);
   const rgn = () => HPO.streams.ai;
 
-  const T = CFG.TUNE.ai = Object.assign({ sharp: 0.6, smashDepthMax: 7.0, lobBase: 0.8, aimNoise: 1.0, riskMargin: 1.0, volleyWilling: 1.0 }, CFG.TUNE.ai || {});
+  const T = CFG.TUNE.ai = Object.assign({ sharp: 0.6, smashDepthMax: 9.8, lobBase: 0.45, aimNoise: 1.0, riskMargin: 1.0, volleyWilling: 1.0 }, CFG.TUNE.ai || {});
 
   const PRESETS = {
     balanced: {}, aggressive: { smash: 1.4, vibora: 1.4, flat: 1.25, lob: 0.7, risk: 0.7 }, safe: { smash: 0.6, vibora: 0.6, lob: 1.3, slice: 1.3, risk: 1.5, flat: 0.8 },
     controlNet: { bandeja: 1.4, volley: 1.25, chiquita: 1.2, lob: 0.85, netBias: 1 }, defensive: { lob: 2.0, wallDef: 1.4, smash: 0.7, risk: 1.3, netBias: -1 },
-    targetMiddle: { middle: 1 }, targetGlass: { glass: 1 }, rushNet: { netBias: 2, volley: 1.15 }, focusOne: { focus: 1 }, moreChiquitas: { chiquita: 2.6 }, moreSmashes: { smash: 2.2 }
+    targetMiddle: { middle: 1 }, targetGlass: { glass: 1 }, rushNet: { netBias: 2, volley: 1.15 }, focusOne: { focus: 1 }, moreChiquitas: { chiquita: 2.6 }, moreSmashes: { smash: 3.2, lob: 0.35 }
   };
 
   const teams = {
@@ -1550,6 +1629,13 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   function opp(team) { return team === 'A' ? 'B' : 'A'; }
   function depthOf(team, x) { return Math.abs(x); } // distance from the net plane
   function pr(id) { return HPO.mod.players.byId[id]; }
+  function backGlassLob(p) {
+    if (!lastShot || !LOB[lastShot.kind] || lastShot.team === p.team) return false;
+    const B = HPO.mod.ball, st = B.state;
+    const bounced = st.touchedSinceHit.find(c => c.surf === 'floor');
+    const hit = bounced ? { p: { x: bounced.x, z: bounced.z } } : B.predict(st, 5, 30).contacts.find(c => c.surf === 'floor');
+    return !!hit && hit.p.x * HPO.court.sides[p.team] >= 8 && Math.abs(hit.p.x) <= 10 && Math.abs(hit.p.z) <= 5;
+  }
   function mods(team) { return Object.assign({ smash: 1, vibora: 1, flat: 1, lob: 1, slice: 1, bandeja: 1, volley: 1, chiquita: 1, wallDef: 1, risk: 1, netBias: 0 }, PRESETS[teams[team].orders.preset] || {}); }
 
   const AI = HPO.mod.ai = {
@@ -1589,7 +1675,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     },
 
     chooseStrike(p, cands) {
-      const t = teams[p.team], m = mods(p.team);
+      const t = teams[p.team], m = mods(p.team), deepLob = backGlassLob(p);
       const depth = Math.abs(p.pos.x);
       const atNet = depth < 4.2;
       let best = null, bs = -1e9;
@@ -1599,7 +1685,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
         let s = 0;
         s += Math.min(c.slack, 0.8) * 1.2;                         // time to set up
         s -= Math.abs(y - (atNet ? 1.35 : 1.0)) * 0.9;              // comfortable contact height
-        if (c.p.y > 2.1 && d > 7) s -= 0.7;                         // overhead from the deep corner is hard
+        if (y >= 2.1 && y <= 2.95) s += (deepLob ? 4.0 : 1.8) * m.smash;
         if (c.ownBounces === 0) s += atNet ? 0.9 * T.volleyWilling * (1 + (m.netBias > 0 ? 0.3 : 0)) : -0.5; // volley when at the net
         if (c.afterWall) s += lvl(p.attrs.wallRead) * 0.6 - (atNet ? 0.5 : 0);   // wall specialists let it come back
         if (c.ownBounces === 0 && c.dt < 0.25) s -= 0.5;              // too rushed
@@ -1632,10 +1718,15 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       const w = {};
       const high = h >= 1.85, low = h < 0.95;
       const near = depth < 4.5, mid = depth >= 4.5 && depth < 6.5, deep = depth >= 6.5;
+      const deepLob = backGlassLob(p);
+      if (deepLob && h >= 2.1 && h <= 3.0) {
+        const kick = aimFor(p, 'smashKick', info, ops, oppNet, press, m, tm);
+        if (S.nominal(info.p, kick.kind, kick.target, { effort: kick.effort }).feasible) { tm.aim = null; kick.reason = 'back-glass-lob'; return kick; }
+      }
 
       if (high) {
         const okSmash = (depth <= T.smashDepthMax && h >= 2.05) ? 1 : 0.03;
-        w.smashFlat = 1.5 * okSmash * m.smash; w.smashKick = 0.8 * okSmash * m.smash;
+        w.smashFlat = 3.6 * okSmash * m.smash; w.smashKick = 2.8 * okSmash * m.smash;
         w.bandeja = 2.6 * m.bandeja * (deep ? 1.1 : 1); w.vibora = 1.5 * m.vibora * (near ? 1.2 : 0.7);
         w.lobOff = deep ? 1.0 * m.lob : 0.35 * m.lob;
         if (info.afterWall && deep) w.bajada = 1.2;
@@ -1656,6 +1747,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
         if (info.walls >= 2 && info.slack > 0.12) w.counterDW = 1.3;
         if (mid && h > 0.6) w.volleyFH = w.volleyBH = 0.8 * m.volley;
       }
+      Object.keys(w).forEach(k => { if (LOB[k]) w[k] *= deepLob ? 0 : 0.55; });
       if (oppNet >= 2) { if (w.flatGround) w.flatGround *= 0.55; if (w.topGround) w.topGround *= 0.7; }
       if (w.volleyFH !== undefined) { if (info.fh) w.volleyBH = 0; else w.volleyFH = 0; }
 
@@ -1691,7 +1783,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       const S2 = HPO.mod.shots;
       let nom = S2.nominal(info.p, pick.kind, pick.target, { effort: pick.effort, netMargin: pick.netMargin });
       if (!nom.feasible) {
-        const fb = high && depth > 5 ? ['bandeja', 'lobOff'] : (near ? ['volley', 'chiquita', 'lobDef'] : ['lobDef', 'slice', 'flatGround']);
+        const fb = high ? ['smashKick', 'smashFlat', 'bandeja', 'vibora'] : (near ? ['volley', 'chiquita', 'flatGround'] : ['slice', 'flatGround', 'topGround']);
         for (let i = 0; i < fb.length; i++) {
           let k = fb[i]; if (k === 'volley') k = info.fh ? 'volleyFH' : 'volleyBH';
           const alt = aimFor(p, k, info, ops, oppNet, press, m, tm);
@@ -2315,10 +2407,15 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   }
 
   function onContact(e) {
-    if (!live() || pt.retrieving || pt.phase === 'tossed') return;
+    if (!live() || pt.phase === 'tossed') return;
     const surf = e.surf, st = pt.stroke;
     if (e.p) pt.lastP = e.p;
     if (surf === 'floor' || !st) return;
+    if (surf === 'ground' || surf === 'outsideItem') {
+      if (pt.phase === 'serveFlight') return serveFault('long');
+      return finish(st.bounced ? st.team : other(st.team), st.bounced ? 'lost' : 'out');
+    }
+    if (pt.retrieving) return;
     if (pt.phase === 'serveFlight') {
       if (NET[surf]) pt.netTouched = true;
       else serveFault(surf === 'ceiling' || surf === 'ground' ? 'long' : 'wallFirst');
@@ -2326,7 +2423,6 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     }
     if (surf === 'ceiling') return finish(other(st.team), 'ceiling');
     if (NET[surf]) { if (!st.bounced) st.net = true; return; }
-    if (surf === 'ground') return leaving(e.p);
     if (pt.phase === 'serve' && MESH[surf]) return serveFault('mesh'); // serve fault after bounce
     if (!st.bounced) finish(other(st.team), 'wallFirst');
   }
@@ -2459,6 +2555,9 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
         else if (cfg.type === 'W') { ta = [wom[0].id, wom[1].id]; tb = [wom[2].id, wom[3].id]; }
         else { ta = [men[0].id, wom[0].id]; tb = [men[2].id, wom[2].id]; }
       }
+      const ids = ta.concat(tb);
+      if (ta.length !== 2 || tb.length !== 2 || new Set(ids).size !== 4 || ids.some(id => !pool.some(p => p.id === id))) throw new Error('Choose four different players eligible for this match type.');
+      if (cfg.type === 'X' && [ta, tb].some(team => team.filter(id => roster.find(p => p.id === id).gender === 'F').length !== 1)) throw new Error('Mixed teams require one woman and one man.');
       cfg.teamA = ta; cfg.teamB = tb;
       M.cfg = cfg;
       P().setup(ta, tb); A().reset(); Bl().reset();
@@ -2800,7 +2899,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
 (function (HPO) {
   'use strict';
   const U = HPO.util;
-  const EL = 31 * Math.PI / 180;
+  const EL = 40 * Math.PI / 180;
   const YAW0 = Math.PI / 4;           // yaw of quarter-turn index 0
   const CAM_D = 140;                  // camera distance from its target (orthographic: only affects clipping/fog)
   const MODES = ['follow', 'club', 'close', 'top', 'free'];
@@ -3013,7 +3112,30 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       R.resize();
       window.addEventListener('resize', R.resize);
       if (typeof ResizeObserver !== 'undefined') new ResizeObserver(R.resize).observe(cont);
-      HPO.BUS.on('boot:ready', function () { R.ready = true; R._forwardTod(); R._last = performance.now(); requestAnimationFrame(R._loop); });
+      HPO.BUS.on('boot:ready', function () { R.ready = true; R._forwardTod(); R._syncOutsideCollisions(); R._last = performance.now(); requestAnimationFrame(R._loop); });
+    },
+
+    _syncOutsideCollisions() {
+      const T = R.THREE, triangles = [], v = new T.Vector3(), instance = new T.Matrix4(), world = new T.Matrix4();
+      R.groups.world.updateWorldMatrix(true, true);
+      ['court', 'island', 'club'].forEach(key => R.groups[key].traverseVisible(o => {
+        if (!o.isMesh || !o.geometry || !o.geometry.attributes.position || o.isSkinnedMesh) return;
+        const mat = o.material;
+        if (Array.isArray(mat) || mat.opacity < 0.9 || (mat.userData && mat.userData.glass)) return;
+        const g = o.geometry, pos = g.attributes.position, index = g.index, count = index ? index.count : pos.count;
+        for (let j = 0; j < (o.isInstancedMesh ? o.count : 1); j++) {
+          if (o.isInstancedMesh) { o.getMatrixAt(j, instance); world.multiplyMatrices(o.matrixWorld, instance); } else world.copy(o.matrixWorld);
+          for (let i = 0; i + 2 < count; i += 3) {
+            const tri = [];
+            for (let k = 0; k < 3; k++) { v.fromBufferAttribute(pos, index ? index.getX(i + k) : i + k).applyMatrix4(world); tri.push(v.x, v.y, v.z); }
+            const xs = [tri[0], tri[3], tri[6]], ys = [tri[1], tri[4], tri[7]], zs = [tri[2], tri[5], tri[8]];
+            if (Math.min(...xs) > 18 || Math.max(...xs) < -18 || Math.min(...zs) > 12 || Math.max(...zs) < -12 || Math.max(...ys) < -0.3) continue;
+            if (xs.every(x => Math.abs(x) < 9.95) && zs.every(z => Math.abs(z) < 4.95)) continue;
+            triangles.push(tri);
+          }
+        }
+      }));
+      HPO.mod.court.setOutsideTriangles(triangles);
     },
 
     mat(hex, o) {
@@ -3061,7 +3183,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       enabled: true,
       add(obj, o) {
         o = o || {};
-        const role = o.role || 'prop', D = { stand: 0.22, building: 0.25, wall: 0.2, tree: 0.3, prop: 0.55, roof: 0.15 };
+        const role = o.role || 'prop', D = { stand: 0.22, building: 0.25, wall: 0.2, tree: 0.3, prop: 0.55, light: 0.05, roof: 0.15 };
         for (let i = 0; i < R._cutEntries.length; i++) if (R._cutEntries[i].obj === obj) { R._cutEntries[i].role = role; return; }
         const e = { obj: obj, role: role, fadeTo: o.fadeTo === undefined ? (D[role] === undefined ? 0.4 : D[role]) : o.fadeTo, lift: o.lift === undefined ? (role === 'roof' ? 9 : 0) : o.lift,
           fade: 1, liftCur: 0, baseY: obj.position.y, box: new R.THREE.Box3(), boxAge: 1e9, meshes: [], swapped: false, skip: false, nChildren: -1 };
@@ -3156,7 +3278,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
             if (ok) { if (Math.abs(dz) < 1e-9) { if (pz < b.min.z || pz > b.max.z) ok = false; } else { t1 = (b.min.z - pz) / dz; t2 = (b.max.z - pz) / dz; if (t1 > t2) { sw = t1; t1 = t2; t2 = sw; } if (t1 > tmin) tmin = t1; if (t2 < tmax) tmax = t2; } }
             if (ok && tmax > 0.05 && tmin < tmax) { if (s < nFixed) hits++; else liveHit = true; }
           }
-          need = liveHit ? 1 : Math.min(1, hits / nFixed * 4);
+          need = liveHit || (e.role === 'light' && hits > 0) ? 1 : Math.min(1, hits / nFixed * 4);
         }
         const fT = 1 - need * (1 - e.fadeTo), lT = need * e.lift;
         e.fade += (fT - e.fade) * kf; if (e.fade > 0.995) e.fade = 1;
@@ -3279,16 +3401,16 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       if (!R.renderer) return;
       const T = R.THREE, c = R.container, w = Math.max(16, c.clientWidth), h = Math.max(16, c.clientHeight), N = R.pixelSize;
       const lw = Math.ceil(w / N), lh = Math.ceil(h / N);
-      if (lw === R._lw && lh === R._lh && R._rt) { R._cssN = N; R.renderer.domElement.style.width = lw * N + 'px'; R.renderer.domElement.style.height = lh * N + 'px'; return; }
+      if (lw === R._lw && lh === R._lh && R._rt) { R._cssN = N; R.aspect = w / h; R.renderer.domElement.style.width = w + 'px'; R.renderer.domElement.style.height = h + 'px'; return; }
       R._lw = lw; R._lh = lh;
       R.renderer.setSize(lw, lh, false);
-      const cv = R.renderer.domElement; cv.style.width = lw * N + 'px'; cv.style.height = lh * N + 'px';
+      const cv = R.renderer.domElement; cv.style.width = w + 'px'; cv.style.height = h + 'px';
       if (R._rt) { R._rt.dispose(); if (R._rt.depthTexture) R._rt.depthTexture.dispose(); }
       const rt = new T.WebGLRenderTarget(lw, lh, { minFilter: T.NearestFilter, magFilter: T.NearestFilter, format: T.RGBAFormat, type: T.UnsignedByteType, depthBuffer: true, stencilBuffer: false });
       if (R._hasDepth) { const dt = new T.DepthTexture(lw, lh); dt.type = T.UnsignedIntType; dt.format = T.DepthFormat; dt.minFilter = T.NearestFilter; dt.magFilter = T.NearestFilter; rt.depthTexture = dt; }
       R._rt = rt;
       R._postU.tColor.value = rt.texture; R._postU.tDepth.value = rt.depthTexture; R._postU.uRes.value.set(lw, lh);
-      R.aspect = lw / lh;
+      R.aspect = w / h;
     },
 
     _basis(yaw, el) { // right/up vectors and direction towards the camera
@@ -6129,7 +6251,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       const im = new T.InstancedMesh(lensGeo, lm, 9); let n = 0;
       for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) { tm.makeTranslation((c - 1) * 1.02, -0.5 - r * 0.8, -0.3); im.setMatrixAt(n++, tm); }
       im.frustumCulled = false; head.add(im);
-      G.add(grp); S.masts.push(grp); cut(grp, 'prop');
+      G.add(grp); S.masts.push(grp); cut(grp, 'light');
       if (R.addPointGlow) { const p = new T.Vector3(0, -1.3, -0.6).applyMatrix4(head.matrix).add(new T.Vector3(x, 13.9, z)); try { S.glows.push(R.addPointGlow({ x: p.x, y: p.y, z: p.z }, 0xfff2c0, 5.5, { intensity: 0.9, parent: G })); } catch (e) { U.logError('worldClub.glow', e); } }
     });
     const pos = [], uv = [], idx = [];
@@ -9758,6 +9880,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     EL.debug = h('div', { id: 'debug', hidden: true }); EL.stage.appendChild(EL.debug);
     buildScoreboard();
     buildPanel();
+    loadSavedPlayers();
     const help = document.getElementById('btn-help'); if (help) help.addEventListener('click', showKeys);
     bindBus();
     document.addEventListener('keydown', onKey);
@@ -9983,6 +10106,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     });
     b.push(h('div', { class: 'field' }, h('div', { class: 'lbl' }, 'Players'), pk));
     refillPickers();
+    b.push(buildCreatePlayer());
     const seedIn = h('input', { type: 'text', inputmode: 'numeric', placeholder: 'random', id: 'in-seed', 'aria-label': 'Seed' });
     seedIn.addEventListener('input', () => { S.seed = seedIn.value.replace(/[^0-9]/g, ''); });
     syncs.push(() => { if (document.activeElement !== seedIn) seedIn.value = S.seed; });
@@ -9992,6 +10116,61 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       sw('Auto-next match', () => S.autoNext, v => { S.autoNext = v; if (!v) { nextAt = 0; } }, 'sw-auto').root));
     b.push(h('details', { class: 'adv' }, h('summary', null, 'Advanced'), field('Seed (same seed = same match)', seedIn), ff.root));
     return section('01', 'Match', 'Match setup', true, b, 'sec-match');
+  }
+
+  let playerDB;
+  function openPlayerDB() {
+    if (!playerDB) playerDB = new Promise((resolve, reject) => {
+      if (!window.indexedDB) return reject(new Error('Storage unavailable'));
+      const request = window.indexedDB.open('littleworld-padel', 1);
+      request.onupgradeneeded = () => request.result.createObjectStore('players', { keyPath: 'id' });
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+      request.onblocked = () => reject(new Error('Storage blocked'));
+    });
+    return playerDB;
+  }
+  async function loadSavedPlayers() {
+    try {
+      const db = await openPlayerDB();
+      const saved = await new Promise((resolve, reject) => {
+        const tx = db.transaction('players', 'readonly'), req = tx.objectStore('players').getAll();
+        req.onsuccess = () => resolve(req.result); req.onerror = () => reject(req.error);
+      });
+      saved.forEach(def => { try { mod('players').restoreCustom(def); } catch (e) { /* skip invalid records */ } });
+      refillPickers();
+      if (EL.playerStatus && saved.length) EL.playerStatus.textContent = 'Saved players loaded. Select them above, or create another player.';
+    } catch (e) {
+      if (EL.playerStatus) EL.playerStatus.textContent = 'Local saving is unavailable. You can still create a player for this visit.';
+    }
+  }
+  function buildCreatePlayer() {
+    const name = h('input', { id: 'create-name', type: 'text', maxlength: '40', placeholder: 'Your name', 'aria-label': 'Player name', autocomplete: 'nickname' });
+    const nationality = h('select', { id: 'create-nationality', 'aria-label': 'Nationality' }, h('option', { value: 'IDN' }, 'Indonesia'));
+    const gender = h('select', { id: 'create-gender', 'aria-label': 'Player gender' }, h('option', { value: 'F' }, 'Woman'), h('option', { value: 'M' }, 'Man'));
+    EL.playerStatus = h('p', { class: 'hint', role: 'status', id: 'create-status' }, 'Random stats and appearance. Saved on this device and browser.');
+    const submit = h('button', { class: 'btn primary block', type: 'submit', id: 'btn-create-player' }, 'Create player & team up with Annetta');
+    const form = h('form', { id: 'create-player', onsubmit: async e => {
+      e.preventDefault(); submit.disabled = true;
+      try {
+        const seed = window.crypto.getRandomValues(new Uint32Array(1))[0] || 1;
+        const def = mod('players').createCustom({ name: name.value, gender: gender.value, seed });
+        S.type = def.gender === 'M' ? 'X' : 'W'; applyDefaults(S.type);
+        S.teamA = [def.id, 'p5']; refillPickers(); sync();
+        let saved = true;
+        try {
+          const db = await openPlayerDB();
+          await new Promise((resolve, reject) => {
+            const tx = db.transaction('players', 'readwrite'); tx.objectStore('players').put(def);
+            tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); tx.onabort = () => reject(tx.error);
+          });
+        } catch (err) { saved = false; }
+        EL.playerStatus.textContent = def.name + ' · ' + ARCH[def.archetype] + ' · Power ' + def.attrs.power + ', accuracy ' + def.attrs.accuracy + '. ' +
+          (saved ? 'Saved on this device. ' : 'Available this visit; local saving failed. ') + 'Team A is ready with Annetta. Press New Match to play.';
+      } catch (err) { EL.playerStatus.textContent = err.message; }
+      finally { submit.disabled = false; }
+    } }, field('Name', name), field('Nationality', nationality), field('Gender', gender), submit, EL.playerStatus);
+    return h('details', { class: 'adv', id: 'create-player-section' }, h('summary', null, 'Create player · Play with Annetta'), form);
   }
 
   function refillPickers() {

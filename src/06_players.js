@@ -16,7 +16,7 @@
       attrs: { power: 95, accuracy: 70, reflexes: 70, coverage: 68, stamina: 72, net: 82, defense: 56, wallRead: 62, tactics: 66 }, look: { skin: 0, hair: 0xd8b25c, hairStyle: 'short', outfit: [0xf28c28, 0x222222], racket: 0x222222 } },
     { id: 'p4', name: 'Camila Ferreyra', nick: 'Cami', gender: 'F', country: { code: 'ARG', name: 'Argentina' }, ranking: 3, hand: 'R', side: 'either', archetype: 'allRound',
       attrs: { power: 74, accuracy: 84, reflexes: 82, coverage: 80, stamina: 84, net: 80, defense: 80, wallRead: 82, tactics: 86 }, look: { skin: 1, hair: 0x4a2a16, hairStyle: 'ponytail', outfit: [0x8a5cf6, 0xffffff], racket: 0xff7ab6 } },
-    { id: 'p5', name: 'Sari Wulandari', nick: 'Sari Sprint', gender: 'F', country: { code: 'IDN', name: 'Indonesia' }, ranking: 6, hand: 'R', side: 'reves', archetype: 'counterpuncher',
+    { id: 'p5', name: 'Annetta Arslan H', nick: 'Annetta', gender: 'F', country: { code: 'IDN', name: 'Indonesia' }, ranking: 6, hand: 'R', side: 'reves', archetype: 'counterpuncher',
       attrs: { power: 62, accuracy: 82, reflexes: 90, coverage: 90, stamina: 86, net: 66, defense: 88, wallRead: 90, tactics: 84 }, look: { skin: 3, hair: 0x0b0b0d, hairStyle: 'bun', outfit: [0xe5484d, 0xfff4b3], racket: 0xfff4b3 } },
     { id: 'p6', name: 'Hana Kobayashi', nick: 'Glass Hana', gender: 'F', country: { code: 'JPN', name: 'Japan' }, ranking: 8, hand: 'L', side: 'reves', archetype: 'wallSpecialist',
       attrs: { power: 58, accuracy: 80, reflexes: 82, coverage: 78, stamina: 90, net: 60, defense: 90, wallRead: 92, tactics: 78 }, look: { skin: 1, hair: 0x14100c, hairStyle: 'bob', outfit: [0x14b8a6, 0xffffff], racket: 0x1e6bd6 } },
@@ -32,6 +32,28 @@
   const P = HPO.mod.players = {
     now: 0, list: [], byId: {}, ROSTER: ROSTER,
     roster() { return ROSTER; },
+    createCustom(input) {
+      const name = typeof input.name === 'string' ? input.name.trim().replace(/\s+/g, ' ') : '';
+      if (!name || name.length > 40 || /[\u0000-\u001f\u007f]/.test(name)) throw new Error('Enter a name of 1–40 characters.');
+      if (input.gender !== 'M' && input.gender !== 'F') throw new Error('Choose a gender.');
+      if (!Number.isInteger(input.seed) || input.seed < 1 || input.seed > 4294967295) throw new Error('Invalid player seed.');
+      const id = 'custom-' + input.seed.toString(16), existing = ROSTER.find(r => r.id === id);
+      if (existing) return existing;
+      const rg = HPO.makeRng(input.seed), attrs = {};
+      ['power', 'accuracy', 'reflexes', 'coverage', 'stamina', 'net', 'defense', 'wallRead', 'tactics'].forEach(k => { attrs[k] = rg.int(55, 95); });
+      const colors = [0x177dc5, 0xe5484d, 0x14b8a6, 0x8a5cf6, 0xf28c28, 0x123954];
+      const def = { id, name, nick: name.split(' ')[0], gender: input.gender, country: { code: 'IDN', name: 'Indonesia' },
+        seed: input.seed, custom: true, ranking: rg.int(10, 99), hand: rg.pick(['R', 'R', 'L']), side: 'either',
+        archetype: rg.pick(['netAttacker', 'wallSpecialist', 'allRound', 'smasher', 'precision', 'counterpuncher']), attrs,
+        look: { skin: rg.int(0, 3), hair: rg.pick([0x15110e, 0x4a2a16, 0x2a1d14]),
+          hairStyle: rg.pick(input.gender === 'F' ? ['ponytail', 'bun', 'bob', 'short'] : ['short', 'crop', 'long']),
+          outfit: [rg.pick(colors), rg.pick([0xffffff, 0xfff4b3, 0x123954])], racket: rg.pick(colors) } };
+      ROSTER.push(def); return def;
+    },
+    restoreCustom(def) {
+      if (!def || def.custom !== true || def.id !== 'custom-' + Number(def.seed).toString(16)) throw new Error('Invalid saved player.');
+      return P.createCustom(def);
+    },
     get(id) { return P.byId[id]; },
     team(t) { return P.list.filter(p => p.team === t); },
     other(p) { return P.list.find(q => q.team === p.team && q !== p); },

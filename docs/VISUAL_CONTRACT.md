@@ -3,6 +3,7 @@
 Extends CONTRACT.md §12. Everything here is browser-only (needs `THREE` r128 and DOM). Simulation code in `src/00–09` never depends on it.
 
 ## 0. Dev loop
+- Camera remains orthographic with a 40° default elevation and viewport-matched aspect ratio; opposite floor edges must remain parallel at every yaw. Floodlight occluders use a dedicated `light` cutaway role (5% visibility) triggered by any court-grid overlap.
 - `node tools/devpage.js` regenerates `dev.html` (loads `vendor/three.min.js` then every `src/*.js` in numeric order). Open it as `file:///C:/Hermes/project/annetta/padel/dev.html?...`.
 - `node tools/browser.js <url> <out.png> [waitMs]` prints console + errors and saves a screenshot (headless Chrome, SwiftShader WebGL). Programmatic: `require('./tools/browser').run({url,width,height,waitMs,evals:[],steps:[{eval},{wait},{shot},{key},{click}],shots:[]})`. **Look at your screenshots** (Read the png) before claiming visuals work.
 - Boot in the browser: `HPO.boot({container})` is called by `src/20_main.js`. Dev query flags: `?auto=0` don't auto-start a match, `?tod=day|dusk|night`, `?venue=classicBlue|terracotta|fastBlue|indoor`, `?cam=follow|club|close|top|free`, `?px=2`, `?seed=7`, `?debug=1`, `?test=1`.

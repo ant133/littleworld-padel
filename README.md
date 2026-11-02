@@ -2,6 +2,8 @@
 
 A physics-driven 3D pixel-art doubles padel diorama for annetta.dev.
 
+In **Match setup → Create player · Play with Annetta**, enter a name and gender to generate an Indonesian player with random stats and appearance. The creator selects a Women's or Mixed team with Annetta Arslan H; press **New Match** to begin. Created players remain selectable in eligible match types and are saved in this browser's IndexedDB. Saved players belong to the current site origin and device; clearing site data removes them.
+
 - Repository: https://github.com/ant133/littleworld-padel
 - Intended website: https://padel.annetta.dev
 - Default Pages address: https://ant133.github.io/littleworld-padel/

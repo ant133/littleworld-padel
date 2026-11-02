@@ -131,6 +131,12 @@ Streams: `rng.fork('ai')`, `'exec'` (shot execution error), `'ball'` (net-cord/m
 ## 5. Data models
 
 ### 5.1 Player
+Custom players: `players.createCustom({name, gender, seed})` creates an Indonesian roster definition using an isolated seeded RNG; `players.restoreCustom(def)` validates and restores a saved definition. UI owns IndexedDB persistence (`littleworld-padel`, store `players`), reports failures, and never uses localStorage. Custom IDs start with `custom-`; gender eligibility is enforced at match start (M=men, W=women, X=one of each per team). The Indonesian woman is Annetta Arslan H, and visitors may choose her as a teammate in Women's/Mixed matches.
+
+Exterior collisions: `court.setOutsideTriangles(triangles)` accepts plain world-space triangle vertices from the static world at boot, with no renderer dependency. Only exterior triangles near the playable enclosure are indexed. Contacts use `outsideItem`; all exterior ground/item contacts immediately end the rally, even during retrieval: after a legal opponent-floor bounce the hitter wins, otherwise the hitter loses. Airborne exits can still be recovered before an exterior contact.
+
+AI prioritizes reachable overheads, with increased default smash weights and reduced lob weights. When an incoming lob lands 0–2 m inside the back glass, a reachable overhead prefers a kick smash; unreachable/low contacts keep a physically feasible non-lob fallback.
+
 ```ts
 Player {
   id: 'p0'..'p7', name, nick, country:{code,name,flagId}, gender:'M'|'F',
