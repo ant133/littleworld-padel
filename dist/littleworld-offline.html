@@ -331,25 +331,15 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
 
 /* HUD */
 #gm-hud{position:absolute;inset:0;z-index:9;pointer-events:none}
-#gm-hud button{pointer-events:auto}
+#gm-hud button,#gm-hud select,#gm-hud label{pointer-events:auto}
 .gm-icons{position:absolute;right:10px;top:10px;display:flex;gap:6px}
 .gm-ib{width:40px;height:40px;border:1px solid var(--ink);background:var(--cream);box-shadow:3px 3px 0 #12399433;cursor:pointer;font:800 13px var(--head);padding:0;display:grid;place-items:center;transition:background .15s}
 .gm-ib:hover{background:var(--hl)}
 .gm-ib.txt{font-size:14px}.gm-ib.sm{font-size:10px;letter-spacing:.12em}
-.gm-ib.snd{font-size:19px;position:relative}
+.gm-ib.snd svg{display:block}
 .gm-ib.snd.off{color:#12395488}
-.gm-ib.snd.off::after{content:'';position:absolute;left:8px;right:8px;top:50%;height:2px;background:var(--bad);transform:rotate(-40deg)}
 .gm-coach{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);width:min(1000px,calc(100% - 20px));padding:8px 10px;background:var(--card);border:1px solid var(--ink);box-shadow:5px 6px 0 #1264992e}
 .gm-coachrow{display:flex;align-items:center;gap:10px}
-.gm-chips{display:flex;align-items:center;gap:6px;flex:1;min-width:0;overflow-x:auto;scrollbar-width:none;padding:2px}
-.gm-chips::-webkit-scrollbar{display:none}
-.gm-chip{flex:none;min-height:40px;padding:6px 12px;border:1px solid var(--ink);background:#fff;font:800 14px var(--head);letter-spacing:-.03em;cursor:pointer}
-.gm-chip:hover{background:var(--hl)}
-.gm-chip[aria-pressed=true]{background:var(--blue);color:#fff;box-shadow:2px 2px 0 var(--ink)}
-.gm-chip.m{font-size:13px;padding:6px 10px}
-.gm-chip.m[aria-pressed=true]{background:var(--ink)}
-.gm-sep{flex:none;width:1px;height:24px;background:var(--hair);margin:0 4px}
-.gm-ctag,.gm-mtag{flex:none}
 .gm-acts2{display:flex;gap:6px;flex:none}
 .gm-act{min-height:40px;padding:6px 12px;border:1px solid var(--ink);background:var(--cream);font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap}
 .gm-act:disabled{opacity:.4;cursor:not-allowed}
@@ -373,10 +363,10 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   .gm-icons{flex-direction:column;top:10px;right:8px;gap:5px}
   .gm-ib{width:44px;height:44px}
   .gm-coach{bottom:8px;width:calc(100% - 16px);padding:6px}
-  .gm-ctag,.gm-mtag{display:none}
   .gm-coachrow{gap:6px}
-  .gm-chip{min-height:44px;padding:6px 11px;font-size:13.5px}
-  .gm-act{min-height:44px;padding:4px 8px;font-size:11.5px;line-height:1.05;white-space:normal;width:68px}
+  .gm-select{min-height:44px;font-size:13px;padding-right:22px;background-position:right 7px center}
+  .gm-pick.mid .gm-select{width:84px}
+  .gm-act{min-height:44px;padding:4px 6px;font-size:11.5px;line-height:1.05;white-space:normal;width:62px}
   .gm-ticker{bottom:72px;font-size:12.5px}
   .gm-skip{bottom:126px;right:8px}
   .gm-courts{grid-template-columns:repeat(2,1fr)}
@@ -387,7 +377,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   .gm-h{font-size:26px}
   .gm-ib{width:36px;height:36px}
   .gm-coach{padding:4px 6px}
-  .gm-chip,.gm-act{min-height:36px}
+  .gm-select,.gm-act{min-height:36px}
   .gm-ticker{bottom:52px}
   .sb-card{transform:scale(.85);transform-origin:top left}
   .mode-play #toasts{display:none}
@@ -399,9 +389,63 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
 .gm-card>.gm-stk{position:absolute;right:14px;top:16px}
 
 @media (max-width:899px){.gm-skip{min-height:44px}}
-@media (max-height:520px){.gm-ib{width:40px;height:40px}.gm-chip,.gm-act{min-height:40px}}
+@media (max-height:520px){.gm-ib{width:40px;height:40px}.gm-select,.gm-act{min-height:40px}}
 
 @media (max-height:520px){.gm-skip{right:58px;top:10px;bottom:auto}}
+
+/* Coach dropdowns (Play mode) */
+.gm-pick{display:flex;flex-direction:column;gap:1px;flex:1 1 0;min-width:84px}
+.gm-pick.mid{flex:0 0 auto;min-width:0}
+.gm-pick>span{font:700 9px var(--head);letter-spacing:.2em;text-transform:uppercase;color:var(--tag);line-height:1.2}
+.gm-select{appearance:none;-webkit-appearance:none;width:100%;min-height:40px;padding:6px 24px 6px 9px;border:1px solid var(--ink);border-radius:0;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23123954' stroke-width='2'/%3E%3C/svg%3E") no-repeat right 9px center;color:var(--ink);font:800 14px var(--head);letter-spacing:-.03em;cursor:pointer;text-overflow:ellipsis}
+.gm-select:hover,.gm-select:focus-visible{background-color:var(--hl)}
+
+/* Callouts: comic bursts + pre-match state ribbon + flashing replay label */
+.hpo-callouts{position:absolute;inset:0;z-index:10;overflow:hidden;pointer-events:none;font-family:var(--head)}
+.hpo-co{position:absolute;left:0;top:0;width:0;height:0;display:flex;justify-content:center;align-items:flex-end;will-change:transform}
+.hpo-co.big{left:50%;top:27%;align-items:flex-start}
+.hpo-co-in{position:relative;flex:none;padding:.42em .95em .38em;font-size:clamp(24px,6.4vw,44px);animation:hpo-co-pop 1.5s cubic-bezier(.2,.9,.3,1) both}
+.hpo-co.big .hpo-co-in{font-size:clamp(34px,11.5vw,88px);padding:.5em 1.05em .46em}
+.hpo-co-star{position:absolute;left:-14%;top:-24%;width:128%;height:148%;overflow:visible;animation:hpo-co-throb .16s steps(2) infinite alternate}
+.hpo-co-star .sh{fill:var(--ink);transform:translate(2.2px,3px)}
+.hpo-co-star .fl{fill:var(--co);stroke:var(--ink);stroke-width:3;vector-effect:non-scaling-stroke;stroke-linejoin:miter}
+.hpo-co-t{position:relative;display:block;font-weight:900;font-style:italic;line-height:1;letter-spacing:-.045em;color:#fff;white-space:pre;text-align:center;
+  text-shadow:2px 0 0 var(--ink),-2px 0 0 var(--ink),0 2px 0 var(--ink),0 -2px 0 var(--ink),2px 2px 0 var(--ink),-2px -2px 0 var(--ink),2px -2px 0 var(--ink),-2px 2px 0 var(--ink),3px 4px 0 var(--ink)}
+@keyframes hpo-co-pop{
+  0%{transform:scale(.12) rotate(calc(var(--rot) - 20deg));opacity:0}
+  9%{transform:scale(1.5) rotate(calc(var(--rot) + 5deg));opacity:1}
+  17%{transform:scale(.9) rotate(var(--rot))}
+  25%{transform:scale(1.1) rotate(var(--rot))}
+  33%{transform:scale(1) rotate(var(--rot))}
+  80%{transform:scale(1.04) rotate(var(--rot));opacity:1}
+  100%{transform:scale(1.3) rotate(var(--rot)) translateY(-14px);opacity:0}
+}
+@keyframes hpo-co-throb{from{transform:scale(1) rotate(0)}to{transform:scale(1.045) rotate(1.4deg)}}
+.hpo-shake1 canvas{animation:hpo-shake1 .42s linear both}
+.hpo-shake2 canvas{animation:hpo-shake2 .48s linear both}
+@keyframes hpo-shake1{0%,100%{transform:none}15%{transform:translate(-4px,2px)}30%{transform:translate(4px,-3px)}45%{transform:translate(-3px,-2px)}60%{transform:translate(3px,2px)}80%{transform:translate(-1px,1px)}}
+@keyframes hpo-shake2{0%,100%{transform:none}10%{transform:translate(-9px,4px)}22%{transform:translate(8px,-6px)}34%{transform:translate(-7px,-4px)}46%{transform:translate(7px,5px)}58%{transform:translate(-5px,2px)}72%{transform:translate(3px,-2px)}86%{transform:translate(-2px,1px)}}
+
+.hpo-state{position:absolute;left:50%;top:30%;transform:translateX(-50%);display:grid;grid-template-columns:auto 1fr;column-gap:.5em;align-items:center;padding:.3em .85em .32em;background:var(--cream);border:2px solid var(--ink);box-shadow:6px 7px 0 #1264992e;color:var(--ink);white-space:nowrap}
+.hpo-state .dot{grid-row:1/3;width:.75em;height:.75em;border-radius:50%;background:#e5484d;box-shadow:0 0 0 0 #e5484d99;animation:hpo-live 1s ease-out infinite;font-size:clamp(22px,6.4vw,44px)}
+.hpo-state b{font:900 clamp(22px,6.4vw,44px)/1.05 var(--head);letter-spacing:-.05em}
+.hpo-state small{font:700 clamp(9px,2.2vw,12px) var(--head);letter-spacing:.2em;text-transform:uppercase;color:var(--tag)}
+.hpo-state.in{animation:hpo-state-in .45s cubic-bezier(.2,.9,.3,1) both}
+@keyframes hpo-state-in{from{opacity:0;transform:translateX(-50%) scale(.7)}}
+@keyframes hpo-live{to{box-shadow:0 0 0 .6em #e5484d00}}
+
+.hpo-replay{position:absolute;left:50%;bottom:15%;transform:translateX(-50%) skewX(-8deg);padding:.12em .55em .14em;background:#e5484d;border:3px solid var(--ink);box-shadow:6px 7px 0 #1264992e;color:#fff;font:900 clamp(30px,10.5vw,72px)/1 var(--head);letter-spacing:-.04em;font-style:italic;white-space:nowrap;text-shadow:3px 3px 0 var(--ink);animation:hpo-flash .9s steps(1,end) infinite}
+@keyframes hpo-flash{0%{opacity:1;background:#e5484d;color:#fff}50%{opacity:.18;background:#fff4b3;color:#e5484d}}
+.gm-covered .hpo-callouts{visibility:hidden}
+
+/* Match centre toggle (Play mode) */
+.mode-play #sb{left:30px;transition:transform .28s cubic-bezier(.3,.8,.3,1)}
+.mode-play.gm-sb-off #sb{transform:translateX(calc(-100% - 40px))}
+.gm-sbtab{position:absolute;left:0;top:12px;width:26px;height:56px;padding:0;display:grid;place-items:center;border:1px solid var(--ink);border-left:0;background:var(--cream);color:var(--ink);box-shadow:3px 3px 0 #12399433;cursor:pointer}
+.gm-sbtab:hover{background:var(--hl)}
+.gm-sbtab svg{transition:transform .28s}
+.gm-sb-off .gm-sbtab svg{transform:rotate(180deg)}
+@media (max-height:520px){.gm-sbtab{height:44px}}
 
 </style></head><body>
 <div id="app">
@@ -576,7 +620,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   }
 
   HPO.initOrder = ['palette', 'court', 'nav', 'ball', 'shots', 'players', 'ai', 'rules', 'match',
-    'render', 'worldCourt', 'worldIsland', 'worldClub', 'rigs', 'actors', 'crowd', 'fx', 'replay', 'ceremony',
+    'render', 'worldCourt', 'worldIsland', 'worldClub', 'rigs', 'actors', 'crowd', 'fx', 'replay', 'ceremony', 'callouts',
     'audio', 'commentary', 'ui'];
   HPO.boot = function (opts) {
     const ctx = { HPO: HPO, BUS: HPO.BUS, rng: HPO.rng, cfg: HPO.cfg, THREE: root.THREE, opts: opts || {} };
@@ -1654,7 +1698,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     const maxd = (dl > 0 && Math.hypot(dvx, dvz) < Math.hypot(p.vel.x, p.vel.z) ? 13 : a) * dt;
     if (dl > maxd) { p.vel.x += dvx2 / dl * maxd; p.vel.z += dvz2 / dl * maxd; } else { p.vel.x = dvx; p.vel.z = dvz; }
     p.pos.x += p.vel.x * dt; p.pos.z += p.vel.z * dt;
-    nav.clamp(p.pos, nav.bounds(sx, p.retrieving));
+    nav.clamp(p.pos, nav.bounds(Math.abs(p.pos.x) > 0.55 ? Math.sign(p.pos.x) : sx, p.retrieving));
     p.speed = Math.hypot(p.vel.x, p.vel.z);
 
     const step = p.speed * dt;
@@ -1813,7 +1857,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       const rcv = (receiverId && P.byId[receiverId]) || chooseReceiver(rec, bz);
       const rp = P.other(rcv);
       out[rcv.id] = { x: rx * 8.0, z: bz > 0 ? 2.4 : -2.4 };
-      out[rp.id] = { x: rx * 2.6, z: bz > 0 ? -2.0 : 2.0 };
+      out[rp.id] = { x: rx * SERVE_BACK, z: bz > 0 ? -2.0 : 2.0 };   // both receivers start behind the service line (6.95 m)
       return { map: out, receiver: rcv.id };
     },
 
@@ -2046,6 +2090,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     updateFormation(team);
 
     const incoming = B.state === 'live' && B.lastHitTeam !== team && B.lastHitTeam !== null;
+    const serveReturn = incoming && B.hitsSinceServe === 1;
     let roles = null;
     if (incoming) {
       if (now - assignAt[team] > 0.08) { assignAt[team] = now; roles = pickInterceptor(team, ps.filter(q => !q.scripted).length ? ps.filter(q => !q.scripted) : ps); tm.roles = roles; }
@@ -2059,7 +2104,8 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       else {
         const t = pos[p.id];
         const arrive = tm.formation === 'attack' ? 0.9 : 0.8;
-        p.intent = { type: 'move', x: t.x, z: t.z, cap: arrive };
+        const tx = serveReturn ? sx * Math.max(Math.abs(t.x), SERVE_BACK) : t.x;
+        p.intent = { type: 'move', x: tx, z: t.z, cap: arrive };
       }
     });
   }
@@ -2106,6 +2152,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   }
 
   const BASE = { attack: [2.2, 2.2], neutral: [2.8, 5.6], defend: [7.0, 7.0] };
+  const SERVE_BACK = 7.6; // metres from the net: just behind the 6.95 m service line
 
   function updateFormation(team) {
     const tm = teams[team], B = HPO.mod.ball.state, m = mods(team);
@@ -2942,9 +2989,9 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   function* changeover(kind) {
     BUS.emit('changeover:start', { kind: kind });
     const pl = P();
-    pl.list.forEach(function (p) { p.intent = { type: 'move', x: HPO.court.sides[p.team] * 1.2, z: (p.slot ? -1 : 1) * 4.2, cap: 0.5 }; });
+    pl.list.forEach(function (p) { p.retrieving = true; p.intent = { type: 'move', x: HPO.court.sides[p.team] * 1.2, z: (p.slot ? -1 : 1) * 4.2, cap: 0.5 }; });
     yield wait(kind === 'set' ? 9 : 5);
-    pl.list.forEach(p => { p.anim = { clip: 'drink', t: 0, rate: 1 }; });
+    pl.list.forEach(p => { p.retrieving = false; p.anim = { clip: 'drink', t: 0, rate: 1 }; });
     pl.rest(kind === 'set' ? 0.12 : 0.05);
     BUS.emit('changeover:end', { kind: kind });
   }
@@ -2960,6 +3007,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     const serverInfo = R().startPoint();
     const players = P();
     const server = players.get(serverInfo.playerId);
+    players.list.forEach(function (p) { if (p.pos.x * HPO.court.sides[p.team] < 0) p.pos = { x: -p.pos.x, z: p.pos.z }; });
     yield wait(0.4);
     let guard = 0;
     for (;;) {
@@ -3049,6 +3097,8 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   const YAW0 = Math.PI / 4;           // yaw of quarter-turn index 0
   const CAM_D = 140;                  // camera distance from its target (orthographic: only affects clipping/fog)
   const MODES = ['follow', 'club', 'close', 'top', 'free'];
+  const ZOOM_MAX = 18;                // orthographic half-height can shrink to well under a metre
+  const FOLLOW_HALF = 11.5;           // TV follow: visible half-height in metres at zoom 1 (landscape)
 
   const TOD = {
     day:    { night: 0,    lamps: 0,   indoor: false, skyTop: 0x4cc3ee, skyBottom: 0xdff3ff, fog: 0xcdeeff, sun: 0xfff2d0, sunI: 0.78, amb: 0xdbe9ff, ground: 0xa89878, ambI: 0.62, sunDir: [-0.5, 1.0, 0.6] },
@@ -3250,6 +3300,8 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       R._P = { cur: R._mkParams(), from: R._mkParams(), to: R._mkParams(), t: 1 };
       R.todParams = R._P.cur;
       R._setTod(opts.venue === 'indoor' ? 'indoor' : (opts.tod || 'day'), true);
+
+      if (HPO.cfg.mobile) R.cameraMode = 'follow';
 
       R._quality = HPO.cfg.mobile ? 'low' : 'high';
       R._applyQuality(true);
@@ -3524,8 +3576,8 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       v.yawK += dir > 0 ? 1 : -1; R.yawIndex = ((v.yawK % 4) + 4) % 4;
       if (R.cameraMode === 'free') v.yawT = YAW0 + v.yawK * Math.PI / 2;
     },
-    zoom(d) { R.view.zoom = U.clamp(R.view.zoom * Math.pow(1.12, d), 0.45, 5); }, // delta > 0 zooms IN
-    resetView() { const v = R.view; v.zoom = 1; v.yawK = 0; R.yawIndex = 0; R.followId = null; R.followBall = true; v.tTarget.set(0, 0, 0); R.setCameraMode('club'); },
+    zoom(d) { R.view.zoom = U.clamp(R.view.zoom * Math.pow(1.12, d), 0.45, ZOOM_MAX); }, // delta > 0 zooms IN
+    resetView() { const v = R.view; v.zoom = 1; v.yawK = 0; R.yawIndex = 0; R.followId = null; R.followBall = true; v.tTarget.set(0, 0, 0); R.setCameraMode(HPO.cfg.mobile ? 'follow' : 'club'); },
     followPlayer(id) { R.followId = id || null; if (id) R.setCameraMode('follow'); },
     setFollowBall(b) { R.followBall = !!b; if (b) R.followId = null; },
     pan(dx, dz) { R._toFree(); const v = R.view; v.tTarget.x = U.clamp(v.tTarget.x + dx, -70, 70); v.tTarget.z = U.clamp(v.tTarget.z + dz, -70, 70); },
@@ -3545,18 +3597,20 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
 
     resize() {
       if (!R.renderer) return;
-      const T = R.THREE, c = R.container, w = Math.max(16, c.clientWidth), h = Math.max(16, c.clientHeight), N = R.pixelSize;
-      const lw = Math.ceil(w / N), lh = Math.ceil(h / N);
-      if (lw === R._lw && lh === R._lh && R._rt) { R._cssN = N; R.aspect = w / h; R.renderer.domElement.style.width = w + 'px'; R.renderer.domElement.style.height = h + 'px'; return; }
+      const T = R.THREE, c = R.container, dpr = Math.max(1, window.devicePixelRatio || 1);
+      const W = Math.max(16, Math.round(c.clientWidth * dpr)), H = Math.max(16, Math.round(c.clientHeight * dpr));
+      const N = Math.max(1, Math.round(R.pixelSize * dpr));
+      const lw = Math.ceil(W / N), lh = Math.ceil(H / N), cssW = lw * N / dpr, cssH = lh * N / dpr;
+      R.aspect = lw / lh; R._cssN = N;
+      if (lw === R._lw && lh === R._lh && R._rt) { R.renderer.domElement.style.width = cssW + 'px'; R.renderer.domElement.style.height = cssH + 'px'; return; }
       R._lw = lw; R._lh = lh;
       R.renderer.setSize(lw, lh, false);
-      const cv = R.renderer.domElement; cv.style.width = w + 'px'; cv.style.height = h + 'px';
+      const cv = R.renderer.domElement; cv.style.width = cssW + 'px'; cv.style.height = cssH + 'px';
       if (R._rt) { R._rt.dispose(); if (R._rt.depthTexture) R._rt.depthTexture.dispose(); }
       const rt = new T.WebGLRenderTarget(lw, lh, { minFilter: T.NearestFilter, magFilter: T.NearestFilter, format: T.RGBAFormat, type: T.UnsignedByteType, depthBuffer: true, stencilBuffer: false });
       if (R._hasDepth) { const dt = new T.DepthTexture(lw, lh); dt.type = T.UnsignedIntType; dt.format = T.DepthFormat; dt.minFilter = T.NearestFilter; dt.magFilter = T.NearestFilter; rt.depthTexture = dt; }
       R._rt = rt;
       R._postU.tColor.value = rt.texture; R._postU.tDepth.value = rt.depthTexture; R._postU.uRes.value.set(lw, lh);
-      R.aspect = w / h;
     },
 
     _basis(yaw, el) { // right/up vectors and direction towards the camera
@@ -3589,7 +3643,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       const fp = R.followId && HPO.mod.players && HPO.mod.players.byId && HPO.mod.players.byId[R.followId];
       if (fp && fp.pos) { x = fp.pos.x; z = fp.pos.z; if (bs && bs.p && bs.state !== 'dead') { x = x * 0.8 + bs.p.x * 0.2; z = z * 0.8 + bs.p.z * 0.2; } }
       else if (R.followBall && bs && bs.p && bs.state !== 'dead') { x = bs.p.x * 0.65 + mx * 0.35; z = bs.p.z * 0.65 + mz * 0.35; }
-      out.set(U.clamp(x, -9, 9), 0, U.clamp(z, -4.5, 4.5));
+      out.set(U.clamp(x, -9, 9), 0, U.clamp(z, -7.5, 7.5)); // the walk-on queue stands outside the sideline (z = 6.9)
     },
     _updateCamera(dt) {
       const v = R.view, cam = R.camera, t = R._tmp, mode = R.cameraMode, pts = R._fitPts();
@@ -3601,7 +3655,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       if (mode === 'club') { R._fit(pts.club, v.yawT, v.elT, 1.02, f); baseHalf = f.half; v.tTarget.copy(t.right).multiplyScalar(f.cx).addScaledVector(t.up, f.cy); }
       else if (mode === 'close') { R._fit(pts.close, v.yawT, v.elT, 1.08, f); baseHalf = f.half; v.tTarget.copy(t.right).multiplyScalar(f.cx).addScaledVector(t.up, f.cy); }
       else if (mode === 'top') { R._fit(pts.top, v.yawT, v.elT, 1.06, f); baseHalf = f.half; v.tTarget.set(0, 0, 0).addScaledVector(t.right, f.cx).addScaledVector(t.up, f.cy); }
-      else if (mode === 'follow') { R._followPoint(v.tTarget); baseHalf = 11.5 * Math.max(1, 1.5 / R.aspect); kT = 3; }
+      else if (mode === 'follow') { R._followPoint(v.tTarget); baseHalf = FOLLOW_HALF * Math.max(1, 1.5 / R.aspect) * (HPO.cfg.mobile ? 0.55 : 1); kT = 3; }
       else { baseHalf = v.freeBase; kT = 10; }
       v.halfT = baseHalf / v.zoom;
       v.target.lerp(v.tTarget, K(dt, kT));
@@ -3707,7 +3761,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
         const a = HPO.mod.actors; if (a && a.sync) a.sync(M && M.acc ? M.acc / HPO.cfg.SIM_DT : 0, dt);
         HPO.initOrder.concat(['replay', 'commentary']).forEach(function (n) {
           const m = HPO.mod[n];
-          if (m && m.update && (/^world/.test(n) || n === 'crowd' || n === 'fx' || n === 'ceremony' || n === 'audio' || n === 'ui' || n === 'replay')) { try { m.update(dt, R.t); } catch (e) { U.logError('update:' + n, e); } }
+          if (m && m.update && (/^world/.test(n) || n === 'crowd' || n === 'fx' || n === 'ceremony' || n === 'callouts' || n === 'audio' || n === 'ui' || n === 'replay')) { try { m.update(dt, R.t); } catch (e) { U.logError('update:' + n, e); } }
         });
         for (let i = 0; i < R._hooks.length; i++) R._hooks[i](dt, R.t);
         R.renderNow(dt);
@@ -8051,7 +8105,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     root.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:6;overflow:hidden;font-family:Manrope,system-ui,sans-serif';
     const mk = (css, parent) => { const d = document.createElement('div'); d.style.cssText = css; d.hidden = true; (parent || root).appendChild(d); return d; };
     DOM.banner = mk('position:absolute;left:50%;top:14%;transform:translateX(-50%);background:#fffaf0;color:#123954;border:2px solid #123954;box-shadow:6px 7px 0 #1264992e;padding:10px 22px;text-align:center;font-weight:800;letter-spacing:-.03em;font-size:clamp(16px,3.2vw,30px);max-width:86%');
-    DOM.badge = mk('position:absolute;left:14px;bottom:9%;background:#e5484d;color:#fff;font-weight:800;font-size:13px;letter-spacing:.2em;padding:5px 10px;border:2px solid #123954');
+    DOM.badge = mk(''); DOM.badge.className = 'hpo-replay'; // large flashing label, styled in shell.css
     DOM.verdict = mk('position:absolute;left:50%;top:22%;transform:translateX(-50%);color:#fff;font-weight:800;font-size:clamp(40px,9vw,92px);letter-spacing:-.04em;text-shadow:4px 5px 0 #123954;padding:0 18px');
     DOM.bars = mk('position:absolute;inset:0;box-shadow:inset 0 0 0 9999px transparent');
     DOM.bars.style.cssText = 'position:absolute;left:0;right:0;top:0;height:5%;background:#0b1a2a;opacity:.85';
@@ -8072,6 +8126,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     const r = RN(), s = cam.saved; cam.saved = null; if (!r || !s) return;
     try { if (r.followPlayer) r.followPlayer(null); r.setCameraMode(s.mode || 'club'); if (r.view && s.zoom && s.mode !== 'free') r.view.zoom = s.zoom; } catch (e) { U.logError('cam.restore', e); }
   }
+  function tvFollow(r) { if (r.followPlayer) r.followPlayer(null); if (r.setFollowBall) r.setFollowBall(true); r.setCameraMode('follow'); }
   function camFocus(x, z, half, y) { // half = visible half-height in metres
     const r = RN(); if (!r || !r.view) return;
     camSave(); if (r.cameraMode !== 'free') r.setCameraMode('free');
@@ -8240,7 +8295,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       if (RS.label.material.map) RS.label.material.map.dispose();
       RS.label.material.map = labelTex(info.margin !== null ? info.margin.toFixed(1) + ' cm' : '', info.verdict); RS.label.material.needsUpdate = true;
       RS.label.position.set(info.p.x, 1.6, info.p.z); RS.label.visible = false;
-    } else if (r && r.setCameraMode) { r.setCameraMode('follow'); if (r.setFollowBall) r.setFollowBall(true); }
+    } else if (r) tvFollow(r);
     BUS.emit('replay:start', { kind: kind });
     stepReplay(0);
     return true;
@@ -8376,7 +8431,25 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     p._cm = { walk: false }; p.intent = { type: 'hold', face: face === undefined ? p.heading : face };
     if (p.anim.clip !== clip) p.anim = { clip: clip, t: 0, rate: 1 };
   }
+  function withGate(p, pts) {
+    const inside = q => Math.abs(q.z) < 5.2 && Math.abs(q.x) < 10, out = []; let cur = { x: p.pos.x, z: p.pos.z };
+    pts.forEach(function (pt) {
+      if (cur.x * pt.x < 0) {
+        const t = -cur.x / (pt.x - cur.x), zc = cur.z + t * (pt.z - cur.z);
+        if (Math.abs(zc) < 5.2) { // this leg would cut through the net
+          const zs = cur.z >= 0 ? 1 : -1, sa = cur.x < 0 ? -1 : 1;
+          if (inside(cur)) out.push({ x: sa * 0.55, z: zs * 4.2 });
+          out.push({ x: 0, z: zs * 5.8 });
+          if (inside(pt)) out.push({ x: -sa * 0.55, z: zs * 4.2 });
+        }
+      }
+      out.push(pt); cur = pt;
+    });
+    return out;
+  }
   function* walkPath(p, pts, cap, face, clipAfter) {
+    p.retrieving = true; // wide walking bounds: an own-half clamp would block anyone heading for the far side
+    pts = withGate(p, pts);
     for (let i = 0; i < pts.length; i++) {
       if (skipped()) return;
       const pt = pts[i], hd = Math.atan2(pt.z - p.pos.z, pt.x - p.pos.x);
@@ -8437,7 +8510,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       CM.skipping = false; CM.active = true; ensureDriver(); clearProps();
       const c = crowd(); if (c) { c.setMood(1); c.react(1, 'applause'); }
       stagePlayers();
-      const r = RN(); camSave(); if (r) r.setCameraMode('club');
+      const r = RN(); camSave(); if (r) tvFollow(r);
       banner(title(), 'Welcome to the club', 7000);
       say('Ladies and gentlemen, welcome to the ' + title() + '.');
       try {
@@ -8450,7 +8523,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       CM.active = true; ensureDriver();
       const P = PL(), c = crowd();
       if (!P.list.length) return;
-      const r = RN(); camSave(); if (r) r.setCameraMode('close');
+      const r = RN(); camSave(); if (r) tvFollow(r);
       if (c) c.react(2, 'applause');
       stagePlayers();
       try {
@@ -8519,9 +8592,9 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       try {
         if (c) c.setMood(1);
         yield* par(P.list.map(function (p) {
-          const sx = HPO.court.sides[p.team], gx = sx * 0.55, off = p.slot ? 0.5 : -0.5, bx = sx * 5 + (p.slot ? 0.6 : -0.6);
+          const sx = HPO.court.sides[p.team], cs = p.pos.x < 0 ? -1 : 1, off = p.slot ? 0.5 : -0.5, bx = sx * 5 + (p.slot ? 0.6 : -0.6);
           p.retrieving = true;
-          return () => walkPath(p, [{ x: gx + off * 0.4, z: -4.0 }, { x: gx + off * 0.4, z: -5.7 }, { x: bx, z: -5.8 }], 0.5, Math.PI / 2);
+          return () => walkPath(p, [{ x: cs * 0.55 + off * 0.4, z: -4.0 }, { x: off * 0.4, z: -5.7 }, { x: bx, z: -5.8 }], 0.5, Math.PI / 2);
         }), 10);
         if (skipped()) return;
         P.list.forEach(p => stand(p, 'drink', Math.PI / 2));
@@ -10011,7 +10084,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     const t = document.getElementById('title'); if (t) t.textContent = HPO.cfg.TITLE();
     loadFonts();
     const R = mod('render');
-    S.px = (R && R.pixelSize) || (HPO.cfg.mobile ? 3 : 2);
+    S.px = (R && R.pixelSize) || 2;
     if (R && R.cameraMode) S.cam = R.cameraMode;
     S.cam = (R && R.cameraMode) || 'club';
     if (R && R.todParams && R.todParams.tod && R.todParams.tod !== 'indoor') S.tod = R.todParams.tod;
@@ -10554,8 +10627,8 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   }
   function buildAudioSec() {
     const b = [];
-    EL.soundBtn = h('button', { class: 'btn block', type: 'button', id: 'btn-sound', onclick: () => setSound(!S.soundOn), 'aria-pressed': 'false' }, 'Sound off ♪');
-    syncs.push(() => { EL.soundBtn.textContent = S.soundOn ? (S.muted ? 'Sound on (muted) ♪' : 'Sound on ♪') : 'Sound off ♪'; EL.soundBtn.setAttribute('aria-pressed', S.soundOn ? 'true' : 'false'); EL.soundBtn.classList.toggle('primary', S.soundOn); });
+    EL.soundBtn = h('button', { class: 'btn block', type: 'button', id: 'btn-sound', onclick: () => setSound(!S.soundOn), 'aria-pressed': 'false' }, 'Sound off');
+    syncs.push(() => { EL.soundBtn.textContent = S.soundOn ? (S.muted ? 'Sound on (muted)' : 'Sound on') : 'Sound off'; EL.soundBtn.setAttribute('aria-pressed', S.soundOn ? 'true' : 'false'); EL.soundBtn.classList.toggle('primary', S.soundOn); });
     b.push(EL.soundBtn);
     [['fx', 'Effects'], ['crowd', 'Crowd'], ['commentary', 'Commentary'], ['ambience', 'Ambience']].forEach(function (bus) {
       b.push(field(bus[1], slider(0, 1, 0.05, () => S.vol[bus[0]], v => { S.vol[bus[0]] = v; const A = mod('audio'); if (A && A.setVolume) safe(() => A.setVolume(bus[0], v), 'vol'); BUS.emit('ui:setting', { key: 'volume:' + bus[0], value: v }); }, 'rg-vol-' + bus[0])));
@@ -10965,7 +11038,6 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       const rp = mod('replay'); const M = mod('match');
       if (rp && rp.play && !rp.active && S.coachClaimed && e.team === S.coachTeam && !(M && M.cfg && M.cfg.fast)) safe(() => rp.play({ kind: 'challenge' }), 'replay');
     });
-    BUS.on('replay:start', function (e) { toast(e && e.kind === 'challenge' ? 'Eagle Eye replay' : 'Replay', { kind: 'info', ms: 2500 }); });
     BUS.on('ball:contact', function (e) { lastSurf = e.surf; lastSurfAt = performance.now(); });
     BUS.on('cam:mode', function (e) { S.cam = e.mode; sync(); });
     BUS.on('ui:setting', function (e) {
@@ -11076,7 +11148,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     const tod = q.get('tod') || 'day', venue = q.get('venue') || 'classicBlue';
     HPO.boot({ container: document.getElementById('stage') || document.body, tod: tod, venue: venue });
     const R = HPO.mod.render;
-    if (R && R.setPixelSize) R.setPixelSize(+q.get('px') || (HPO.cfg.mobile ? 3 : 2));
+    if (R && R.setPixelSize) R.setPixelSize(+q.get('px') || 2);
     if (q.get('cam') && R) R.setCameraMode(q.get('cam'));
     if (q.get('auto') !== '0' && HPO.mod.match) {
       HPO.mod.match.start({ format: q.get('format') || 'quick', scoring: q.get('scoring') || 'golden', type: q.get('type') || 'M', venue: venue, seed: +q.get('seed') || 7, fast: q.get('fast') === '1' });
@@ -11098,6 +11170,11 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   const PRESETS = [['balanced', 'Balanced'], ['aggressive', 'Attack'], ['safe', 'Safe'], ['controlNet', 'Net'], ['defensive', 'Lobs'], ['moreSmashes', 'Smash']];
   const COURTS = [['classicBlue', 'Classic Blue'], ['terracotta', 'Terracotta'], ['fastBlue', 'Fast Blue'], ['indoor', 'Indoor']];
   const CAM_CYCLE = [['close', 'Close-up'], ['follow', 'TV follow'], ['club', 'Whole club'], ['top', 'Top-down']];
+  const defCam = () => (HPO.cfg.mobile ? 'follow' : 'club');
+  const SVG = 'xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
+  const SND_ON = '<svg ' + SVG + '><path d="M11 5 6 9H3v6h3l5 4z" fill="currentColor"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
+  const SND_OFF = '<svg ' + SVG + '><path d="M11 5 6 9H3v6h3l5 4z" fill="currentColor"/><path d="m16 9 5 6M21 9l-5 6"/></svg>';
+  const CHEV = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg>';
   const PRE = { intro: 1, walkon: 1, introductions: 1, toss: 1, warmup: 1 };
   const NATION_NAME = {}; NATIONS.forEach(n => { NATION_NAME[n[0]] = n[1]; });
 
@@ -11176,12 +11253,12 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     S.coachClaimed = false; const M = mod('match'); if (M) M.coachTeam = null;
     S.type = 'M'; S.speed = 1; S.seed = '';
     API.newMatch({ draw: true });
-    API.setCam('club');
+    API.setCam(defCam());
     const A = mod('audio'); void A;
   }
   function startWatch(first) {
     closeScreen(); closePause(); setSt('watch'); clearHighlights();
-    if (!first) API.setCam('club');
+    if (!first) API.setCam(defCam());
     updateVisibility();
   }
 
@@ -11189,7 +11266,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     closePause(); clearHighlights();
     setSt('title');
     const M = mod('match');
-    if (!keep) { const R = mod('render'); if (R && R.cameraMode !== 'club') API.setCam('club'); if (M && M.coachTeam) { startAttract(); } }
+    if (!keep) { const R = mod('render'); if (R && R.cameraMode !== defCam()) API.setCam(defCam()); if (M && M.coachTeam) { startAttract(); } }
     if (M && M.paused) M.pause(false);
     const saved = (S.saved && S.saved.length) ? S.saved[S.saved.length - 1] : null;
     const an = pdef(AN);
@@ -11338,7 +11415,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     setSt('playing'); hlKey = '';
     API.newMatch();
     const M = mod('match'); if (M) M.coachTeam = 'A';
-    G.camPref = 'close'; API.setCam('close');
+    G.camPref = HPO.cfg.mobile ? 'follow' : 'close'; API.setCam(G.camPref);
     updateHud(true);
   }
 
@@ -11348,17 +11425,19 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     hud.pause = btn('gm-pause', '', '❚❚', 'Pause (Space)', () => { API.togglePause(); updateHud(true); });
     hud.speed = btn('gm-speed', 'txt', '1×', 'Speed', () => { const nx = { 1: 2, 2: 4, 4: 1 }[S.speed] || 1; API.setSpeed(nx); updateHud(true); });
     hud.cam = btn('gm-cam', 'txt sm', 'CAM', 'Camera', () => { const R = mod('render'); let i = CAM_CYCLE.findIndex(c => c[0] === (R && R.cameraMode)); i = (i + 1) % CAM_CYCLE.length; API.setCam(CAM_CYCLE[i][0]); G.camPref = CAM_CYCLE[i][0]; API.toast('Camera: ' + CAM_CYCLE[i][1], { ms: 1400 }); updateHud(true); });
-    hud.sound = btn('gm-sound', 'snd', '♪', 'Sound on / off (S)', () => { API.setSound(!S.soundOn); updateHud(true); });
+    hud.sound = btn('gm-sound', 'snd', '', 'Sound on / off (S)', () => { API.setSound(!S.soundOn); updateHud(true); }); hud.sound.innerHTML = SND_OFF;
     hud.studio = btn('gm-studio', '', '⚙︎', 'Studio controls', () => setMode('studio'));
     hud.icons = h('div', { class: 'gm-icons' }, hud.pause, hud.speed, hud.cam, hud.sound, hud.studio);
-    hud.chips = PRESETS.map(p => { const b = h('button', { type: 'button', class: 'gm-chip', 'data-k': p[0], 'aria-pressed': 'false', onclick: () => setPreset(p[0], p[1]) }, p[1]); return b; });
-    hud.mid = [h('button', { type: 'button', class: 'gm-chip m', 'data-i': '0', onclick: () => setMid(0), 'aria-pressed': 'false' }, 'You'), h('button', { type: 'button', class: 'gm-chip m', 'data-i': '1', onclick: () => setMid(1), 'aria-pressed': 'false' }, 'Annetta')];
+    hud.tactic = h('select', { class: 'gm-select', id: 'gm-tactic', 'aria-label': 'Coach tactic', onchange: () => { const p = PRESETS.find(x => x[0] === hud.tactic.value); if (p) setPreset(p[0], p[1]); } },
+      PRESETS.map(p => h('option', { value: p[0] }, p[1])));
+    hud.middle = h('select', { class: 'gm-select', id: 'gm-middle', 'aria-label': 'Who takes the middle balls', onchange: () => setMid(hud.middle.value === '' ? undefined : +hud.middle.value) },
+      h('option', { value: '' }, 'Auto'), h('option', { value: '0' }, 'You'), h('option', { value: '1' }, 'Annetta'));
     hud.tmo = h('button', { type: 'button', class: 'gm-act', id: 'gm-timeout', onclick: () => { API.callTimeout(); updateHud(true); } }, 'Timeout');
     hud.chal = h('button', { type: 'button', class: 'gm-act', id: 'gm-challenge', onclick: () => { API.doChallenge(); updateHud(true); } }, 'Challenge');
     hud.coach = h('div', { class: 'gm-coach' },
       h('div', { class: 'gm-coachrow' },
-        h('span', { class: 'tag gm-ctag' }, 'Coach'),
-        h('div', { class: 'gm-chips' }, hud.chips, h('span', { class: 'gm-sep' }), h('span', { class: 'tag gm-mtag' }, 'Middle'), hud.mid),
+        h('label', { class: 'gm-pick', for: 'gm-tactic' }, h('span', null, 'Coach'), hud.tactic),
+        h('label', { class: 'gm-pick mid', for: 'gm-middle' }, h('span', null, 'Middle ball'), hud.middle),
         h('div', { class: 'gm-acts2' }, hud.tmo, hud.chal)));
     hud.ticker = h('div', { class: 'gm-ticker', hidden: true });
     hud.skip = h('button', { type: 'button', class: 'btn small gm-skip', id: 'gm-skip', onclick: () => { API.skipCeremony(); } }, 'Skip intro ▸');
@@ -11366,9 +11445,17 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     hud.labels = h('div', { class: 'gm-labels' });
     hud.labYou = h('div', { class: 'gm-lab you' }, 'YOU'); hud.labAn = h('div', { class: 'gm-lab an' }, 'ANNETTA');
     hud.labels.append(hud.labYou, hud.labAn);
-    hud.root.append(hud.labels, hud.icons, hud.skip, hud.ticker, hud.coach, hud.watchBar);
+    hud.sbTab = h('button', { type: 'button', class: 'gm-sbtab', id: 'gm-sbtab', 'aria-expanded': 'true', 'aria-label': 'Hide match centre', title: 'Match centre', onclick: () => toggleSb() });
+    hud.sbTab.innerHTML = CHEV;
+    hud.root.append(hud.labels, hud.sbTab, hud.icons, hud.skip, hud.ticker, hud.coach, hud.watchBar);
     EL.stage.appendChild(hud.root);
     hud.root.hidden = true;
+  }
+  function toggleSb(force) {
+    G.sbOff = force === undefined ? !G.sbOff : !!force;
+    EL.app.classList.toggle('gm-sb-off', G.sbOff);
+    hud.sbTab.setAttribute('aria-expanded', G.sbOff ? 'false' : 'true');
+    hud.sbTab.setAttribute('aria-label', G.sbOff ? 'Show match centre' : 'Hide match centre');
   }
   function showCreateOrSetup() { const s = S.saved && S.saved.length; if (s) { G.player = G.player || S.saved[S.saved.length - 1]; showSetup(); } else showCreate(); }
   function updateVisibility() {
@@ -11391,8 +11478,8 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     const Ai = mod('ai'); if (!Ai || !Ai.setOrders) return;
     S.coachTeam = 'A'; API.claimCoach();
     safe(() => Ai.setOrders('A', { middlePriority: i }), 'mid');
-    const P = mod('players'), who = P && P.list ? P.list.filter(p => p.team === 'A').sort((a, b) => a.slot - b.slot)[i] : null;
-    API.toast('Middle balls: ' + (i === 0 ? 'you' : (who ? who.name.split(' ')[0] : 'Annetta')), { kind: 'info', ms: 1800 });
+    const P = mod('players'), who = P && P.list && i === 1 ? P.list.filter(p => p.team === 'A').sort((a, b) => a.slot - b.slot)[1] : null;
+    API.toast('Middle balls: ' + (i === undefined ? 'whoever is closer' : i === 0 ? 'you' : (who ? who.name.split(' ')[0] : 'Annetta')), { kind: 'info', ms: 1800 });
     updateHud(true);
   }
   function updateHud(force) {
@@ -11403,11 +11490,12 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     hud.speed.textContent = (M ? M.speed : S.speed) + '×';
     const R = mod('render'); const cc = CAM_CYCLE.find(c => c[0] === (R && R.cameraMode));
     hud.cam.title = 'Camera: ' + (cc ? cc[1] : (R && R.cameraMode) || '-');
-    hud.sound.classList.toggle('off', !S.soundOn || S.muted);
+    const sndOff = !S.soundOn || S.muted; hud.sound.classList.toggle('off', sndOff);
+    if (hud._snd !== sndOff) { hud._snd = sndOff; hud.sound.innerHTML = sndOff ? SND_OFF : SND_ON; }
     hud.sound.title = S.soundOn && !S.muted ? 'Sound on (S)' : 'Sound off (S)';
-    const cur = o.preset || 'balanced';
-    hud.chips.forEach(b => { b.setAttribute('aria-pressed', b.dataset.k === cur ? 'true' : 'false'); });
-    hud.mid.forEach(b => b.setAttribute('aria-pressed', o.middlePriority === +b.dataset.i ? 'true' : 'false'));
+    const cur = o.preset || 'balanced', mid = o.middlePriority === 0 || o.middlePriority === 1 ? String(o.middlePriority) : '';
+    if (document.activeElement !== hud.tactic && hud.tactic.value !== cur) hud.tactic.value = cur;
+    if (document.activeElement !== hud.middle && hud.middle.value !== mid) hud.middle.value = mid;
     if (Rl && Rl.state) {
       const st = Rl.state, tl = st.timeouts ? st.timeouts.A : 0, cl = st.challenges ? st.challenges.A : 0;
       const canT = tl > 0 && M && M.phase === 'play' && !st.over;
@@ -11516,6 +11604,139 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
           h('button', { class: 'btn', type: 'button', id: 'gm-rnew', onclick: () => showCreate() }, 'New player'),
           h('button', { class: 'btn', type: 'button', id: 'gm-rtitle', onclick: () => showTitle() }, 'Back to title')))
     ], 'results');
+  }
+})(HPO);
+
+/* 22_callouts.js */
+(function (HPO) {
+  'use strict';
+  const BUS = HPO.BUS;
+  const mod = n => HPO.mod[n];
+
+  const SHOT = { smashFlat: 'smash', smashKick: 'smash', lobDef: 'lob', lobOff: 'lob', bandeja: 'bandeja', bajada: 'bajada' };
+  const KIND = {
+    out:     { text: 'OUT!',          col: '#e5484d', pri: 5, big: 1, shake: 1, rot: -6 },
+    fault:   { text: 'FAULT!',        col: '#ff8a1f', pri: 5, big: 1, shake: 1, rot: 5 },
+    double:  { text: 'DOUBLE FAULT!', col: '#b3122a', pri: 6, big: 1, shake: 2, rot: -4 },
+    net:     { text: 'NET!',          col: '#e0a800', pri: 5, big: 1, shake: 1, rot: 4 },
+    let:     { text: 'LET!',          col: '#e0a800', pri: 5, big: 1, shake: 0, rot: -5 },
+    first:   { text: 'FIRST SERVE!',  col: '#177dc5', pri: 1, rot: -3 },
+    smash:   { text: 'SMASH!',        col: '#ff4d2e', pri: 3, shake: 1, rot: -7 },
+    lob:     { text: 'LOB!',          col: '#27a9e1', pri: 2, rot: 5 },
+    bandeja: { text: 'BANDEJA!',      col: '#8e5bd9', pri: 2, rot: -4 },
+    bajada:  { text: 'BAJADA!',       col: '#2fb26b', pri: 3, rot: 4 }
+  };
+  const END = { out: 'out', wallFirst: 'out', ceiling: 'out', net: 'net', doubleFault: 'double' };
+  const STATE = {
+    intro: ['MATCH INTRO', 'Welcome to the club'], walkon: ['WALK-ON', 'The teams take the court'],
+    introductions: ['MEET THE PLAYERS', 'Introductions'], toss: ['COIN TOSS', 'Who serves first?'], warmup: ['WARM-UP', 'Get loose']
+  };
+  const LIFE_MS = 1500, SOFT_GAP_MS = 2200;
+
+  const STAR = (function () {
+    const pts = [];
+    for (let i = 0; i < 28; i++) { const a = i / 28 * Math.PI * 2, r = i % 2 ? 40 : 50; pts.push((50 + Math.cos(a) * r).toFixed(1) + ',' + (50 + Math.sin(a) * r).toFixed(1)); }
+    const p = pts.join(' ');
+    return '<svg class="hpo-co-star" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polygon class="sh" points="' + p + '"/><polygon class="fl" points="' + p + '"/></svg>';
+  })();
+
+  const C = HPO.mod.callouts = { ready: false, root: null, ribbon: null, live: [], last: null, lastSoft: 0, init: init, update: update, show: show };
+  let tmpV = null;
+
+  function init() {
+    if (typeof document === 'undefined') return;
+    const R = mod('render'), cont = (R && R.container) || document.getElementById('stage'); if (!cont) return;
+    const root = C.root = document.createElement('div');
+    root.className = 'hpo-callouts'; root.setAttribute('aria-hidden', 'true');
+    const ribbon = C.ribbon = document.createElement('div');
+    ribbon.className = 'hpo-state'; ribbon.hidden = true;
+    ribbon.innerHTML = '<i class="dot"></i><b></b><small></small>';
+    root.appendChild(ribbon);
+    cont.appendChild(root);
+    BUS.on('fault', onFault);
+    BUS.on('point:end', onPointEnd);
+    BUS.on('serve:hit', onServe);
+    BUS.on('shot:hit', onShot);
+    BUS.on('match:phase', onPhase);
+    BUS.on('match:new', function () { const M = mod('match'); clearAll(); setState((M && STATE[M.phase]) || null); });
+    C.ready = true;
+  }
+
+  function allowed() {
+    const M = mod('match'), rp = mod('replay');
+    if (!C.ready || document.hidden) return false;
+    if (rp && rp.active) return false;
+    if (M && (M.phase !== 'play' || M.speed >= 4 || (M.cfg && M.cfg.fast))) return false; // fast-forwarded play would just be noise
+    return true;
+  }
+
+  function onFault(e) {
+    if (!e) return;
+    if (e.kind === 'let') return show('let');
+    if (e.attempt >= 2) return; // the double fault call follows on point:end
+    show(e.kind === 'net' ? 'net' : 'fault');
+  }
+  function onPointEnd(e) { const k = e && END[e.reason]; if (k) show(k); }
+  function onServe(e) { if (e && e.attempt === 1) show('first', ballPos(e.playerId)); }
+  function onShot(e) {
+    if (!e || e.warmup || e.serve) return;
+    const k = SHOT[e.shot]; if (k) show(k, ballPos(e.playerId, e.p));
+  }
+  function onPhase(e) {
+    const s = e && STATE[e.phase];
+    if (s) setState(s); else setState(null);
+  }
+  function ballPos(id, p) {
+    const P = mod('players'), pl = P && P.byId && P.byId[id];
+    const src = pl && pl.pos ? pl.pos : p; if (!src) return null;
+    return { x: src.x, y: 2.7, z: src.z };
+  }
+
+  function removeEntry(en) { clearTimeout(en.tm); if (en.el.parentNode) en.el.parentNode.removeChild(en.el); const i = C.live.indexOf(en); if (i >= 0) C.live.splice(i, 1); }
+  function clearAll() { C.live.slice().forEach(removeEntry); C.last = null; }
+  function show(key, wp) {
+    const k = KIND[key]; if (!k || !allowed()) return;
+    const now = performance.now(), last = C.last;
+    if (last && now - last.t < 800 && k.pri <= last.pri) return;
+    if (!k.big && k.pri < 5 && now - C.lastSoft < SOFT_GAP_MS) return; // keep the shot callouts special
+    if (key === 'first' && C.live.length) return;
+    if (!k.big && !wp) return;
+    if (k.big || k.pri >= 5) C.live.slice().forEach(removeEntry); // a call replaces whatever is still on screen
+    const el = document.createElement('div'); el.className = 'hpo-co' + (k.big ? ' big' : '') + ' k-' + key;
+    const inn = document.createElement('div'); inn.className = 'hpo-co-in';
+    inn.style.setProperty('--co', k.col); inn.style.setProperty('--rot', k.rot + 'deg');
+    const cw = C.root.clientWidth || 360, words = k.text.split(' '), stack = cw < 560 && words.length > 1, longest = stack ? Math.max.apply(null, words.map(function (s) { return s.length; })) : k.text.length;
+    const want = k.big ? Math.min(88, cw * 0.115) : Math.max(24, Math.min(44, cw * 0.064));
+    inn.style.fontSize = Math.floor(Math.min(want, cw * 0.94 / ((longest * 0.57 + 2.1) * 1.28))) + 'px';
+    inn.innerHTML = STAR; const t = document.createElement('span'); t.className = 'hpo-co-t'; t.textContent = stack ? words.join('\n') : k.text; inn.appendChild(t);
+    el.appendChild(inn); C.root.appendChild(el);
+    const en = { el: el, wp: wp || null, big: !!k.big, pri: k.pri, t: now, tm: 0 };
+    en.tm = setTimeout(function () { removeEntry(en); }, LIFE_MS + 100);
+    C.live.push(en); C.last = en; if (!k.big && k.pri < 5) C.lastSoft = now;
+    place(en);
+    if (k.shake) rattle(k.shake);
+  }
+  function rattle(level) {
+    const R = mod('render'), c = R && R.container; if (!c) return;
+    c.classList.remove('hpo-shake1', 'hpo-shake2'); void c.offsetWidth; c.classList.add('hpo-shake' + level);
+    clearTimeout(rattle.tm); rattle.tm = setTimeout(function () { c.classList.remove('hpo-shake1', 'hpo-shake2'); }, 480);
+  }
+  function place(en) {
+    if (en.big || !en.wp) return;
+    const R = mod('render'); if (!R || !R.project || !R.THREE) return;
+    if (!tmpV) tmpV = new R.THREE.Vector3();
+    tmpV.set(en.wp.x, en.wp.y, en.wp.z);
+    const s = R.project(tmpV), cont = R.container, w = cont.clientWidth, h = cont.clientHeight;
+    const x = Math.max(70, Math.min(w - 70, s.x)), y = Math.max(54, Math.min(h - 60, s.y));
+    en.el.style.transform = 'translate(' + Math.round(x) + 'px,' + Math.round(y) + 'px)';
+  }
+  function update() { for (let i = 0; i < C.live.length; i++) place(C.live[i]); }
+
+  function setState(s) {
+    const r = C.ribbon; if (!r) return;
+    if (!s) { r.hidden = true; return; }
+    r.querySelector('b').textContent = s[0]; r.querySelector('small').textContent = s[1];
+    if (r.hidden) { r.hidden = false; r.classList.remove('in'); void r.offsetWidth; r.classList.add('in'); }
   }
 })(HPO);
 

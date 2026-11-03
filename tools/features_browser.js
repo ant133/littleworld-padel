@@ -20,7 +20,7 @@ const yawTest = `JSON.stringify((()=>{const R=HPO.mod.render,b=R.view.yaw,v=[];f
     { eval: snap },                                                                                                                            // 3 setup
     { eval: `${click('gm-kick')};true` }, { wait: 1500 },
     { eval: snap },                                                                                                                            // 4 playing, coach box
-    { eval: `JSON.stringify({chips:document.querySelectorAll('#gm-hud .gm-chip').length,tmo:!!document.getElementById('gm-timeout'),chal:!!document.getElementById('gm-challenge')})` }, // 5
+    { eval: `JSON.stringify({tactics:[...document.querySelectorAll('#gm-tactic option')].length,middle:[...document.querySelectorAll('#gm-middle option')].length,chips:document.querySelectorAll('#gm-hud .gm-chip').length,tmo:!!document.getElementById('gm-timeout'),chal:!!document.getElementById('gm-challenge')})` }, // 5
     { eval: `HPO.mod.match.paused=true; HPO.mod.render.setCameraMode('close'); true` }, { wait: 800 },
     { shot: 'scratch/features-desktop.png' },
     { eval: `JSON.stringify({ortho:HPO.mod.render.camera.isOrthographicCamera,lights:HPO.mod.render.cutaway.list().filter(x=>x.role==='light'),errors:HPO.util.errors})` }, // 6
@@ -44,7 +44,7 @@ const yawTest = `JSON.stringify((()=>{const R=HPO.mod.render,b=R.view.yaw,v=[];f
   assert.match(String(v[3]), /name/i, 'empty name is refused with a message');
   const setup = v[5]; assert.equal(setup.st, 'setup'); assert.equal(setup.player, 'Visitor Woman');
   const play = v[7]; assert.equal(play.st, 'playing'); assert.equal(play.type, 'W'); assert.equal(play.team[1], 'p5'); assert.equal(play.coach, 'A'); assert.equal(play.cam, 'close'); assert.deepEqual(play.errors, []);
-  const bar = v[8]; assert.equal(bar.chips, 8); assert(bar.tmo && bar.chal);
+  const bar = v[8]; assert.equal(bar.tactics, 6); assert.equal(bar.middle, 3); assert.equal(bar.chips, 0); assert(bar.tmo && bar.chal);
   const cam = v[10]; assert(cam.ortho); assert.deepEqual(cam.errors, []); assert(cam.lights.some(c => c.fade < 0.1), 'obstructing floodlights fade');
   const back = v[12]; assert.deepEqual(back.players, ['Visitor Woman']); assert.match(back.cont, /Continue as Visitor Woman/);
   const mixed = v[16]; assert.equal(mixed.type, 'X'); assert.equal(mixed.team[1], 'p5'); assert.equal(mixed.st, 'playing'); assert.deepEqual(mixed.errors, []);

@@ -10,6 +10,12 @@
   const PRESETS = [['balanced', 'Balanced'], ['aggressive', 'Attack'], ['safe', 'Safe'], ['controlNet', 'Net'], ['defensive', 'Lobs'], ['moreSmashes', 'Smash']];
   const COURTS = [['classicBlue', 'Classic Blue'], ['terracotta', 'Terracotta'], ['fastBlue', 'Fast Blue'], ['indoor', 'Indoor']];
   const CAM_CYCLE = [['close', 'Close-up'], ['follow', 'TV follow'], ['club', 'Whole club'], ['top', 'Top-down']];
+  // the whole club is too small to read on a phone, so phones default to the TV follow camera
+  const defCam = () => (HPO.cfg.mobile ? 'follow' : 'club');
+  const SVG = 'xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
+  const SND_ON = '<svg ' + SVG + '><path d="M11 5 6 9H3v6h3l5 4z" fill="currentColor"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
+  const SND_OFF = '<svg ' + SVG + '><path d="M11 5 6 9H3v6h3l5 4z" fill="currentColor"/><path d="m16 9 5 6M21 9l-5 6"/></svg>';
+  const CHEV = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg>';
   const PRE = { intro: 1, walkon: 1, introductions: 1, toss: 1, warmup: 1 };
   const NATION_NAME = {}; NATIONS.forEach(n => { NATION_NAME[n[0]] = n[1]; });
 
@@ -92,12 +98,12 @@
     S.coachClaimed = false; const M = mod('match'); if (M) M.coachTeam = null;
     S.type = 'M'; S.speed = 1; S.seed = '';
     API.newMatch({ draw: true });
-    API.setCam('club');
+    API.setCam(defCam());
     const A = mod('audio'); void A;
   }
   function startWatch(first) {
     closeScreen(); closePause(); setSt('watch'); clearHighlights();
-    if (!first) API.setCam('club');
+    if (!first) API.setCam(defCam());
     updateVisibility();
   }
 
@@ -106,7 +112,7 @@
     closePause(); clearHighlights();
     setSt('title');
     const M = mod('match');
-    if (!keep) { const R = mod('render'); if (R && R.cameraMode !== 'club') API.setCam('club'); if (M && M.coachTeam) { startAttract(); } }
+    if (!keep) { const R = mod('render'); if (R && R.cameraMode !== defCam()) API.setCam(defCam()); if (M && M.coachTeam) { startAttract(); } }
     if (M && M.paused) M.pause(false);
     const saved = (S.saved && S.saved.length) ? S.saved[S.saved.length - 1] : null;
     const an = pdef(AN);
@@ -258,7 +264,7 @@
     setSt('playing'); hlKey = '';
     API.newMatch();
     const M = mod('match'); if (M) M.coachTeam = 'A';
-    G.camPref = 'close'; API.setCam('close');
+    G.camPref = HPO.cfg.mobile ? 'follow' : 'close'; API.setCam(G.camPref);
     updateHud(true);
   }
 
@@ -270,18 +276,21 @@
     hud.pause = btn('gm-pause', '', '❚❚', 'Pause (Space)', () => { API.togglePause(); updateHud(true); });
     hud.speed = btn('gm-speed', 'txt', '1×', 'Speed', () => { const nx = { 1: 2, 2: 4, 4: 1 }[S.speed] || 1; API.setSpeed(nx); updateHud(true); });
     hud.cam = btn('gm-cam', 'txt sm', 'CAM', 'Camera', () => { const R = mod('render'); let i = CAM_CYCLE.findIndex(c => c[0] === (R && R.cameraMode)); i = (i + 1) % CAM_CYCLE.length; API.setCam(CAM_CYCLE[i][0]); G.camPref = CAM_CYCLE[i][0]; API.toast('Camera: ' + CAM_CYCLE[i][1], { ms: 1400 }); updateHud(true); });
-    hud.sound = btn('gm-sound', 'snd', '♪', 'Sound on / off (S)', () => { API.setSound(!S.soundOn); updateHud(true); });
+    hud.sound = btn('gm-sound', 'snd', '', 'Sound on / off (S)', () => { API.setSound(!S.soundOn); updateHud(true); }); hud.sound.innerHTML = SND_OFF;
     hud.studio = btn('gm-studio', '', '⚙︎', 'Studio controls', () => setMode('studio'));
     hud.icons = h('div', { class: 'gm-icons' }, hud.pause, hud.speed, hud.cam, hud.sound, hud.studio);
     // coach bar
-    hud.chips = PRESETS.map(p => { const b = h('button', { type: 'button', class: 'gm-chip', 'data-k': p[0], 'aria-pressed': 'false', onclick: () => setPreset(p[0], p[1]) }, p[1]); return b; });
-    hud.mid = [h('button', { type: 'button', class: 'gm-chip m', 'data-i': '0', onclick: () => setMid(0), 'aria-pressed': 'false' }, 'You'), h('button', { type: 'button', class: 'gm-chip m', 'data-i': '1', onclick: () => setMid(1), 'aria-pressed': 'false' }, 'Annetta')];
+    // dropdowns instead of a chip row: the picker costs one line of height on a phone
+    hud.tactic = h('select', { class: 'gm-select', id: 'gm-tactic', 'aria-label': 'Coach tactic', onchange: () => { const p = PRESETS.find(x => x[0] === hud.tactic.value); if (p) setPreset(p[0], p[1]); } },
+      PRESETS.map(p => h('option', { value: p[0] }, p[1])));
+    hud.middle = h('select', { class: 'gm-select', id: 'gm-middle', 'aria-label': 'Who takes the middle balls', onchange: () => setMid(hud.middle.value === '' ? undefined : +hud.middle.value) },
+      h('option', { value: '' }, 'Auto'), h('option', { value: '0' }, 'You'), h('option', { value: '1' }, 'Annetta'));
     hud.tmo = h('button', { type: 'button', class: 'gm-act', id: 'gm-timeout', onclick: () => { API.callTimeout(); updateHud(true); } }, 'Timeout');
     hud.chal = h('button', { type: 'button', class: 'gm-act', id: 'gm-challenge', onclick: () => { API.doChallenge(); updateHud(true); } }, 'Challenge');
     hud.coach = h('div', { class: 'gm-coach' },
       h('div', { class: 'gm-coachrow' },
-        h('span', { class: 'tag gm-ctag' }, 'Coach'),
-        h('div', { class: 'gm-chips' }, hud.chips, h('span', { class: 'gm-sep' }), h('span', { class: 'tag gm-mtag' }, 'Middle'), hud.mid),
+        h('label', { class: 'gm-pick', for: 'gm-tactic' }, h('span', null, 'Coach'), hud.tactic),
+        h('label', { class: 'gm-pick mid', for: 'gm-middle' }, h('span', null, 'Middle ball'), hud.middle),
         h('div', { class: 'gm-acts2' }, hud.tmo, hud.chal)));
     hud.ticker = h('div', { class: 'gm-ticker', hidden: true });
     hud.skip = h('button', { type: 'button', class: 'btn small gm-skip', id: 'gm-skip', onclick: () => { API.skipCeremony(); } }, 'Skip intro ▸');
@@ -289,9 +298,18 @@
     hud.labels = h('div', { class: 'gm-labels' });
     hud.labYou = h('div', { class: 'gm-lab you' }, 'YOU'); hud.labAn = h('div', { class: 'gm-lab an' }, 'ANNETTA');
     hud.labels.append(hud.labYou, hud.labAn);
-    hud.root.append(hud.labels, hud.icons, hud.skip, hud.ticker, hud.coach, hud.watchBar);
+    // chevron tab on the left edge: slides the match centre (scoreboard) out of the way and back
+    hud.sbTab = h('button', { type: 'button', class: 'gm-sbtab', id: 'gm-sbtab', 'aria-expanded': 'true', 'aria-label': 'Hide match centre', title: 'Match centre', onclick: () => toggleSb() });
+    hud.sbTab.innerHTML = CHEV;
+    hud.root.append(hud.labels, hud.sbTab, hud.icons, hud.skip, hud.ticker, hud.coach, hud.watchBar);
     EL.stage.appendChild(hud.root);
     hud.root.hidden = true;
+  }
+  function toggleSb(force) {
+    G.sbOff = force === undefined ? !G.sbOff : !!force;
+    EL.app.classList.toggle('gm-sb-off', G.sbOff);
+    hud.sbTab.setAttribute('aria-expanded', G.sbOff ? 'false' : 'true');
+    hud.sbTab.setAttribute('aria-label', G.sbOff ? 'Show match centre' : 'Hide match centre');
   }
   function showCreateOrSetup() { const s = S.saved && S.saved.length; if (s) { G.player = G.player || S.saved[S.saved.length - 1]; showSetup(); } else showCreate(); }
   function updateVisibility() {
@@ -314,8 +332,8 @@
     const Ai = mod('ai'); if (!Ai || !Ai.setOrders) return;
     S.coachTeam = 'A'; API.claimCoach();
     safe(() => Ai.setOrders('A', { middlePriority: i }), 'mid');
-    const P = mod('players'), who = P && P.list ? P.list.filter(p => p.team === 'A').sort((a, b) => a.slot - b.slot)[i] : null;
-    API.toast('Middle balls: ' + (i === 0 ? 'you' : (who ? who.name.split(' ')[0] : 'Annetta')), { kind: 'info', ms: 1800 });
+    const P = mod('players'), who = P && P.list && i === 1 ? P.list.filter(p => p.team === 'A').sort((a, b) => a.slot - b.slot)[1] : null;
+    API.toast('Middle balls: ' + (i === undefined ? 'whoever is closer' : i === 0 ? 'you' : (who ? who.name.split(' ')[0] : 'Annetta')), { kind: 'info', ms: 1800 });
     updateHud(true);
   }
   function updateHud(force) {
@@ -326,11 +344,12 @@
     hud.speed.textContent = (M ? M.speed : S.speed) + '×';
     const R = mod('render'); const cc = CAM_CYCLE.find(c => c[0] === (R && R.cameraMode));
     hud.cam.title = 'Camera: ' + (cc ? cc[1] : (R && R.cameraMode) || '-');
-    hud.sound.classList.toggle('off', !S.soundOn || S.muted);
+    const sndOff = !S.soundOn || S.muted; hud.sound.classList.toggle('off', sndOff);
+    if (hud._snd !== sndOff) { hud._snd = sndOff; hud.sound.innerHTML = sndOff ? SND_OFF : SND_ON; }
     hud.sound.title = S.soundOn && !S.muted ? 'Sound on (S)' : 'Sound off (S)';
-    const cur = o.preset || 'balanced';
-    hud.chips.forEach(b => { b.setAttribute('aria-pressed', b.dataset.k === cur ? 'true' : 'false'); });
-    hud.mid.forEach(b => b.setAttribute('aria-pressed', o.middlePriority === +b.dataset.i ? 'true' : 'false'));
+    const cur = o.preset || 'balanced', mid = o.middlePriority === 0 || o.middlePriority === 1 ? String(o.middlePriority) : '';
+    if (document.activeElement !== hud.tactic && hud.tactic.value !== cur) hud.tactic.value = cur;
+    if (document.activeElement !== hud.middle && hud.middle.value !== mid) hud.middle.value = mid;
     if (Rl && Rl.state) {
       const st = Rl.state, tl = st.timeouts ? st.timeouts.A : 0, cl = st.challenges ? st.challenges.A : 0;
       const canT = tl > 0 && M && M.phase === 'play' && !st.over;

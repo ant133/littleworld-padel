@@ -25,19 +25,19 @@ URL: default is Play mode with the title. `?mode=studio` opens Studio; `?title=0
 - A woman plays **women's doubles** (`type: 'W'`) with Annetta; a man plays **mixed** (`type: 'X'`).
 - Team A is always the visitor's pair `[custom player, 'p5']` (p5 = Annetta Arslan). Opponents are a random pair from the fixed roster, shuffled without repeating the previous pair.
 - Defaults: Quick format, Golden Point, Classic Blue, Day, speed 1×, seed random.
-- `kickoff()` resets both teams' coach orders to Balanced, sets `match.coachTeam = 'A'`, starts a new match, and switches the camera to `close` (`G.camPref`). After the intro/ceremony camera sweeps, the camera returns to the player's chosen view when play starts.
+- `kickoff()` resets both teams' coach orders to Balanced, sets `match.coachTeam = 'A'`, starts a new match, and switches the camera to `close` (TV follow on phones) (`G.camPref`). After the intro/ceremony camera sweeps, the camera returns to the player's chosen view when play starts.
 - "Skip intro" calls the same skip as the Studio ceremony skip: walk-on, introductions, toss and warm-up are bypassed and players are placed for the first serve.
 
 ## HUD and coach box
 
-Top-right icons: pause, speed (1× → 2× → 4×), camera cycle (Close-up, TV follow, Whole club, Top-down), sound (off by default), Studio. `Esc` opens a pause menu (Resume, Restart, Back to title, Studio controls); `Space` also pauses.
+Top-right icons: pause, speed (1× → 2× → 4×), camera cycle (Close-up, TV follow, Whole club, Top-down), sound (off by default; speaker icon, crossed when off), Studio. A chevron tab on the left edge slides the match centre (scoreboard) away and back. On phones the camera defaults to TV follow (the whole club is too small to read); intro, walk-on and replays use TV follow everywhere. Callouts (OUT!, FAULT!, SMASH! …) appear as comic bursts, and the pre-match phases show a large state ribbon (MATCH INTRO, WALK-ON, COIN TOSS, WARM-UP); a replay shows a flashing REPLAY label. `Esc` opens a pause menu (Resume, Restart, Back to title, Studio controls); `Space` also pauses.
 
 The coach bar controls **team A only** and is intentionally limited:
 
 | Control | Maps to |
 | --- | --- |
-| Balanced, Attack, Safe, Net, Lobs, Smash | `ai.setOrders('A', {preset})` with `balanced`, `aggressive`, `safe`, `controlNet`, `defensive`, `moreSmashes` |
-| Middle: You / Annetta | `ai.setOrders('A', {middlePriority: 0 or 1})` |
+| Coach dropdown (`#gm-tactic`): Balanced, Attack, Safe, Net, Lobs, Smash | `ai.setOrders('A', {preset})` with `balanced`, `aggressive`, `safe`, `controlNet`, `defensive`, `moreSmashes` |
+| Middle ball dropdown (`#gm-middle`): Auto, You, Annetta | `ai.setOrders('A', {middlePriority: undefined, 0 or 1})` |
 | Timeout · n | `rules` timeout (one per match); enabled only during play |
 | Challenge · n | `rules.canChallenge('A')`; two per set |
 

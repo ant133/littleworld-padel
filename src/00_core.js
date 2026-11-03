@@ -150,7 +150,7 @@
   // ---------- boot ----------
   // order = module registration order for init(); modules are looked up at call time.
   HPO.initOrder = ['palette', 'court', 'nav', 'ball', 'shots', 'players', 'ai', 'rules', 'match',
-    'render', 'worldCourt', 'worldIsland', 'worldClub', 'rigs', 'actors', 'crowd', 'fx', 'replay', 'ceremony',
+    'render', 'worldCourt', 'worldIsland', 'worldClub', 'rigs', 'actors', 'crowd', 'fx', 'replay', 'ceremony', 'callouts',
     'audio', 'commentary', 'ui'];
   HPO.boot = function (opts) {
     const ctx = { HPO: HPO, BUS: HPO.BUS, rng: HPO.rng, cfg: HPO.cfg, THREE: root.THREE, opts: opts || {} };

@@ -8,6 +8,8 @@
   const YAW0 = Math.PI / 4;           // yaw of quarter-turn index 0
   const CAM_D = 140;                  // camera distance from its target (orthographic: only affects clipping/fog)
   const MODES = ['follow', 'club', 'close', 'top', 'free'];
+  const ZOOM_MAX = 18;                // orthographic half-height can shrink to well under a metre
+  const FOLLOW_HALF = 11.5;           // TV follow: visible half-height in metres at zoom 1 (landscape)
 
   // ---------- time-of-day presets ----------
   const TOD = {
@@ -218,6 +220,9 @@
       R._P = { cur: R._mkParams(), from: R._mkParams(), to: R._mkParams(), t: 1 };
       R.todParams = R._P.cur;
       R._setTod(opts.venue === 'indoor' ? 'indoor' : (opts.tod || 'day'), true);
+
+      // the whole club is tiny on a phone: start on the TV follow camera instead
+      if (HPO.cfg.mobile) R.cameraMode = 'follow';
 
       // quality
       R._quality = HPO.cfg.mobile ? 'low' : 'high';
@@ -501,8 +506,8 @@
       v.yawK += dir > 0 ? 1 : -1; R.yawIndex = ((v.yawK % 4) + 4) % 4;
       if (R.cameraMode === 'free') v.yawT = YAW0 + v.yawK * Math.PI / 2;
     },
-    zoom(d) { R.view.zoom = U.clamp(R.view.zoom * Math.pow(1.12, d), 0.45, 5); }, // delta > 0 zooms IN
-    resetView() { const v = R.view; v.zoom = 1; v.yawK = 0; R.yawIndex = 0; R.followId = null; R.followBall = true; v.tTarget.set(0, 0, 0); R.setCameraMode('club'); },
+    zoom(d) { R.view.zoom = U.clamp(R.view.zoom * Math.pow(1.12, d), 0.45, ZOOM_MAX); }, // delta > 0 zooms IN
+    resetView() { const v = R.view; v.zoom = 1; v.yawK = 0; R.yawIndex = 0; R.followId = null; R.followBall = true; v.tTarget.set(0, 0, 0); R.setCameraMode(HPO.cfg.mobile ? 'follow' : 'club'); },
     followPlayer(id) { R.followId = id || null; if (id) R.setCameraMode('follow'); },
     setFollowBall(b) { R.followBall = !!b; if (b) R.followId = null; },
     pan(dx, dz) { R._toFree(); const v = R.view; v.tTarget.x = U.clamp(v.tTarget.x + dx, -70, 70); v.tTarget.z = U.clamp(v.tTarget.z + dz, -70, 70); },
@@ -523,18 +528,22 @@
     // ================= size =================
     resize() {
       if (!R.renderer) return;
-      const T = R.THREE, c = R.container, w = Math.max(16, c.clientWidth), h = Math.max(16, c.clientHeight), N = R.pixelSize;
-      const lw = Math.ceil(w / N), lh = Math.ceil(h / N);
-      if (lw === R._lw && lh === R._lh && R._rt) { R._cssN = N; R.aspect = w / h; R.renderer.domElement.style.width = w + 'px'; R.renderer.domElement.style.height = h + 'px'; return; }
+      // Each low-res pixel must cover a whole number of device pixels. Stretching to a fractional scale (e.g. 3 css px at a
+      // 2.6 device ratio) makes nearest-neighbour upscaling drop or double rows, which shows as stripes on phones.
+      const T = R.THREE, c = R.container, dpr = Math.max(1, window.devicePixelRatio || 1);
+      const W = Math.max(16, Math.round(c.clientWidth * dpr)), H = Math.max(16, Math.round(c.clientHeight * dpr));
+      const N = Math.max(1, Math.round(R.pixelSize * dpr));
+      const lw = Math.ceil(W / N), lh = Math.ceil(H / N), cssW = lw * N / dpr, cssH = lh * N / dpr;
+      R.aspect = lw / lh; R._cssN = N;
+      if (lw === R._lw && lh === R._lh && R._rt) { R.renderer.domElement.style.width = cssW + 'px'; R.renderer.domElement.style.height = cssH + 'px'; return; }
       R._lw = lw; R._lh = lh;
       R.renderer.setSize(lw, lh, false);
-      const cv = R.renderer.domElement; cv.style.width = w + 'px'; cv.style.height = h + 'px';
+      const cv = R.renderer.domElement; cv.style.width = cssW + 'px'; cv.style.height = cssH + 'px';
       if (R._rt) { R._rt.dispose(); if (R._rt.depthTexture) R._rt.depthTexture.dispose(); }
       const rt = new T.WebGLRenderTarget(lw, lh, { minFilter: T.NearestFilter, magFilter: T.NearestFilter, format: T.RGBAFormat, type: T.UnsignedByteType, depthBuffer: true, stencilBuffer: false });
       if (R._hasDepth) { const dt = new T.DepthTexture(lw, lh); dt.type = T.UnsignedIntType; dt.format = T.DepthFormat; dt.minFilter = T.NearestFilter; dt.magFilter = T.NearestFilter; rt.depthTexture = dt; }
       R._rt = rt;
       R._postU.tColor.value = rt.texture; R._postU.tDepth.value = rt.depthTexture; R._postU.uRes.value.set(lw, lh);
-      R.aspect = w / h;
     },
 
     // ================= camera update =================
@@ -568,7 +577,7 @@
       const fp = R.followId && HPO.mod.players && HPO.mod.players.byId && HPO.mod.players.byId[R.followId];
       if (fp && fp.pos) { x = fp.pos.x; z = fp.pos.z; if (bs && bs.p && bs.state !== 'dead') { x = x * 0.8 + bs.p.x * 0.2; z = z * 0.8 + bs.p.z * 0.2; } }
       else if (R.followBall && bs && bs.p && bs.state !== 'dead') { x = bs.p.x * 0.65 + mx * 0.35; z = bs.p.z * 0.65 + mz * 0.35; }
-      out.set(U.clamp(x, -9, 9), 0, U.clamp(z, -4.5, 4.5));
+      out.set(U.clamp(x, -9, 9), 0, U.clamp(z, -7.5, 7.5)); // the walk-on queue stands outside the sideline (z = 6.9)
     },
     _updateCamera(dt) {
       const v = R.view, cam = R.camera, t = R._tmp, mode = R.cameraMode, pts = R._fitPts();
@@ -581,7 +590,7 @@
       if (mode === 'club') { R._fit(pts.club, v.yawT, v.elT, 1.02, f); baseHalf = f.half; v.tTarget.copy(t.right).multiplyScalar(f.cx).addScaledVector(t.up, f.cy); }
       else if (mode === 'close') { R._fit(pts.close, v.yawT, v.elT, 1.08, f); baseHalf = f.half; v.tTarget.copy(t.right).multiplyScalar(f.cx).addScaledVector(t.up, f.cy); }
       else if (mode === 'top') { R._fit(pts.top, v.yawT, v.elT, 1.06, f); baseHalf = f.half; v.tTarget.set(0, 0, 0).addScaledVector(t.right, f.cx).addScaledVector(t.up, f.cy); }
-      else if (mode === 'follow') { R._followPoint(v.tTarget); baseHalf = 11.5 * Math.max(1, 1.5 / R.aspect); kT = 3; }
+      else if (mode === 'follow') { R._followPoint(v.tTarget); baseHalf = FOLLOW_HALF * Math.max(1, 1.5 / R.aspect) * (HPO.cfg.mobile ? 0.55 : 1); kT = 3; }
       else { baseHalf = v.freeBase; kT = 10; }
       v.halfT = baseHalf / v.zoom;
       v.target.lerp(v.tTarget, K(dt, kT));
@@ -692,7 +701,7 @@
         const a = HPO.mod.actors; if (a && a.sync) a.sync(M && M.acc ? M.acc / HPO.cfg.SIM_DT : 0, dt);
         HPO.initOrder.concat(['replay', 'commentary']).forEach(function (n) {
           const m = HPO.mod[n];
-          if (m && m.update && (/^world/.test(n) || n === 'crowd' || n === 'fx' || n === 'ceremony' || n === 'audio' || n === 'ui' || n === 'replay')) { try { m.update(dt, R.t); } catch (e) { U.logError('update:' + n, e); } }
+          if (m && m.update && (/^world/.test(n) || n === 'crowd' || n === 'fx' || n === 'ceremony' || n === 'callouts' || n === 'audio' || n === 'ui' || n === 'replay')) { try { m.update(dt, R.t); } catch (e) { U.logError('update:' + n, e); } }
         });
         for (let i = 0; i < R._hooks.length; i++) R._hooks[i](dt, R.t);
         R.renderNow(dt);

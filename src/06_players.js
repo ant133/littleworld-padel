@@ -282,7 +282,9 @@
     const maxd = (dl > 0 && Math.hypot(dvx, dvz) < Math.hypot(p.vel.x, p.vel.z) ? 13 : a) * dt;
     if (dl > maxd) { p.vel.x += dvx2 / dl * maxd; p.vel.z += dvz2 / dl * maxd; } else { p.vel.x = dvx; p.vel.z = dvz; }
     p.pos.x += p.vel.x * dt; p.pos.z += p.vel.z * dt;
-    nav.clamp(p.pos, nav.bounds(sx, p.retrieving));
+    // Clamp to the half the player is standing on, not the half their team now owns: when the sides flip at the end of a game the
+    // old bounds would shove everyone to the net in one frame. The changeover walks them across through the entrance instead.
+    nav.clamp(p.pos, nav.bounds(Math.abs(p.pos.x) > 0.55 ? Math.sign(p.pos.x) : sx, p.retrieving));
     p.speed = Math.hypot(p.vel.x, p.vel.z);
 
     // fatigue and distance

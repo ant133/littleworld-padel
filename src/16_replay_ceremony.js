@@ -37,7 +37,7 @@
     root.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:6;overflow:hidden;font-family:Manrope,system-ui,sans-serif';
     const mk = (css, parent) => { const d = document.createElement('div'); d.style.cssText = css; d.hidden = true; (parent || root).appendChild(d); return d; };
     DOM.banner = mk('position:absolute;left:50%;top:14%;transform:translateX(-50%);background:#fffaf0;color:#123954;border:2px solid #123954;box-shadow:6px 7px 0 #1264992e;padding:10px 22px;text-align:center;font-weight:800;letter-spacing:-.03em;font-size:clamp(16px,3.2vw,30px);max-width:86%');
-    DOM.badge = mk('position:absolute;left:14px;bottom:9%;background:#e5484d;color:#fff;font-weight:800;font-size:13px;letter-spacing:.2em;padding:5px 10px;border:2px solid #123954');
+    DOM.badge = mk(''); DOM.badge.className = 'hpo-replay'; // large flashing label, styled in shell.css
     DOM.verdict = mk('position:absolute;left:50%;top:22%;transform:translateX(-50%);color:#fff;font-weight:800;font-size:clamp(40px,9vw,92px);letter-spacing:-.04em;text-shadow:4px 5px 0 #123954;padding:0 18px');
     DOM.bars = mk('position:absolute;inset:0;box-shadow:inset 0 0 0 9999px transparent');
     DOM.bars.style.cssText = 'position:absolute;left:0;right:0;top:0;height:5%;background:#0b1a2a;opacity:.85';
@@ -59,6 +59,8 @@
     const r = RN(), s = cam.saved; cam.saved = null; if (!r || !s) return;
     try { if (r.followPlayer) r.followPlayer(null); r.setCameraMode(s.mode || 'club'); if (r.view && s.zoom && s.mode !== 'free') r.view.zoom = s.zoom; } catch (e) { U.logError('cam.restore', e); }
   }
+  // intro, walk-on and replays always use the TV follow camera (the render core tightens it on phones)
+  function tvFollow(r) { if (r.followPlayer) r.followPlayer(null); if (r.setFollowBall) r.setFollowBall(true); r.setCameraMode('follow'); }
   function camFocus(x, z, half, y) { // half = visible half-height in metres
     const r = RN(); if (!r || !r.view) return;
     camSave(); if (r.cameraMode !== 'free') r.setCameraMode('free');
@@ -233,7 +235,7 @@
       if (RS.label.material.map) RS.label.material.map.dispose();
       RS.label.material.map = labelTex(info.margin !== null ? info.margin.toFixed(1) + ' cm' : '', info.verdict); RS.label.material.needsUpdate = true;
       RS.label.position.set(info.p.x, 1.6, info.p.z); RS.label.visible = false;
-    } else if (r && r.setCameraMode) { r.setCameraMode('follow'); if (r.setFollowBall) r.setFollowBall(true); }
+    } else if (r) tvFollow(r);
     BUS.emit('replay:start', { kind: kind });
     stepReplay(0);
     return true;
@@ -375,7 +377,26 @@
     p._cm = { walk: false }; p.intent = { type: 'hold', face: face === undefined ? p.heading : face };
     if (p.anim.clip !== clip) p.anim = { clip: clip, t: 0, rate: 1 };
   }
+  // Players cross between the halves through the open entrance beside the net (x within 1 m of the net, z about +-5), never through the net itself.
+  function withGate(p, pts) {
+    const inside = q => Math.abs(q.z) < 5.2 && Math.abs(q.x) < 10, out = []; let cur = { x: p.pos.x, z: p.pos.z };
+    pts.forEach(function (pt) {
+      if (cur.x * pt.x < 0) {
+        const t = -cur.x / (pt.x - cur.x), zc = cur.z + t * (pt.z - cur.z);
+        if (Math.abs(zc) < 5.2) { // this leg would cut through the net
+          const zs = cur.z >= 0 ? 1 : -1, sa = cur.x < 0 ? -1 : 1;
+          if (inside(cur)) out.push({ x: sa * 0.55, z: zs * 4.2 });
+          out.push({ x: 0, z: zs * 5.8 });
+          if (inside(pt)) out.push({ x: -sa * 0.55, z: zs * 4.2 });
+        }
+      }
+      out.push(pt); cur = pt;
+    });
+    return out;
+  }
   function* walkPath(p, pts, cap, face, clipAfter) {
+    p.retrieving = true; // wide walking bounds: an own-half clamp would block anyone heading for the far side
+    pts = withGate(p, pts);
     for (let i = 0; i < pts.length; i++) {
       if (skipped()) return;
       const pt = pts[i], hd = Math.atan2(pt.z - p.pos.z, pt.x - p.pos.x);
@@ -436,7 +457,7 @@
       CM.skipping = false; CM.active = true; ensureDriver(); clearProps();
       const c = crowd(); if (c) { c.setMood(1); c.react(1, 'applause'); }
       stagePlayers();
-      const r = RN(); camSave(); if (r) r.setCameraMode('club');
+      const r = RN(); camSave(); if (r) tvFollow(r);
       banner(title(), 'Welcome to the club', 7000);
       say('Ladies and gentlemen, welcome to the ' + title() + '.');
       try {
@@ -449,7 +470,7 @@
       CM.active = true; ensureDriver();
       const P = PL(), c = crowd();
       if (!P.list.length) return;
-      const r = RN(); camSave(); if (r) r.setCameraMode('close');
+      const r = RN(); camSave(); if (r) tvFollow(r);
       if (c) c.react(2, 'applause');
       stagePlayers();
       try {
@@ -521,9 +542,11 @@
       try {
         if (c) c.setMood(1);
         yield* par(P.list.map(function (p) {
-          const sx = HPO.court.sides[p.team], gx = sx * 0.55, off = p.slot ? 0.5 : -0.5, bx = sx * 5 + (p.slot ? 0.6 : -0.6);
+          const sx = HPO.court.sides[p.team], cs = p.pos.x < 0 ? -1 : 1, off = p.slot ? 0.5 : -0.5, bx = sx * 5 + (p.slot ? 0.6 : -0.6);
           p.retrieving = true;
-          return () => walkPath(p, [{ x: gx + off * 0.4, z: -4.0 }, { x: gx + off * 0.4, z: -5.7 }, { x: bx, z: -5.8 }], 0.5, Math.PI / 2);
+          // the sides flipped when the game ended, but the players are still where they were: walk from there to the middle of the court,
+          // out through the entrance, then along the fence to the new bench
+          return () => walkPath(p, [{ x: cs * 0.55 + off * 0.4, z: -4.0 }, { x: off * 0.4, z: -5.7 }, { x: bx, z: -5.8 }], 0.5, Math.PI / 2);
         }), 10);
         if (skipped()) return;
         // drink, towel, tactical chat

@@ -49,7 +49,7 @@ render.pickCourt(clientX, clientY) -> {x,z}|null // screen click -> court-plane 
 render.stats() -> {fps, drawCalls, tris}
 render.debugRaw(bool)               // "Raw 3D" toggle (bypass palette/dither)
 ```
-Post pipeline (render agent): scene → low-res `WebGLRenderTarget` (colour+depth texture) → fullscreen shader: depth-edge outline (darken), OKLab nearest-colour snap against the fixed **90-colour palette** (LUT texture built at boot from `palette.COLORS`), 8×8 Bayer ordered dither scaled by luminance step, nearest upscale. Pixel size N means the target is `ceil(w/N) × ceil(h/N)`.
+Post pipeline (render agent): scene → low-res `WebGLRenderTarget` (colour+depth texture) → fullscreen shader: depth-edge outline (darken), OKLab nearest-colour snap against the fixed **90-colour palette** (LUT texture built at boot from `palette.COLORS`), 8×8 Bayer ordered dither scaled by luminance step, nearest upscale. Pixel size N means each low-res pixel covers N css px, rounded to a whole number of device pixels (`round(N × devicePixelRatio)`), so the target is `ceil(W/n) × ceil(H/n)` in device pixels and the canvas is sized to a whole multiple (cropped by the container). A fractional scale would draw stripes on phones.
 
 ## 3. actors (src/14_rigs.js → `HPO.mod.rigs` and `HPO.mod.actors`)
 ```js
@@ -84,7 +84,7 @@ Listens to BUS: `point:end`, `rally:stroke`, `match:phase`, `flag:update`, `chal
 Page shell in annetta.dev style (CONTRACT §13). `ui.init(ctx)` builds panel DOM into `#panel`, TV scoreboard overlay into `#stage`, match centre tabs, coach controls (all presets, serve/return direction, middle priority, focus opponent, click-to-aim `A`, timeout, challenge `C`), camera controls, court settings, audio sliders, debug overlay (backtick). Keys: Q/E rotate, 1–5 cameras, +/- zoom, R reset, Space pause, C challenge, A aim. `ui.feed(entry)`, `ui.setScore(state)`, `ui.toast(text)`. Responsive: desktop panel at right (≥ 900 px), stacked below on mobile.
 
 ## 7. Performance & mobile
-`HPO.cfg.mobile = matchMedia('(pointer:coarse)').matches || innerWidth < 700` → reduced mode: pixel size 3, crowd ×0.5, no shadows, fewer trees/flowers, particles ×0.5. Provide `setOptions({mobile})`.
+`HPO.cfg.mobile = matchMedia('(pointer:coarse)').matches || innerWidth < 700` → reduced mode (pixel size stays 2), crowd ×0.5, no shadows, fewer trees/flowers, particles ×0.5. Provide `setOptions({mobile})`.
 
 ## 8. World layout zones (so builders don't overlap)
 Metres, origin = court centre, +Z towards the default camera, −Z far side. Court enclosure footprint x∈[−10.5,10.5], z∈[−5.5,5.5] (glass/mesh walls, posts, open entrance).

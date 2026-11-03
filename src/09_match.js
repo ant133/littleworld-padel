@@ -286,9 +286,9 @@
   function* changeover(kind) {
     BUS.emit('changeover:start', { kind: kind });
     const pl = P();
-    pl.list.forEach(function (p) { p.intent = { type: 'move', x: HPO.court.sides[p.team] * 1.2, z: (p.slot ? -1 : 1) * 4.2, cap: 0.5 }; });
+    pl.list.forEach(function (p) { p.retrieving = true; p.intent = { type: 'move', x: HPO.court.sides[p.team] * 1.2, z: (p.slot ? -1 : 1) * 4.2, cap: 0.5 }; });
     yield wait(kind === 'set' ? 9 : 5);
-    pl.list.forEach(p => { p.anim = { clip: 'drink', t: 0, rate: 1 }; });
+    pl.list.forEach(p => { p.retrieving = false; p.anim = { clip: 'drink', t: 0, rate: 1 }; });
     pl.rest(kind === 'set' ? 0.12 : 0.05);
     BUS.emit('changeover:end', { kind: kind });
   }
@@ -305,6 +305,8 @@
     const serverInfo = R().startPoint();
     const players = P();
     const server = players.get(serverInfo.playerId);
+    // players are clamped to the half they stand on, so a skipped changeover must not leave anyone on the wrong one
+    players.list.forEach(function (p) { if (p.pos.x * HPO.court.sides[p.team] < 0) p.pos = { x: -p.pos.x, z: p.pos.z }; });
     yield wait(0.4);
     let guard = 0;
     for (;;) {

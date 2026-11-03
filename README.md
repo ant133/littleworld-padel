@@ -21,12 +21,12 @@ In the match the court fills the screen. Your pair is ringed and labelled **YOU*
 
 | Control | What it does |
 | --- | --- |
-| Balanced · Attack · Safe · Net · Lobs · Smash | Team tactic |
-| Middle: You / Annetta | Who takes the middle ball |
+| Coach dropdown: Balanced · Attack · Safe · Net · Lobs · Smash | Team tactic |
+| Middle ball dropdown: Auto / You / Annetta | Who takes the middle ball |
 | Timeout | Rest and re-set (one per match) |
 | Challenge | Eagle-Eye style line review with replay (two per set) |
 
-Top-right icons: pause, speed (1×/2×/4×), camera cycle, sound, Studio. `Esc` opens the pause menu. Sound and speech are **off** until you turn them on.
+Top-right icons: pause, speed (1×/2×/4×), camera cycle, sound (speaker icon), Studio. The chevron on the left edge hides or shows the scoreboard. Calls and signature shots (out, fault, double fault, net/let, first serve, smash, lob, bandeja, bajada) pop up as comic bursts. `Esc` opens the pause menu. Sound and speech are **off** until you turn them on.
 
 Saved players live in this browser's IndexedDB (database `littleworld-padel`). They belong to this site origin and device; clearing site data removes them.
 
@@ -103,7 +103,8 @@ Pushing to `main` runs `.github/workflows/pages.yml`: dupcheck, build, physics, 
 src/        one file per module, concatenated in numeric order (namespace HPO)
               00–09 headless simulation: core, palette, court, nav, ball, shots, players, AI, rules, match
               10–20 presentation: render, worlds, rigs, crowd/fx, replay/ceremony, audio, commentary, panel UI, main
-              21_game.js  Play mode (title, create player, setup, HUD, coach box, results)
+              21_game.js  Play mode (title, create player, setup, HUD, coach dropdowns, results)
+              22_callouts.js  Exclamation bursts and the pre-match state ribbon
               shell.html / shell.css  page chrome in the annetta.dev style
 tools/      build, dupcheck, headless and browser test drivers
 docs/       API notes, visual contract, testing summary, Pages setup

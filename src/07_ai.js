@@ -69,7 +69,7 @@
       const rcv = (receiverId && P.byId[receiverId]) || chooseReceiver(rec, bz);
       const rp = P.other(rcv);
       out[rcv.id] = { x: rx * 8.0, z: bz > 0 ? 2.4 : -2.4 };
-      out[rp.id] = { x: rx * 2.6, z: bz > 0 ? -2.0 : 2.0 };
+      out[rp.id] = { x: rx * SERVE_BACK, z: bz > 0 ? -2.0 : 2.0 };   // both receivers start behind the service line (6.95 m)
       return { map: out, receiver: rcv.id };
     },
 
@@ -313,6 +313,7 @@
     updateFormation(team);
 
     const incoming = B.state === 'live' && B.lastHitTeam !== team && B.lastHitTeam !== null;
+    const serveReturn = incoming && B.hitsSinceServe === 1;
     let roles = null;
     if (incoming) {
       if (now - assignAt[team] > 0.08) { assignAt[team] = now; roles = pickInterceptor(team, ps.filter(q => !q.scripted).length ? ps.filter(q => !q.scripted) : ps); tm.roles = roles; }
@@ -326,7 +327,9 @@
       else {
         const t = pos[p.id];
         const arrive = tm.formation === 'attack' ? 0.9 : 0.8;
-        p.intent = { type: 'move', x: t.x, z: t.z, cap: arrive };
+        // the receiving partner stays behind the service line until the serve has been returned
+        const tx = serveReturn ? sx * Math.max(Math.abs(t.x), SERVE_BACK) : t.x;
+        p.intent = { type: 'move', x: tx, z: t.z, cap: arrive };
       }
     });
   }
@@ -379,6 +382,7 @@
 
   // ---- formations ----
   const BASE = { attack: [2.2, 2.2], neutral: [2.8, 5.6], defend: [7.0, 7.0] };
+  const SERVE_BACK = 7.6; // metres from the net: just behind the 6.95 m service line
 
   function updateFormation(team) {
     const tm = teams[team], B = HPO.mod.ball.state, m = mods(team);

@@ -111,7 +111,7 @@
     const t = document.getElementById('title'); if (t) t.textContent = HPO.cfg.TITLE();
     loadFonts();
     const R = mod('render');
-    S.px = (R && R.pixelSize) || (HPO.cfg.mobile ? 3 : 2);
+    S.px = (R && R.pixelSize) || 2;
     if (R && R.cameraMode) S.cam = R.cameraMode;
     S.cam = (R && R.cameraMode) || 'club';
     if (R && R.todParams && R.todParams.tod && R.todParams.tod !== 'indoor') S.tod = R.todParams.tod;
@@ -669,8 +669,8 @@
   }
   function buildAudioSec() {
     const b = [];
-    EL.soundBtn = h('button', { class: 'btn block', type: 'button', id: 'btn-sound', onclick: () => setSound(!S.soundOn), 'aria-pressed': 'false' }, 'Sound off ♪');
-    syncs.push(() => { EL.soundBtn.textContent = S.soundOn ? (S.muted ? 'Sound on (muted) ♪' : 'Sound on ♪') : 'Sound off ♪'; EL.soundBtn.setAttribute('aria-pressed', S.soundOn ? 'true' : 'false'); EL.soundBtn.classList.toggle('primary', S.soundOn); });
+    EL.soundBtn = h('button', { class: 'btn block', type: 'button', id: 'btn-sound', onclick: () => setSound(!S.soundOn), 'aria-pressed': 'false' }, 'Sound off');
+    syncs.push(() => { EL.soundBtn.textContent = S.soundOn ? (S.muted ? 'Sound on (muted)' : 'Sound on') : 'Sound off'; EL.soundBtn.setAttribute('aria-pressed', S.soundOn ? 'true' : 'false'); EL.soundBtn.classList.toggle('primary', S.soundOn); });
     b.push(EL.soundBtn);
     [['fx', 'Effects'], ['crowd', 'Crowd'], ['commentary', 'Commentary'], ['ambience', 'Ambience']].forEach(function (bus) {
       b.push(field(bus[1], slider(0, 1, 0.05, () => S.vol[bus[0]], v => { S.vol[bus[0]] = v; const A = mod('audio'); if (A && A.setVolume) safe(() => A.setVolume(bus[0], v), 'vol'); BUS.emit('ui:setting', { key: 'volume:' + bus[0], value: v }); }, 'rg-vol-' + bus[0])));
@@ -1092,7 +1092,6 @@
       // the match flow plays the replay for AI challenges; a coach challenge plays it here
       if (rp && rp.play && !rp.active && S.coachClaimed && e.team === S.coachTeam && !(M && M.cfg && M.cfg.fast)) safe(() => rp.play({ kind: 'challenge' }), 'replay');
     });
-    BUS.on('replay:start', function (e) { toast(e && e.kind === 'challenge' ? 'Eagle Eye replay' : 'Replay', { kind: 'info', ms: 2500 }); });
     BUS.on('ball:contact', function (e) { lastSurf = e.surf; lastSurfAt = performance.now(); });
     BUS.on('cam:mode', function (e) { S.cam = e.mode; sync(); });
     BUS.on('ui:setting', function (e) {

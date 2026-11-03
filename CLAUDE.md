@@ -40,7 +40,7 @@ Web toy for annetta.dev, feature-complete and deployed through GitHub Pages. Wor
 - Experience: Play mode by default (title → create player → quick setup → full-screen match with a limited coach box for the visitor's team only); full panel optional as Studio. Match defaults: Quick, Golden Point, Classic Blue, Day, 1×; the title screen plays a live match behind it. Visitor teams up with Annetta Arslan (id `p5`, shown as "Annetta"); women's doubles for a woman, mixed for a man.
 - Coach: Play mode has six tactics, middle-ball choice, one timeout, two challenges per set; Studio has the full set (all presets, serve/return direction, aim-click, focus opponent). Eagle-Eye-style challenge with replay.
 - Audio and speech commentary are off by default with a visible sound toggle.
-- Device tier is auto-detected (pixel size, reduced mobile mode); the slider overrides.
+- Device tier is auto-detected (reduced mobile mode; pixel size is 2 on every device); the slider overrides. Phones start on the TV follow camera, never the whole-club camera.
 - Fonts: Google Fonts when online, system fallbacks offline. Pixel art stays in the canvas; UI text is not pixelated.
 - Persistence: visitor players in IndexedDB only; no `localStorage`.
 - Annetta in-world: sponsor board (annetta.dev), mascot spectator sprite (new art, embedded as a data URI; do NOT reuse her original sprite art), "A✦" on the LED screen.
