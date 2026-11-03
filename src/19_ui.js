@@ -50,7 +50,7 @@
   const S = {
     format: 'quick', scoring: 'golden', type: 'M', venue: 'classicBlue', tod: 'day', teamA: [], teamB: [], seed: '',
     speed: 1, ff: false, autoNext: false, roof: true, markings: true, trail: true, raw: false, glass: 0.4, px: 2,
-    soundOn: false, muted: false, speech: false, vol: { fx: 0.8, crowd: 0.7, commentary: 0.8, ambience: 0.5 },
+    soundOn: false, musicOn: false, callouts: true, muted: false, speech: false, vol: { master: 0.8, music: 0.5, fx: 0.8, crowd: 0.7, commentary: 0.8, ambience: 0.5 },
     coachTeam: 'A', coachClaimed: false, aim: false, debug: false, followBall: false, followPlayer: '',
     tab: 'score', feedKey: false
   };
@@ -148,7 +148,7 @@
     sync();
     ui.api = { S: S, EL: EL, h: h, add: add, safe: safe, toast: toast, feed: feed, drawPortrait: drawPortrait, flagEl: flagEl, mbar: mbar, teamName: teamName, teamIds: teamIds, rdef: rdef, roster: roster,
       contribution: contribution, teamSum: teamSum, newMatch: newMatch, applyVenueVisuals: applyVenueVisuals, applyTod: applyTod, applyDefaults: applyDefaults, refillPickers: refillPickers,
-      setSpeed: setSpeed, togglePause: togglePause, skipCeremony: skipCeremony, doChallenge: doChallenge, callTimeout: callTimeout, setCam: setCam, setSound: setSound, orders: orders,
+      setSpeed: setSpeed, togglePause: togglePause, setMusic: setMusic, setVolume: setVolume, setCallouts: setCallouts, skipCeremony: skipCeremony, doChallenge: doChallenge, callTimeout: callTimeout, setCam: setCam, setSound: setSound, orders: orders,
       claimCoach: claimCoach, closeModal: closeModal, fmtClock: fmtClock, M_clock: M_clock, savePlayerDef: savePlayerDef, openStudioPanel: null, ARCH: ARCH, ATTRS: ATTRS, FORMAT_NAMES: FORMAT_NAMES,
       PHASE_NAMES: PHASE_NAMES, VENUES: VENUES, CAMS: CAMS, showKeys: showKeys, setScore: setScore, shortName: shortName, other: other, hex: hex,
       isBusy: () => !!tmo, resultsReset: () => { resultsShown = false; } };
@@ -631,6 +631,7 @@
     const b = [];
     EL.camSeg = seg(CAMS.map((c, i) => [c[0], c[1], 'Key ' + (i + 1)]), () => { const R = mod('render'); return (R && R.cameraMode) || S.cam; }, v => setCam(v));
     b.push(h('div', { class: 'field' }, h('div', { class: 'lbl' }, 'Camera'), EL.camSeg.root));
+    b.push(sw('Callouts (OUT!, SMASH! ...)', () => S.callouts, v => setCallouts(v), 'sw-callouts').root);
     b.push(sw('Follow ball', () => S.followBall, v => { S.followBall = v; const R = mod('render'); if (R && R.setFollowBall) safe(() => R.setFollowBall(v), 'followBall'); }, 'sw-fball').root);
     EL.fpSel = h('select', { id: 'sel-fp', 'aria-label': 'Follow player' });
     EL.fpSel.addEventListener('change', () => { S.followPlayer = EL.fpSel.value; const R = mod('render'); if (R && R.followPlayer) safe(() => R.followPlayer(S.followPlayer || null), 'followPlayer'); });
@@ -667,16 +668,33 @@
     applyAudio(); sync();
     if (on && !mod('audio')) toast('Audio is not available in this build.', { kind: 'warn' });
   }
+  // one volume setter for every slider (Play-mode menus, HUD popover, Studio panel)
+  function setVolume(bus, v) {
+    v = Math.max(0, Math.min(1, +v || 0)); S.vol[bus] = v;
+    const A = mod('audio'); if (A && A.setVolume) safe(() => A.setVolume(bus, v), 'vol');
+    BUS.emit('ui:setting', { key: 'volume:' + bus, value: v });
+  }
+  function setCallouts(on) { S.callouts = !!on; BUS.emit('ui:setting', { key: 'callouts', value: S.callouts }); sync(); }
+  function setMusic(on) {
+    S.musicOn = !!on; const A = mod('audio');
+    if (on && A && A.unlock) safe(() => A.unlock(), 'unlock');
+    BUS.emit('ui:setting', { key: 'music', value: S.musicOn }); sync();
+    if (on && A && A.hasMusic && !A.hasMusic()) toast('No music track is bundled in this build.', { kind: 'warn' });
+  }
   function buildAudioSec() {
     const b = [];
     EL.soundBtn = h('button', { class: 'btn block', type: 'button', id: 'btn-sound', onclick: () => setSound(!S.soundOn), 'aria-pressed': 'false' }, 'Sound off');
     syncs.push(() => { EL.soundBtn.textContent = S.soundOn ? (S.muted ? 'Sound on (muted)' : 'Sound on') : 'Sound off'; EL.soundBtn.setAttribute('aria-pressed', S.soundOn ? 'true' : 'false'); EL.soundBtn.classList.toggle('primary', S.soundOn); });
     b.push(EL.soundBtn);
+    b.push(field('Sound volume', slider(0, 1, 0.05, () => S.vol.master, v => setVolume('master', v), 'rg-vol-master')));
+    b.push(sw('Music', () => S.musicOn, v => setMusic(v), 'sw-music').root);
+    b.push(field('Music volume', slider(0, 1, 0.05, () => S.vol.music, v => setVolume('music', v), 'rg-vol-music')));
+    b.push(h('div', { class: 'lbl' }, 'Mix'));
     [['fx', 'Effects'], ['crowd', 'Crowd'], ['commentary', 'Commentary'], ['ambience', 'Ambience']].forEach(function (bus) {
       b.push(field(bus[1], slider(0, 1, 0.05, () => S.vol[bus[0]], v => { S.vol[bus[0]] = v; const A = mod('audio'); if (A && A.setVolume) safe(() => A.setVolume(bus[0], v), 'vol'); BUS.emit('ui:setting', { key: 'volume:' + bus[0], value: v }); }, 'rg-vol-' + bus[0])));
     });
     b.push(sw('Speech commentary', () => S.speech, v => { S.speech = v; const A = mod('audio'); if (A && A.setSpeech) safe(() => A.setSpeech(v), 'speech'); BUS.emit('ui:setting', { key: 'speech', value: v }); if (v && !S.soundOn) setSound(true); }, 'sw-speech').root);
-    b.push(h('p', { class: 'hint' }, 'Sound starts off. Press S to switch it on, M to mute.'));
+    b.push(h('p', { class: 'hint' }, 'Sound and music start off. Press S to switch sound on, M to mute.'));
     return section('05', 'Audio', 'Sound', false, b, 'sec-audio');
   }
 

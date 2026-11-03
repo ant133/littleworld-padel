@@ -13,7 +13,7 @@ You make a player, team up with **Annetta Arslan**, and coach your pair from the
 The page opens on a title card over the live club.
 
 1. **Play with Annetta** (or **Continue as <name>** if you already made a player on this device).
-2. **Make your player:** name, Woman/Man, nationality, with a live portrait and nine stat bars. *Shuffle look & stats* rerolls. A woman plays women's doubles with Annetta; a man plays mixed doubles.
+2. **Make your player:** name, Woman/Man, nationality, with a live portrait and nine stat bars. The orange *Shuffle look & stats* button (shuffle icon) rerolls. A woman plays women's doubles with Annetta; a man plays mixed doubles.
 3. **Set up the match:** format (Quick / One set / Best of 3), scoring (Golden Point / Advantage), court (Classic Blue, Terracotta, Fast Blue, Indoor), time of day, and a random opposing pair you can shuffle.
 4. **Kick off.** The camera starts in the close-up; *Skip intro* jumps straight to play.
 
@@ -26,7 +26,9 @@ In the match the court fills the screen. Your pair is ringed and labelled **YOU*
 | Timeout | Rest and re-set (one per match) |
 | Challenge | Eagle-Eye style line review with replay (two per set) |
 
-Top-right icons: pause, speed (1×/2×/4×), camera cycle, sound (speaker icon), Studio. The chevron on the left edge hides or shows the scoreboard. Calls and signature shots (out, fault, double fault, net/let, first serve, smash, lob, bandeja, bajada) pop up as comic bursts. `Esc` opens the pause menu. Sound and speech are **off** until you turn them on.
+Top-right icons: pause, speed (1×/2×/4×), camera cycle, a sliders button that opens the sound and music on/off buttons, volume sliders and the callouts switch, and Studio (`S` still toggles sound). The chevron on the left edge hides or shows the scoreboard. Calls and signature shots (out, fault, double fault, net/let, smash, lob, bandeja, bajada) pop up as small comic bursts; the callouts switch turns them off if they get in the way. `Esc` opens the pause menu. Sound and speech are **off** until you turn them on.
+
+**Sound and music** each have a one-click on/off button and a volume slider (title screen, under the buttons; setup, pause and the in-match popover too; both start off, and dragging a slider up switches that channel on, dragging it to 0 switches it off). Sound covers effects, crowd and commentary; Music plays the soundtrack on a loop. The Studio panel's Audio section has the same two sliders next to the mixer. The soundtrack is optional: put one file at `assets_src/music.mp3` (also `.m4a`, `.ogg`, `.opus`, `.webm`) and `node tools/build.js` inlines it into the page as a data URI, so the build stays a single file. A good encode for a Suno track, trimmed to a clean loop: `ffmpeg -i in.mp3 -ac 1 -ar 44100 -b:a 48k assets_src/music.mp3` (add `-t 100` to keep only the first 100 s, which gives about 0.6 MB; the full 4:07 track is 1.4 MB). Without a track the Music choice shows "no track yet" and stays off.
 
 Saved players live in this browser's IndexedDB (database `littleworld-padel`). They belong to this site origin and device; clearing site data removes them.
 

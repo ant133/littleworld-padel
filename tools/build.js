@@ -24,6 +24,19 @@ function prepJs(code, name) {
   return out.replace(/<\/script/gi, '<\\/script').replace(/<!--/g, '<\\!--');
 }
 
+// Optional soundtrack: assets_src/music.(mp3|m4a|ogg|opus|webm) is inlined as HPO.assets.music (a data URI) so the page stays one file.
+const MUSIC_TYPES = { mp3: 'audio/mpeg', m4a: 'audio/mp4', ogg: 'audio/ogg', opus: 'audio/ogg', webm: 'audio/webm' };
+function musicPart() {
+  for (const ext of Object.keys(MUSIC_TYPES)) {
+    const f = path.join(root, 'assets_src', 'music.' + ext);
+    if (fs.existsSync(f)) {
+      const buf = fs.readFileSync(f);
+      return { kb: buf.length / 1024, code: '/* music.' + ext + ' */\n(function (HPO) { HPO.assets = HPO.assets || {}; HPO.assets.music = \'data:' + MUSIC_TYPES[ext] + ';base64,' + buf.toString('base64') + '\'; })(HPO);' };
+    }
+  }
+  return null;
+}
+
 function gameJs() {
   const files = fs.readdirSync(src).filter(f => /^\d.*\.js$/.test(f)).sort();
   const parts = [];
@@ -31,6 +44,7 @@ function gameJs() {
     const code = read(path.join(src, f));
     try { new vm.Script(code, { filename: f }); } catch (e) { throw new Error('Syntax error in src/' + f + ': ' + e.message); }
     parts.push('/* ' + f + ' */\n' + prepJs(code, f));
+    if (f === '15b_assets.js') { const m = musicPart(); if (m) { parts.push(m.code); console.log('  music  : ' + Math.round(m.kb) + ' KB source, inlined'); } }
   }
   return { js: parts.join('\n'), n: files.length };
 }

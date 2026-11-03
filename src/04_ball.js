@@ -25,7 +25,8 @@
 
   function restit(e, vna) {
     const lo = vna >= 3 ? 1 : 0.62 + 0.38 * smooth((vna - 0.3) / 2.7);
-    const hi = vna > 10 ? Math.max(0.8, 1 - 0.006 * (vna - 10)) : 1;
+    // a real ball loses more of its rebound the harder it lands: a lob dropping from 7-8 m must not climb over the 4 m fence again
+    const hi = vna > 6 ? Math.max(0.74, 1 - 0.04 * (vna - 6)) : 1;
     return e * lo * hi;
   }
   function smooth(x) { x = x < 0 ? 0 : x > 1 ? 1 : x; return x * x * (3 - 2 * x); }

@@ -22,7 +22,9 @@ Run everything from the repo root with Node 22+. The headless suites need no bro
 - `physics_tests`: 20/20.
 - `scoring_tests --quick`: 119/119.
 - `player_ai_tests`: pass (custom players and restoration, gender rules, duplicates, kick smash on both ends, overhead interception; full women's and mixed matches with no watchdogs and repeatable by seed).
-- `commentary_tests`: 1620 passed, 0 failed.
+- `commentary_tests`: 1598 passed, 0 failed.
+- Ball bounce (6 matches, seed 500, local script): of floor impacts at 9+ m/s vertical, rebounds above 3.9 m went from 13.5 % to 0 % (mean rebound apex 1.95 m to 1.39 m), and out-of-court retrievals from 2.2 % of points to 0. `restit` now lowers restitution with impact speed.
+- Volume sliders, toggles and the callouts switch checked in headless Chrome on a 390 px phone (sound/music state, gains, repaint across screens, callouts cleared when off); no errors.
 - `matrix`: 18/18 full matches (parts 0/3, 1/3, 2/3) finished with valid scores and 0 watchdog trips (quick/one set/best of 3 × advantage/golden × men's/women's/mixed, venues rotated). This is an 18-case sample, not every combination of venue, lighting and camera.
 - `build --check`: CHECK OK. Online 769 KB, offline 1359 KB. Title shows the runtime year ("… Cup 2026"). The offline file's only network request is the optional Google Fonts stylesheet; there are no HPO errors, about 203 draw calls and 251k triangles on desktop.
 - `features_browser` (offline build, headless Chrome, no network): title offers "Play with Annetta"; the create screen autofocuses the name field and an empty name is refused; a woman is saved and kicked off into a women's match with Annetta (`p5`) as partner, coach team A, close camera, and the coach bar present (tactic dropdown with six options, middle-ball dropdown with three, Timeout, Challenge); obstructing floodlights fade to about 5%; after a page reload the saved player is restored from IndexedDB and the title offers "Continue as Visitor Woman"; a new man player starts a mixed match; opposite court edges stay parallel at eight yaws; a 390×844 phone render has no horizontal scroll. No application errors.
@@ -47,15 +49,15 @@ Frame rates seen in headless Chrome with software WebGL (12–24 fps) say nothin
 
 | Metric | Result | Target | Status |
 | --- | --- | --- | --- |
-| First serve in | 91.2 % | 85–95 % | ok |
+| First serve in | 90.2 % | 85–95 % | ok |
 | Aces | 0.0 % | 0.5–2 % | low: receivers return every serve |
-| Double faults | 0.4 % of points | 1–3 % | slightly low |
-| Rally length (strokes incl. serve) | median 8, mean 9.7, p10 2, p90 19 | 6–12 | ok |
-| Lobs | 8.6 % of strokes | 8–14 % | ok |
-| Volleys | 26.6 % of strokes | 25–35 % | ok |
-| Wall-assisted returns | 10.7 % of strokes | 15–25 % | low |
-| Smash winners | 6.6 % of points | 2–6 % | slightly high |
-| Winners / forced / unforced | 32.5 % / 51.8 % / 15.4 % | unforced 25–40 % | unforced low |
+| Double faults | 0.2 % of points | 1–3 % | slightly low |
+| Rally length (strokes incl. serve) | median 8, mean 10.1, p10 3, p90 20 | 6–12 | ok |
+| Lobs | 10.3 % of strokes | 8–14 % | ok |
+| Volleys | 25.4 % of strokes | 25–35 % | ok |
+| Wall-assisted returns | 11.3 % of strokes | 15–25 % | low |
+| Smash winners | 8.1 % of points | 2–6 % | high (rose after the bounce change) |
+| Winners / forced / unforced | 29.6 % / 55.0 % / 15.2 % | unforced 25–40 % | unforced low |
 | Watchdog-ended points | 1 of 500 (0.2 %) | 0 | nearly there |
 
 Tuning knobs live under `HPO.cfg.TUNE` and can be overridden with `sim_cli --tune '{...}'`: `errPhi`, `errTh`, `errSpeed` (execution error), `speed`, `react`, `rally` (`{from, per}`), `ai` (`sharp`, `smashDepthMax`, `lobBase`, `aimNoise`, `riskMargin`, `volleyWilling`).

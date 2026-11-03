@@ -213,13 +213,13 @@
   };
 
   // ------------------------------------------------------------------ module state
-  const cfgVol = { master: 1, fx: 0.9, crowd: 0.8, commentary: 0.9, ambience: 0.7 };
+  const cfgVol = { master: 0.8, fx: 0.9, crowd: 0.8, commentary: 0.9, ambience: 0.7, music: 0.5 };
   const LIMITS = { // [minGapMs, maxPerSecond]
     pok: [90, 6], turf: [50, 9], glass: [110, 5], mesh: [120, 4], net: [150, 4], tape: [120, 4], post: [150, 3], step: [90, 8], tok: [300, 2], click: [40, 10],
     clap: [1500, 1], cheer: [2200, 1], gasp: [1800, 1], groan: [1800, 1], wave: [8000, 1], chime: [200, 4], bird: [1200, 2], pop: [60, 12], fanfare: [5000, 1]
   };
   const A = HPO.mod.audio = {
-    ac: null, unlocked: false, enabled: true, muted: true, speech: false, vol: cfgVol,
+    ac: null, unlocked: false, enabled: true, muted: true, speech: false, vol: cfgVol, musicOn: false,
     buses: null, E: null, env: null,
     perSec: { count: 0, lastWindow: 0 }, started: {}, dropped: {}, venue: 'classicBlue', tension: 0, mood: 0
   };
@@ -256,7 +256,9 @@
     comp.threshold.value = -14; comp.knee.value = 12; comp.ratio.value = 3; comp.attack.value = 0.006; comp.release.value = 0.2;
     lim.threshold.value = -2; lim.knee.value = 0; lim.ratio.value = 20; lim.attack.value = 0.001; lim.release.value = 0.08;
     duck.connect(master); master.connect(comp); comp.connect(lim); lim.connect(ac.destination);
-    const buses = { master: master, duck: duck }, env = {};
+    // music has its own bus into the compressor, so it follows the Music switch and not the sound-effects mute
+    const music = ac.createGain(); music.gain.value = 0; music.connect(comp);
+    const buses = { master: master, duck: duck, music: music }, env = {};
     const counters = { active: 0, started: 0 };
     ['fx', 'crowd', 'commentary', 'ambience'].forEach(function (b) {
       const g = ac.createGain(); g.connect(duck); buses[b] = g; env[b] = makeEnv(ac, g, counters);
@@ -271,6 +273,41 @@
     const t = A.ac.currentTime;
     A.buses.master.gain.setTargetAtTime(on() ? cfgVol.master : 0, t, 0.03);
     ['fx', 'crowd', 'commentary', 'ambience'].forEach(function (b) { A.buses[b].gain.setTargetAtTime(cfgVol[b], t, 0.05); });
+    applyMusic();
+  }
+
+  // ------------------------------------------------------------------ music: one embedded track (HPO.assets.music, a data URI), decoded on first use and looped
+  const MU = { buf: null, loading: null, src: null, stopT: 0, off: 0, t0: 0 }; // off = where the song was left, so switching music back on resumes instead of restarting
+  const hasMusic = () => !!(HPO.assets && HPO.assets.music);
+  function loadMusic() {
+    if (MU.buf) return Promise.resolve(MU.buf);
+    if (MU.loading) return MU.loading;
+    const uri = HPO.assets && HPO.assets.music; if (!uri || !A.ac) return Promise.resolve(null);
+    MU.loading = new Promise(function (res, rej) {
+      const b = atob(uri.slice(uri.indexOf(',') + 1)), u8 = new Uint8Array(b.length);
+      for (let i = 0; i < b.length; i++) u8[i] = b.charCodeAt(i);
+      const p = A.ac.decodeAudioData(u8.buffer, res, rej); if (p && p.catch) p.catch(rej); // old Safari only takes the callbacks
+    }).then(function (buf) { MU.buf = buf; return buf; }, function (e) { U.logError('audio.music', e); MU.loading = null; return null; });
+    return MU.loading;
+  }
+  function applyMusic() {
+    if (!A.buses || !A.buses.music) return;
+    const t = A.ac.currentTime, want = A.musicOn && A.unlocked && hasMusic();
+    A.buses.music.gain.setTargetAtTime(want ? cfgVol.music : 0, t, want ? 0.6 : 0.25);
+    clearTimeout(MU.stopT);
+    if (want) {
+      if (!MU.buf) { loadMusic().then(function (b) { if (b && A.musicOn) applyMusic(); }); return; }
+      if (!MU.src) {
+        const s = A.ac.createBufferSource(); s.buffer = MU.buf; s.loop = true; s.connect(A.buses.music); s.start(0, MU.off % MU.buf.duration);
+        MU.src = s; MU.t0 = A.ac.currentTime;
+      }
+    } else if (MU.src) {
+      MU.stopT = setTimeout(function () {
+        if (A.musicOn || !MU.src) return;
+        MU.off = (MU.off + A.ac.currentTime - MU.t0) % MU.buf.duration;
+        try { MU.src.stop(); } catch (e) { /* ignore */ } MU.src = null;
+      }, 1500);
+    }
   }
 
   // persistent beds: crowd murmur, wind, club atmosphere, crickets, tension drone
@@ -425,6 +462,8 @@
     },
     setEnabled(v) { A.enabled = !!v; if (!on()) cancelSpeech(); applyGains(); },
     setMuted(v) { A.muted = !!v; if (!on()) cancelSpeech(); applyGains(); },
+    hasMusic: hasMusic,
+    setMusic(v) { A.musicOn = !!v; if (v && !A.unlocked) A.unlock(); applyMusic(); },
     setSpeech(v) { A.speech = !!v; if (v && speechOK()) loadVoices(); if (!v) cancelSpeech(); },
     setVolume(bus, v) { if (!(bus in cfgVol)) return; cfgVol[bus] = clamp(+v || 0, 0, 1); applyGains(); if (bus === 'commentary' && cfgVol.commentary <= 0) cancelSpeech(); },
     uiClick() { play('click', {}); },
@@ -443,7 +482,7 @@
     status() {
       const t = now(), ev = recentStarts.filter(function (x) { return t - x < 1000; }).length;
       return {
-        unlocked: A.unlocked, enabled: A.enabled, muted: A.muted, on: on(), speech: A.speech, speechAvailable: speechOK(), ctxState: A.ac ? A.ac.state : 'none',
+        unlocked: A.unlocked, enabled: A.enabled, muted: A.muted, on: on(), music: A.musicOn, musicLoaded: !!MU.buf, musicOffset: +MU.off.toFixed(1), hasMusic: hasMusic(), speech: A.speech, speechAvailable: speechOK(), ctxState: A.ac ? A.ac.state : 'none',
         volumes: Object.assign({}, cfgVol), voices: { active: A.E ? A.E.vc.active : 0, started: A.E ? A.E.vc.started : 0, perSec: ev },
         queue: speechQ.length, speaking: speaking, started: Object.assign({}, A.started), dropped: Object.assign({}, A.dropped), venue: A.venue, tension: A.tension, speed: speedNow()
       };
@@ -536,6 +575,7 @@
     BUS.on('ui:setting', function (e) {
       if (!e) return;
       if (e.key === 'sound') A.setMuted(!e.value);
+      else if (e.key === 'music') A.setMusic(!!e.value);
       else if (e.key === 'speech') A.setSpeech(!!e.value);
       else if (typeof e.key === 'string' && e.key.indexOf('volume:') === 0) A.setVolume(e.key.slice(7), e.value);
       else if (e.key === 'venue' && typeof e.value === 'string') A.venue = e.value;
@@ -557,5 +597,7 @@
       requestAnimationFrame(loop);
     }
     if (speechOK() && speechSynthesis.addEventListener) speechSynthesis.addEventListener('voiceschanged', loadVoices);
+    // a backgrounded tab should go quiet
+    if (typeof document !== 'undefined') document.addEventListener('visibilitychange', function () { if (!A.ac) return; try { if (document.hidden) A.ac.suspend(); else if (A.unlocked) A.ac.resume(); } catch (e) { /* ignore */ } });
   };
 })(HPO);

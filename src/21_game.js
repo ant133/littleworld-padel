@@ -41,6 +41,54 @@
     function paint() { const v = String(get()); btns.forEach(b => b.setAttribute('aria-pressed', b.dataset.v === v ? 'true' : 'false')); }
     paint(); return { root: root, paint: paint, btns: btns };
   }
+  const MUS_ON = '<svg ' + SVG + '><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>';
+  const MUS_OFF = '<svg ' + SVG + '><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><path d="m3 3 18 18"/></svg>';
+  const MIX = '<svg ' + SVG + '><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>';
+  const SHUF = '<svg ' + SVG + '><path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H22"/><path d="m18 2 4 4-4 4"/><path d="M2 6h1.9c1.5 0 2.9.9 3.6 2.2"/><path d="M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8"/><path d="m18 14 4 4-4 4"/></svg>';
+  const ico = svg => { const e = document.createElement('span'); e.className = 'gm-ico'; e.innerHTML = svg; return e; };
+
+  // Sound (effects, crowd, commentary) and Music each get a one-click on/off button plus a volume slider. Rows repaint together so the
+  // title, setup, pause and HUD copies never disagree.
+  const paints = [];
+  function refreshAudio() {
+    for (let i = paints.length - 1; i >= 0; i--) { if (!paints[i].el.isConnected) paints.splice(i, 1); else paints[i].fn(); }
+  }
+  const soundIsOn = () => !!(S.soundOn && !S.muted);
+  const DEF_VOL = { master: 0.8, music: 0.5 };
+  function toggleAudio(bus) {
+    const music = bus === 'music', on = music ? !!S.musicOn : soundIsOn();
+    if (!on && (S.vol[bus] || 0) <= 0) API.setVolume(bus, DEF_VOL[bus]);
+    if (music) API.setMusic(!on); else API.setSound(!on);
+    refreshAudio();
+  }
+  function volRow(bus) {
+    const music = bus === 'music', A = mod('audio'), has = !music || !!(A && A.hasMusic && A.hasMusic()), label = music ? 'Music' : 'Sound';
+    const isOn = () => (music ? !!S.musicOn : soundIsOn());
+    const setOn = v => { if (music) API.setMusic(v); else API.setSound(v); };
+    const tog = h('button', { type: 'button', class: 'gm-vtog', 'data-bus': bus, 'aria-label': label + ' on or off', title: label + ' on / off', onclick: () => toggleAudio(bus) });
+    const rng = h('input', { type: 'range', class: 'gm-vol', 'data-bus': bus, min: '0', max: '100', step: '5', 'aria-label': label + ' volume',
+      oninput: () => { const v = +rng.value / 100; API.setVolume(bus, v); if (v > 0 && !isOn()) setOn(true); else if (v === 0 && isOn()) setOn(false); refreshAudio(); } });
+    const val = h('span', { class: 'gm-vval' });
+    const row = h('div', { class: 'gm-vrow' }, tog, h('div', { class: 'gm-vmid' }, h('div', { class: 'lbl rowline' }, h('span', null, has ? label : label + ' · no track yet'), val), rng));
+    let last = '';
+    function paint() {
+      const on = isOn(), v = Math.round((S.vol[bus] || 0) * 100), key = on + ':' + v + ':' + has;
+      if (key === last && document.activeElement !== rng) return; last = key;
+      row.classList.toggle('off', !on);
+      tog.innerHTML = music ? (on ? MUS_ON : MUS_OFF) : (on ? SND_ON : SND_OFF);
+      tog.setAttribute('aria-pressed', on ? 'true' : 'false');
+      if (document.activeElement !== rng) rng.value = String(v);
+      val.textContent = on ? v + '%' : 'Off';
+      tog.disabled = rng.disabled = !has;
+    }
+    paints.push({ el: row, fn: paint }); paint(); return row;
+  }
+  function audioBlock() { return h('div', { class: 'gm-audio' }, volRow('master'), volRow('music')); }
+  function calloutRow() {
+    const sg = segBtns([['on', 'On'], ['off', 'Off']], () => (S.callouts ? 'on' : 'off'), v => API.setCallouts(v === 'on'), 'gm-co');
+    paints.push({ el: sg.root, fn: sg.paint });
+    return h('div', { class: 'field gm-cofield' }, h('div', { class: 'lbl' }, 'Callouts (OUT!, SMASH! ...)'), sg.root);
+  }
   function openScreen(id, kids, cls) {
     closeScreen();
     const card = h('div', { class: 'gm-card ' + (cls || ''), role: 'dialog', 'aria-label': id });
@@ -64,6 +112,7 @@
     BUS.on('match:new', function () { hlKey = ''; if (G.st === 'title' || G.st === 'create' || G.st === 'setup') return; });
     BUS.on('match:phase', function (e) { if (e.phase === 'results' && (G.st === 'title' || G.st === 'create' || G.st === 'setup' || G.st === 'watch')) { clearTimeout(attractT); attractT = setTimeout(() => { if (G.st === 'title' || G.st === 'create' || G.st === 'setup') startAttract(); }, 5000); } });
     BUS.on('flag:update', onFlags);
+    document.addEventListener('pointerdown', function (e) { if (hud.pop && !hud.pop.hidden && !hud.pop.contains(e.target) && !hud.mix.contains(e.target)) toggleMix(false); }, true);
     // the intro/ceremony camera sweeps change the view: when play starts, go back to the camera the player picked
     BUS.on('match:phase', function (e) { if (e.phase === 'play' && G.st === 'playing' && G.camPref) safe(() => { API.setCam(G.camPref); const R = mod('render'); if (R && R.setFollowBall && G.camPref === 'follow') R.setFollowBall(true); }, 'camPref'); });
     const q = HPO.query;
@@ -126,6 +175,7 @@
              h('button', { class: 'btn big', type: 'button', id: 'gm-newplayer', onclick: () => showCreate() }, 'New player')]
           : h('button', { class: 'btn primary big', type: 'button', id: 'gm-play', onclick: () => showCreate() }, 'Play with Annetta'),
         h('button', { class: 'btn big', type: 'button', id: 'gm-watch', onclick: startWatch }, 'Just watch')),
+      audioBlock(),
       h('p', { class: 'gm-foot' }, h('a', { href: '#', id: 'gm-studio-link', onclick: e => { e.preventDefault(); setMode('studio'); } }, 'Studio controls'), ' · ',
         h('a', { href: 'https://annetta.dev/' }, '← annetta.dev')),
       h('p', { class: 'gm-foot it' }, 'Made in Jakarta with code, curiosity, and no spare towel.')
@@ -170,7 +220,7 @@
     }
     name.addEventListener('input', () => { cp.name = name.value; nameLine.firstChild && (nameLine.firstChild.textContent = cp.name.trim() || 'Your name'); });
     nat.addEventListener('change', () => { cp.nat = nat.value; render(); });
-    const shuffle = h('button', { class: 'btn', type: 'button', id: 'gm-shuffle', onclick: () => { cp.seed = rnd(); render(); } }, 'Shuffle look & stats');
+    const shuffle = h('button', { class: 'btn orange', type: 'button', id: 'gm-shuffle', onclick: () => { cp.seed = rnd(); render(); } }, ico(SHUF), 'Shuffle look & stats');
     const save = h('button', { class: 'btn primary big', type: 'button', id: 'gm-save', onclick: async () => {
       const nm = name.value.trim();
       if (!nm) { status.textContent = 'Give your player a name first.'; name.focus(); name.classList.remove('shake'); void name.offsetWidth; name.classList.add('shake'); return; }
@@ -243,7 +293,8 @@
       h('div', { class: 'field' }, h('div', { class: 'lbl' }, 'Scoring'), sco.root),
       h('div', { class: 'field' }, h('div', { class: 'lbl' }, 'Court'), courts),
       h('div', { class: 'field' }, h('div', { class: 'lbl' }, 'Time'), tod.root, todHint),
-      h('div', { class: 'field' }, h('div', { class: 'lbl rowline' }, h('span', null, 'Opponents · random pair'), h('button', { class: 'btn small', type: 'button', id: 'gm-oppshuffle', onclick: () => { G.opp = randomOpp(type, G.opp); paintOpp(); } }, 'Shuffle')), oppBox),
+      audioBlock(),
+      h('div', { class: 'field' }, h('div', { class: 'lbl rowline' }, h('span', null, 'Opponents · random pair'), h('button', { class: 'btn small orange', type: 'button', id: 'gm-oppshuffle', onclick: () => { G.opp = randomOpp(type, G.opp); paintOpp(); } }, ico(SHUF), 'Shuffle')), oppBox),
       h('div', { class: 'gm-acts row' }, h('button', { class: 'btn big', type: 'button', id: 'gm-sback', onclick: () => showTitle(true) }, 'Back'),
         h('button', { class: 'btn primary big', type: 'button', id: 'gm-kick', onclick: kickoff }, 'Kick off'))
     ];
@@ -276,9 +327,10 @@
     hud.pause = btn('gm-pause', '', '❚❚', 'Pause (Space)', () => { API.togglePause(); updateHud(true); });
     hud.speed = btn('gm-speed', 'txt', '1×', 'Speed', () => { const nx = { 1: 2, 2: 4, 4: 1 }[S.speed] || 1; API.setSpeed(nx); updateHud(true); });
     hud.cam = btn('gm-cam', 'txt sm', 'CAM', 'Camera', () => { const R = mod('render'); let i = CAM_CYCLE.findIndex(c => c[0] === (R && R.cameraMode)); i = (i + 1) % CAM_CYCLE.length; API.setCam(CAM_CYCLE[i][0]); G.camPref = CAM_CYCLE[i][0]; API.toast('Camera: ' + CAM_CYCLE[i][1], { ms: 1400 }); updateHud(true); });
-    hud.sound = btn('gm-sound', 'snd', '', 'Sound on / off (S)', () => { API.setSound(!S.soundOn); updateHud(true); }); hud.sound.innerHTML = SND_OFF;
+    hud.mix = btn('gm-mix', '', '', 'Volume and callouts', () => toggleMix()); hud.mix.innerHTML = MIX; hud.mix.setAttribute('aria-expanded', 'false');
+    hud.pop = h('div', { class: 'gm-pop', id: 'gm-pop', hidden: true }, h('div', { class: 'tag' }, 'Sound, music, callouts'), audioBlock(), calloutRow());
     hud.studio = btn('gm-studio', '', '⚙︎', 'Studio controls', () => setMode('studio'));
-    hud.icons = h('div', { class: 'gm-icons' }, hud.pause, hud.speed, hud.cam, hud.sound, hud.studio);
+    hud.icons = h('div', { class: 'gm-icons' }, hud.pause, hud.speed, hud.cam, hud.mix, hud.studio);
     // coach bar
     // dropdowns instead of a chip row: the picker costs one line of height on a phone
     hud.tactic = h('select', { class: 'gm-select', id: 'gm-tactic', 'aria-label': 'Coach tactic', onchange: () => { const p = PRESETS.find(x => x[0] === hud.tactic.value); if (p) setPreset(p[0], p[1]); } },
@@ -301,9 +353,13 @@
     // chevron tab on the left edge: slides the match centre (scoreboard) out of the way and back
     hud.sbTab = h('button', { type: 'button', class: 'gm-sbtab', id: 'gm-sbtab', 'aria-expanded': 'true', 'aria-label': 'Hide match centre', title: 'Match centre', onclick: () => toggleSb() });
     hud.sbTab.innerHTML = CHEV;
-    hud.root.append(hud.labels, hud.sbTab, hud.icons, hud.skip, hud.ticker, hud.coach, hud.watchBar);
+    hud.root.append(hud.labels, hud.sbTab, hud.icons, hud.pop, hud.skip, hud.ticker, hud.coach, hud.watchBar);
     EL.stage.appendChild(hud.root);
     hud.root.hidden = true;
+  }
+  function toggleMix(force) {
+    const open = force === undefined ? hud.pop.hidden : !!force;
+    hud.pop.hidden = !open; hud.mix.setAttribute('aria-expanded', open ? 'true' : 'false'); if (open) refreshAudio();
   }
   function toggleSb(force) {
     G.sbOff = force === undefined ? !G.sbOff : !!force;
@@ -344,9 +400,7 @@
     hud.speed.textContent = (M ? M.speed : S.speed) + '×';
     const R = mod('render'); const cc = CAM_CYCLE.find(c => c[0] === (R && R.cameraMode));
     hud.cam.title = 'Camera: ' + (cc ? cc[1] : (R && R.cameraMode) || '-');
-    const sndOff = !S.soundOn || S.muted; hud.sound.classList.toggle('off', sndOff);
-    if (hud._snd !== sndOff) { hud._snd = sndOff; hud.sound.innerHTML = sndOff ? SND_OFF : SND_ON; }
-    hud.sound.title = S.soundOn && !S.muted ? 'Sound on (S)' : 'Sound off (S)';
+    refreshAudio();
     const cur = o.preset || 'balanced', mid = o.middlePriority === 0 || o.middlePriority === 1 ? String(o.middlePriority) : '';
     if (document.activeElement !== hud.tactic && hud.tactic.value !== cur) hud.tactic.value = cur;
     if (document.activeElement !== hud.middle && hud.middle.value !== mid) hud.middle.value = mid;
@@ -412,6 +466,7 @@
   // ---------- pause menu ----------
   function onEscape() {
     if (G.mode !== 'play') return;
+    if (hud.pop && !hud.pop.hidden) { toggleMix(false); return; }
     if (pauseEl) { resumeFromPause(); return; }
     if (G.st === 'create' || G.st === 'setup') { showTitle(true); return; }
     if (G.st === 'playing' || G.st === 'watch') showPause();
@@ -420,6 +475,7 @@
     const M = mod('match'); wasPaused = !!(M && M.paused); if (M && !wasPaused) M.pause(true);
     pauseEl = h('div', { class: 'gm-screen', id: 'gm-pause-menu' }, h('div', { class: 'gm-card small' },
       h('div', { class: 'tag' }, 'Paused'), h('h2', { class: 'gm-h sm' }, 'Take a breather'),
+      audioBlock(), calloutRow(),
       h('div', { class: 'gm-acts' },
         h('button', { class: 'btn primary big', type: 'button', id: 'gm-resume', onclick: resumeFromPause }, 'Resume'),
         G.st === 'playing' ? h('button', { class: 'btn big', type: 'button', id: 'gm-restart', onclick: () => { closePause(true); kickoff(); } }, 'Restart') : null,

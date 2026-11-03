@@ -14,7 +14,6 @@
     double:  { text: 'DOUBLE FAULT!', col: '#b3122a', pri: 6, big: 1, shake: 2, rot: -4 },
     net:     { text: 'NET!',          col: '#e0a800', pri: 5, big: 1, shake: 1, rot: 4 },
     let:     { text: 'LET!',          col: '#e0a800', pri: 5, big: 1, shake: 0, rot: -5 },
-    first:   { text: 'FIRST SERVE!',  col: '#177dc5', pri: 1, rot: -3 },
     smash:   { text: 'SMASH!',        col: '#ff4d2e', pri: 3, shake: 1, rot: -7 },
     lob:     { text: 'LOB!',          col: '#27a9e1', pri: 2, rot: 5 },
     bandeja: { text: 'BANDEJA!',      col: '#8e5bd9', pri: 2, rot: -4 },
@@ -36,7 +35,7 @@
     return '<svg class="hpo-co-star" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polygon class="sh" points="' + p + '"/><polygon class="fl" points="' + p + '"/></svg>';
   })();
 
-  const C = HPO.mod.callouts = { ready: false, root: null, ribbon: null, live: [], last: null, lastSoft: 0, init: init, update: update, show: show };
+  const C = HPO.mod.callouts = { ready: false, enabled: true, setEnabled: setEnabled, root: null, ribbon: null, live: [], last: null, lastSoft: 0, init: init, update: update, show: show };
   let tmpV = null;
 
   function init() {
@@ -49,9 +48,9 @@
     ribbon.innerHTML = '<i class="dot"></i><b></b><small></small>';
     root.appendChild(ribbon);
     cont.appendChild(root);
+    BUS.on('ui:setting', function (e) { if (e && e.key === 'callouts') setEnabled(!!e.value); });
     BUS.on('fault', onFault);
     BUS.on('point:end', onPointEnd);
-    BUS.on('serve:hit', onServe);
     BUS.on('shot:hit', onShot);
     BUS.on('match:phase', onPhase);
     // main emits match:new right after starting the match, so keep whatever phase is already running
@@ -59,10 +58,12 @@
     C.ready = true;
   }
 
+  function setEnabled(v) { C.enabled = !!v; if (!C.enabled) clearAll(); }
+
   // ---------- gating ----------
   function allowed() {
     const M = mod('match'), rp = mod('replay');
-    if (!C.ready || document.hidden) return false;
+    if (!C.ready || !C.enabled || document.hidden) return false;
     if (rp && rp.active) return false;
     if (M && (M.phase !== 'play' || M.speed >= 4 || (M.cfg && M.cfg.fast))) return false; // fast-forwarded play would just be noise
     return true;
@@ -76,7 +77,6 @@
     show(e.kind === 'net' ? 'net' : 'fault');
   }
   function onPointEnd(e) { const k = e && END[e.reason]; if (k) show(k); }
-  function onServe(e) { if (e && e.attempt === 1) show('first', ballPos(e.playerId)); }
   function onShot(e) {
     if (!e || e.warmup || e.serve) return;
     const k = SHOT[e.shot]; if (k) show(k, ballPos(e.playerId, e.p));
@@ -99,7 +99,6 @@
     const now = performance.now(), last = C.last;
     if (last && now - last.t < 800 && k.pri <= last.pri) return;
     if (!k.big && k.pri < 5 && now - C.lastSoft < SOFT_GAP_MS) return; // keep the shot callouts special
-    if (key === 'first' && C.live.length) return;
     if (!k.big && !wp) return;
     if (k.big || k.pri >= 5) C.live.slice().forEach(removeEntry); // a call replaces whatever is still on screen
     const el = document.createElement('div'); el.className = 'hpo-co' + (k.big ? ' big' : '') + ' k-' + key;
@@ -107,7 +106,7 @@
     inn.style.setProperty('--co', k.col); inn.style.setProperty('--rot', k.rot + 'deg');
     // fit the text to the stage: on narrow screens a multi-word call stacks on two lines so it can stay big
     const cw = C.root.clientWidth || 360, words = k.text.split(' '), stack = cw < 560 && words.length > 1, longest = stack ? Math.max.apply(null, words.map(function (s) { return s.length; })) : k.text.length;
-    const want = k.big ? Math.min(88, cw * 0.115) : Math.max(24, Math.min(44, cw * 0.064));
+    const want = k.big ? Math.max(20, Math.min(44, cw * 0.0575)) : Math.max(13, Math.min(22, cw * 0.032)); // half the size of the first version, which covered too much of the court
     inn.style.fontSize = Math.floor(Math.min(want, cw * 0.94 / ((longest * 0.57 + 2.1) * 1.28))) + 'px';
     inn.innerHTML = STAR; const t = document.createElement('span'); t.className = 'hpo-co-t'; t.textContent = stack ? words.join('\n') : k.text; inn.appendChild(t);
     el.appendChild(inn); C.root.appendChild(el);
