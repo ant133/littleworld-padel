@@ -10900,7 +10900,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     const M = mod('match'), C = mod('ceremony');
     if (!M) return;
     M.skipCeremony(); if (C && C.skip) safe(() => C.skip(), 'ceremony.skip');
-    toast('Skipping the show. On to the tennis. Padel, sorry.', { kind: 'info' });
+    toast('Skipping the show. On to the game!', { kind: 'info' });
   }
   function gatherCfg() {
     return { format: S.format, scoring: S.scoring, type: S.type, venue: S.venue, seed: S.seed ? +S.seed : (1 + Math.floor(Math.random() * 99998)), teamA: S.teamA.slice(), teamB: S.teamB.slice() };
@@ -11765,7 +11765,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   const END = { out: 'out', wallFirst: 'out', ceiling: 'out', net: 'net', doubleFault: 'double' };
   const STATE = {
     intro: ['MATCH INTRO', 'Welcome to the club'], walkon: ['WALK-ON', 'The teams take the court'],
-    introductions: ['MEET THE PLAYERS', 'Introductions'], toss: ['COIN TOSS', 'Who serves first?'], warmup: ['WARM-UP', 'Get loose']
+    introductions: ['MEET THE PLAYERS', 'Introductions'], toss: ['COIN TOSS', 'Who serves first?'], warmup: ['WARM-UP', 'Get ready']
   };
   const LIFE_MS = 1500, SOFT_GAP_MS = 2200;
 

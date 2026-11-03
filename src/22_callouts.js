@@ -23,7 +23,7 @@
   const END = { out: 'out', wallFirst: 'out', ceiling: 'out', net: 'net', doubleFault: 'double' };
   const STATE = {
     intro: ['MATCH INTRO', 'Welcome to the club'], walkon: ['WALK-ON', 'The teams take the court'],
-    introductions: ['MEET THE PLAYERS', 'Introductions'], toss: ['COIN TOSS', 'Who serves first?'], warmup: ['WARM-UP', 'Get loose']
+    introductions: ['MEET THE PLAYERS', 'Introductions'], toss: ['COIN TOSS', 'Who serves first?'], warmup: ['WARM-UP', 'Get ready']
   };
   const LIFE_MS = 1500, SOFT_GAP_MS = 2200;
 
