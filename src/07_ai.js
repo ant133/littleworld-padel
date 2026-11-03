@@ -6,7 +6,7 @@
   const rgn = () => HPO.streams.ai;
 
   // tunable weights (cfg.TUNE.ai can override)
-  const T = CFG.TUNE.ai = Object.assign({ sharp: 0.6, smashDepthMax: 9.8, lobBase: 0.45, aimNoise: 1.0, riskMargin: 1.0, volleyWilling: 1.0 }, CFG.TUNE.ai || {});
+  const T = CFG.TUNE.ai = Object.assign({ sharp: 0.6, smashDepthMax: 9.8, lobBase: 0.3, aimNoise: 1.0, riskMargin: 1.0, volleyWilling: 1.0, duelCalm: 2.2, smashWilling: 0.4, dropBack: 1, smashAim: 0.6, netSafe: 2.0, resetCalm: 2.4, depthSafe: 1.0, lobTire: 0.45, lobNet: 0.7 }, CFG.TUNE.ai || {});
 
   const PRESETS = {
     balanced: {}, aggressive: { smash: 1.4, vibora: 1.4, flat: 1.25, lob: 0.7, risk: 0.7 }, safe: { smash: 0.6, vibora: 0.6, lob: 1.3, slice: 1.3, risk: 1.5, flat: 0.8 },
@@ -20,6 +20,8 @@
   };
   let now = 0, assignAt = { A: -9, B: -9 };
   let lastShot = null; // {team, kind, quality, hitterDepth}
+  let volleyRun = 0;   // strokes in a row, both teams, that were volleys
+  let lobRun = 0;      // ... that were lobs
 
   const LOB = { lobDef: 1, lobOff: 1 }, SOFT = { chiquita: 1, dejada: 1 }, SMASH = { smashFlat: 1, smashKick: 1 };
 
@@ -43,7 +45,7 @@
     },
     orders(team) { return teams[team].orders; },
     setAim(team, x, z, ttl) { teams[team].orders.aimPoint = { x: x, z: z, expires: now + (ttl || 12) }; },
-    reset() { now = 0; assignAt.A = assignAt.B = -9; ['A', 'B'].forEach(t => { teams[t].formation = 'neutral'; teams[t].since = 0; teams[t].claim = null; teams[t].aim = null; }); lastShot = null; },
+    reset() { volleyRun = lobRun = 0; now = 0; assignAt.A = assignAt.B = -9; ['A', 'B'].forEach(t => { teams[t].formation = 'neutral'; teams[t].since = 0; teams[t].claim = null; teams[t].aim = null; }); lastShot = null; },
 
     formation(team) { return teams[team].formation; },
 
@@ -87,6 +89,7 @@
         s -= Math.abs(y - (atNet ? 1.35 : 1.0)) * 0.9;              // comfortable contact height
         if (y >= 2.1 && y <= 2.95) s += (deepLob ? 4.0 : 1.8) * m.smash;
         if (c.ownBounces === 0) s += atNet ? 0.9 * T.volleyWilling * (1 + (m.netBias > 0 ? 0.3 : 0)) : -0.5; // volley when at the net
+        if (c.outside) s -= 2.5;                                      // only when nothing inside the glass can be reached
         if (c.afterWall) s += lvl(p.attrs.wallRead) * 0.6 - (atNet ? 0.5 : 0);   // wall specialists let it come back
         if (c.ownBounces === 0 && c.dt < 0.25) s -= 0.5;              // too rushed
         if (d < 1.0) s -= 0.6;                                       // too close to net / body in the net
@@ -109,6 +112,7 @@
     // --- pick the shot at the moment of commitment ---
     decideShot(p, info) {
       if (AI.warmup) return AI.warmupShot(p, info);
+      if (info.outside || info.above) return salvageShot(p, info);
       const S = HPO.mod.shots, P = HPO.mod.players;
       const team = p.team, m = mods(team), tm = teams[team];
       const ox = -HPO.court.sides[team];                 // sign of opponent half
@@ -127,21 +131,25 @@
       }
 
       if (high) {
-        const okSmash = (depth <= T.smashDepthMax && h >= 2.05) ? 1 : 0.03;
-        w.smashFlat = 3.6 * okSmash * m.smash; w.smashKick = 2.8 * okSmash * m.smash;
+        // a smash from the back of the court is a long, flat, low-percentage ball: the bandeja and the vibora take over
+        const okSmash = (depth <= T.smashDepthMax && h >= 2.05) ? (depth <= 4.8 ? 1 : depth <= 6.5 ? 0.6 : 0.22) : 0.03;
+        w.smashFlat = 3.6 * okSmash * m.smash * T.smashWilling; w.smashKick = 2.8 * okSmash * m.smash * T.smashWilling;
         w.bandeja = 2.6 * m.bandeja * (deep ? 1.1 : 1); w.vibora = 1.5 * m.vibora * (near ? 1.2 : 0.7);
         w.lobOff = deep ? 1.0 * m.lob : 0.35 * m.lob;
         if (info.afterWall && deep) w.bajada = 1.2;
       } else if (near && !low) {
-        w.volleyFH = w.volleyBH = 3.0 * m.volley;
-        w.chiquita = (h < 1.15 ? 1.1 : 0.4) * m.chiquita;
-        w.dejada = 0.5 * (ops.every(q => Math.abs(q.pos.x) > 5.5) ? 2 : 0.3);
-        w.lobOff = 0.35 * m.lob * (oppNet >= 1 ? 1.4 : 0.6);
+        // a volley duel with the other pair at the net is a coin toss; players reset it with a lob, a drop or a ball at the feet
+        // two volleys in a row and the ball is getting faster: somebody takes the pace off it
+        const duel = (oppNet >= 2 ? T.duelCalm : 0) + (volleyRun >= 2 ? T.resetCalm : 0);
+        w.volleyFH = w.volleyBH = 3.0 * m.volley * Math.max(0.25, 1 - 0.55 * duel * (1 - 0.5 * lvl(p.attrs.net)));
+        w.chiquita = (h < 1.15 ? 1.1 : 0.4) * m.chiquita * (1 + 1.6 * duel);
+        w.dejada = 0.5 * (ops.every(q => Math.abs(q.pos.x) > 5.5) ? 2 : 0.3) * (1 + 1.2 * duel);
+        w.lobOff = 0.35 * m.lob * (oppNet >= 1 ? 1.4 : 0.6) * (1 + 3.0 * duel);
       } else if (near && low) {
         w.chiquita = 2.6 * m.chiquita; w.volleyFH = w.volleyBH = 1.4 * m.volley; w.lobDef = 1.0 * m.lob;
       } else {
         w.flatGround = 1.0 * m.flat; w.topGround = 1.7; w.slice = 1.3 * m.slice;
-        w.lobDef = (T.lobBase + 1.1 * oppNet + 1.3 * press) * m.lob;
+        w.lobDef = (T.lobBase + T.lobNet * oppNet + 1.3 * press) * m.lob;
         w.lobOff = 0.5 * m.lob * (oppNet ? 1.2 : 0.4);
         w.chiquita = (oppNet >= 1 && h < 1.15 && mid) ? 1.0 * m.chiquita : 0.0;
         if (info.afterWall && h > 0.85 && deep) w.bajada = 2.0;
@@ -149,7 +157,7 @@
         if (info.walls >= 2 && info.slack > 0.12) w.counterDW = 1.3;
         if (mid && h > 0.6) w.volleyFH = w.volleyBH = 0.8 * m.volley;
       }
-      Object.keys(w).forEach(k => { if (LOB[k]) w[k] *= deepLob ? 0 : 0.55; });
+      Object.keys(w).forEach(k => { if (LOB[k]) w[k] *= (deepLob ? 0 : 0.55) * Math.pow(T.lobTire, Math.max(0, lobRun - 1)); });
       if (oppNet >= 2) { if (w.flatGround) w.flatGround *= 0.55; if (w.topGround) w.topGround *= 0.7; }
       if (w.volleyFH !== undefined) { if (info.fh) w.volleyBH = 0; else w.volleyFH = 0; }
 
@@ -201,6 +209,28 @@
     }
   };
 
+  // The ball has flown out of the court after a bounce and the player has run out to it: whatever goes over the fence or through the
+  // entrance and lands in the other half will do. Each option is flown through the real integrator first, so a ball that would hit
+  // the fence or the net is never chosen.
+  function salvageShot(p, info) {
+    const S = HPO.mod.shots, ox = -HPO.court.sides[p.team], rr = rgn(), h = info.height, ot = opp(p.team);
+    const gap = Math.abs(info.p.x) < 2.4 && Math.abs(info.p.z) > 4.9;
+    const kinds = info.above ? ['smashFlat', 'bandeja', 'vibora', 'lobOff'] : h >= 1.9 ? ['bandeja', 'lobOff', 'lobDef'] : h >= 0.9 ? ['lobOff', 'lobDef', 'flatGround'] : ['lobDef', 'lobOff', 'slice'];
+    if (gap && h < 1.7) kinds.unshift('flatGround', 'slice');                      // low and flat round the net post, through the opening
+    const spots = [[6.5, 0], [7.2, -1.8], [7.2, 1.8], [5.5, 0], [8.2, 0], [4.5, 1.5], [4.5, -1.5]];
+    for (let i = 0; i < kinds.length; i++) {
+      for (let j = 0; j < spots.length; j++) {
+        const target = { x: ox * spots[j][0], z: spots[j][1] + rr.range(-0.3, 0.3) };
+        const nom = S.nominal(info.p, kinds[i], target, { effort: 0.65, netMargin: 0.45 });
+        if (!nom.feasible) continue;
+        const c0 = S.trace(info.p, nom, 3.2).contacts[0];
+        if (!c0 || c0.surf !== 'floor' || HPO.court.regionOf(c0.p.x, c0.p.z) !== ot) continue;
+        return { kind: kinds[i], target: target, effort: 0.65, intent: 'defend', reason: 'salvage', netMargin: 0.45 };
+      }
+    }
+    return null;
+  }
+
   function scoreState() {
     const R = HPO.mod.rules;
     let pressure = 0;
@@ -228,11 +258,14 @@
     const S = HPO.mod.shots, ox = -HPO.court.sides[p.team];
     const acc = lvl(p.attrs.accuracy);
     // aim inside the lines by a multiple of the error this stroke is likely to carry (smart players size the margin to the difficulty)
-    const kEst = S.sigmaK(HPO.mod.players.execCtx(p, S.difficulty(kind, info.height, info.ballSpeed, 0), press, 0.1));
+    const stretchEst = U.clamp((info.reach - 0.8) / 0.4, 0, 1);   // a lunge widens the error, and the ball goes into the net first
+    const kEst = S.sigmaK(HPO.mod.players.execCtx(p, S.difficulty(kind, info.height, info.ballSpeed, stretchEst), press, stretchEst));
     const dist = Math.hypot(info.p.x - ox * 6, info.p.z) * 1.0 + 4;
     const sigLat = dist * Math.tan(kEst * (HPO.cfg.TUNE.errPhi || 1) * Math.PI / 180);
     const wise = 0.6 + 0.6 * lvl(p.attrs.tactics);
-    const marginD = U.clamp(0.4 + 0.35 * (m.risk - 1) + wise * T.riskMargin * 1.2 * sigLat, 0.6, 2.4);
+    // a flat ball's range moves by about 2 dθ / tan 2θ of its length, so an elevation error costs far more depth than width
+    const sigDepth = dist * 2 * kEst * (HPO.cfg.TUNE.errTh || 1) * 0.75 * Math.PI / 180 / 0.45;
+    const marginD = U.clamp(Math.max(0.4 + 0.35 * (m.risk - 1) + wise * T.riskMargin * 1.2 * sigLat, 0.5 + wise * T.depthSafe * sigDepth), 0.6, 3.0);
     const marginZ = U.clamp(0.3 + 0.25 * (m.risk - 1) + wise * T.riskMargin * 1.0 * sigLat, 0.45, 2.0);
     const rr = rgn();
     const cands = [];
@@ -250,7 +283,7 @@
       effort = kind === 'lobOff' ? 0.5 : 0.35;
     } else if (SMASH[kind]) {
       const sk = kind === 'smashKick';
-      [[3.2, -3.4], [3.2, 3.4], [5.5, 0], [4.5, -2.2], [4.5, 2.2]].forEach(a => addAim(a[0], a[1], 'smash'));
+      [[3.2, -3.4], [3.2, 3.4], [5.5, 0], [4.5, -2.2], [4.5, 2.2], [2.8, -3.2], [2.8, 3.2], [2.9, 0], [3.8, -1.4], [3.8, 1.4]].forEach(a => addAim(a[0], a[1], 'smash'));
       if (sk) { addAim(5.2, -5 + marginZ, 'glass'); addAim(5.2, 5 - marginZ, 'glass'); }
       effort = 0.75 + 0.25 * lvl(p.attrs.power);
     } else if (kind === 'chiquita') {
@@ -264,13 +297,13 @@
       addAim(10 - marginD - 1.0, -2.4, 'deep'); addAim(10 - marginD - 1.0, 2.4, 'deep'); addAim(10 - marginD - 1.4, 0, 'deepmid');
       effort = 0.45;
     } else if (kind === 'vibora') {
-      addAim(9 - marginD, -4.2 + 0.2, 'wallside'); addAim(9 - marginD, 4.2 - 0.2, 'wallside'); addAim(6.5, -3, 'wide'); addAim(6.5, 3, 'wide');
+      addAim(8.0 - marginD * 0.6, -2.8, 'wallside'); addAim(8.0 - marginD * 0.6, 2.8, 'wallside');   // bounce inside the line and run into the glass, not into it addAim(6.5, -3, 'wide'); addAim(6.5, 3, 'wide');
       effort = 0.6;
     } else if (kind === 'bajada') {
       addAim(6.0, -3.2, 'angle'); addAim(6.0, 3.2, 'angle'); addAim(7.5, 0, 'mid'); addAim(8, -2, 'deep'); addAim(8, 2, 'deep');
       effort = 0.6;
     } else if (kind.indexOf('volley') === 0) {
-      [[6.5, -3.0], [6.5, 3.0], [8.5, -1.8], [8.5, 1.8], [5.0, 0]].forEach(a => addAim(a[0] - marginD * 0.4, a[1], 'volley'));
+      [[6.5, -3.0], [6.5, 3.0], [7.8, -1.8], [7.8, 1.8], [5.0, 0]].forEach(a => addAim(a[0] - marginD * 0.5, a[1], 'volley'));
       effort = 0.5;
     } else { // ground strokes, slice, counterattack
       const dd = 10 - marginD - 1.2;
@@ -283,6 +316,7 @@
     const aimOrder = tm.orders.aimPoint && tm.orders.aimPoint.expires > now ? tm.orders.aimPoint : null;
     cands.forEach(function (c) {
       let s = 0;
+      c.s0 = 0;
       let dmin = 99; ops.forEach(q => { dmin = Math.min(dmin, Math.hypot(q.pos.x - c.x, q.pos.z - c.z)); });
       s += Math.min(dmin, 5) * (c.tag === 'feet' ? -0.2 : 0.5);
       if (c.tag === 'feet') s += 1.0;
@@ -292,15 +326,51 @@
       s -= Math.abs(c.z) > 5 - marginZ ? 1 : 0;
       s += rr.range(-1, 1) * T.aimNoise * (1.2 - lvl(p.attrs.tactics));
       if (aimOrder) s -= Math.hypot(aimOrder.x - c.x, aimOrder.z - c.z) * 0.9;
+      c.s0 = s;
       if (s > bs) { bs = s; best = c; }
     });
+    // a smash is judged by where the ball actually ends up: the placement the other pair reaches last (or never) wins
+    if (SMASH[kind] && T.smashAim > 0 && !aimOrder) {
+      let top = null, tb = -1e9;
+      cands.slice().sort((a, b) => b.s0 - a.s0).slice(0, 6).forEach(function (c) {
+        const r = reachSlack(p, info, kind, c, effort, ops);
+        if (!r) return;
+        const s = c.s0 - T.smashAim * 2.4 * U.clamp(r.slack, -0.6, 1.4);
+        if (s > tb) { tb = s; top = c; }
+      });
+      if (top) best = top;
+    }
     let target = { x: best.x, z: best.z };
     if (aimOrder) { // coach click: honoured only if the shot can really go there
       const nomO = S.nominal(info.p, kind, { x: aimOrder.x, z: aimOrder.z }, { effort: effort });
       if (nomO.feasible && S.difficulty(kind, info.height, info.ballSpeed, 0) < 0.85) { target = { x: aimOrder.x, z: aimOrder.z }; tm.orders.aimPoint = null; }
     }
     const intent = LOB[kind] || kind === 'wallDef' ? 'defend' : (SMASH[kind] || kind === 'vibora' ? 'attack' : (SOFT[kind] ? 'finesse' : 'rally'));
-    return { kind: kind, target: target, effort: effort, intent: intent, reason: best.tag, netMargin: U.clamp(0.10 + 0.05 * kEst, 0.1, 0.45) };
+    return { kind: kind, target: target, effort: effort, intent: intent, reason: best.tag, netMargin: SMASH[kind] ? U.clamp(0.3 + 0.1 * kEst, 0.32, 0.7) : U.clamp(T.netSafe * (0.12 + 0.07 * kEst), 0.12, 0.7) };
+  }
+
+  // How comfortably can the other pair still hit this smash? slack < 0: nobody gets there in time. null: the shot would not even land in.
+  function reachSlack(p, info, kind, c, effort, ops) {
+    const S = HPO.mod.shots, P = HPO.mod.players, nav = HPO.mod.nav, ot = opp(p.team);
+    const nom = S.nominal(info.p, kind, { x: c.x, z: c.z }, { effort: effort });
+    if (!nom.feasible) return null;
+    const tr = S.trace(info.p, nom, 3.2);
+    const fl = tr.contacts.filter(k => k.surf === 'floor'), first = tr.contacts[0];
+    if (!fl.length || !first || first.surf !== 'floor' || HPO.court.regionOf(fl[0].p.x, fl[0].p.z) !== ot) return null;
+    const react = ops.map(q => P.reactDelay(q) * (HPO.cfg.TUNE.react || 1) + P.readDelay(q, { v: nom.v, shot: kind }, p));
+    let best = -9, ci = 0, ownB = 0;
+    for (let i = 0; i < tr.samples.length; i++) {
+      const s = tr.samples[i];
+      while (ci < fl.length && fl[ci].t <= s.t) { if (HPO.court.regionOf(fl[ci].p.x, fl[ci].p.z) === ot) ownB++; ci++; }
+      if (ownB > 1) break;
+      if (s.p.y < 0.2 || s.p.y > 2.95 || s.p.x * HPO.court.sides[ot] < 0.15 || Math.abs(s.p.x) > 9.9 || Math.abs(s.p.z) > 4.95) continue;
+      for (let k = 0; k < ops.length; k++) {
+        const q = ops[k], d = Math.hypot(s.p.x - q.pos.x, s.p.z - q.pos.z);
+        const sl = s.t - react[k] - nav.timeTo(Math.max(0, d - 0.95), 0, P.vmax(q), P.accel(q));
+        if (sl > best) best = sl;
+      }
+    }
+    return { slack: best };
   }
 
   function weakness(q) { return (1 - lvl(q.attrs.defense)) * 0.6 + q.fatigue * 0.5 + (1 - q.confidence) * 0.2; }
@@ -381,8 +451,27 @@
   }
 
   // ---- formations ----
-  const BASE = { attack: [2.2, 2.2], neutral: [2.8, 5.6], defend: [7.0, 7.0] };
+  const BASE = { attack: [2.2, 2.2], neutral: [2.8, 5.6], defend: [7.4, 7.8] };
   const SERVE_BACK = 7.6; // metres from the net: just behind the 6.95 m service line
+
+  // Our ball is on its way to the opponents and will reach them above 1.9 m (a lob, a floater): they get an overhead.
+  const ovCache = { A: { k: -1, v: false }, B: { k: -1, v: false } };
+  function overheadComing(team) {
+    const B = HPO.mod.ball, st = B.state;
+    if (st.state !== 'live' || st.lastHitTeam !== team || T.dropBack <= 0) return false;
+    const key = st.hitsSinceServe * 1000 + Math.floor(now * 6), c = ovCache[team];
+    if (c.k === key) return c.v;
+    const sx = HPO.court.sides[team];
+    let v = false;
+    const s = B.predict(null, 2.4, 20).samples;
+    for (let i = 0; i < s.length; i++) {
+      const q = s[i];
+      if (q.p.x * sx > 0) continue;                       // still on our side of the net
+      if (q.floorBounces > 0 && q.p.y < 1.9) break;       // it comes down before anyone can hit it from above
+      if (q.p.y >= 1.9 && Math.abs(q.p.x) < 9.2 && Math.abs(q.p.x) > 0.8) { v = true; break; }
+    }
+    c.k = key; c.v = v; return v;
+  }
 
   function updateFormation(team) {
     const tm = teams[team], B = HPO.mod.ball.state, m = mods(team);
@@ -407,6 +496,8 @@
         else want = ls.hitterDepth > 5.5 ? 'neutral' : tm.formation;
       }
     }
+    // the other pair is about to get a ball above the shoulder: nobody stays up to be smashed at, wait for it off the glass
+    if (overheadComing(team)) want = 'defend';
     if (m.netBias > 0 && want === 'neutral') want = 'attack';
     if (m.netBias < 0 && want === 'attack') want = 'neutral';
     const urgent = want === 'defend' && tm.formation !== 'defend';
@@ -447,6 +538,8 @@
   BUS.on('shot:hit', function (e) {
     const p = pr(e.playerId); if (!p) return;
     lastShot = { team: p.team, kind: e.shot, quality: e.quality, hitterDepth: Math.abs(e.p.x), fast: U.len3(e.v) > 20 };
+    volleyRun = e.shot === 'volleyFH' || e.shot === 'volleyBH' ? volleyRun + 1 : 0;
+    lobRun = LOB[e.shot] ? lobRun + 1 : 0;
   });
-  BUS.on('point:start', function () { lastShot = null; ['A', 'B'].forEach(t => { teams[t].formation = 'neutral'; teams[t].since = now; teams[t].claim = null; }); });
+  BUS.on('point:start', function () { lastShot = null; volleyRun = lobRun = 0; ['A', 'B'].forEach(t => { teams[t].formation = 'neutral'; teams[t].since = now; teams[t].claim = null; }); });
 })(HPO);

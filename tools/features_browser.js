@@ -8,6 +8,7 @@ const url = 'file:///' + path.resolve('dist/littleworld-offline.html').replace(/
 const click = id => `document.getElementById('${id}').click()`;
 const create = (name, gender) => `(()=>{const n=document.getElementById('gm-name');n.value=${JSON.stringify(name)};n.dispatchEvent(new Event('input'));document.querySelector('#gm-create .gm-seg button[data-v="${gender}"]').click();${click('gm-save')};return true})()`;
 const snap = `JSON.stringify({st:HPO.mod.game.st,mode:HPO.mod.game.mode,type:HPO.mod.ui.state.type,team:HPO.mod.ui.state.teamA,coach:HPO.mod.match.coachTeam,player:HPO.mod.game.player&&HPO.mod.game.player.name,cam:HPO.mod.render.cameraMode,errors:HPO.util.errors})`;
+const drawerTest = `(async()=>{const w=ms=>new Promise(r=>setTimeout(r,ms)),tab=t=>{document.querySelector('#gm-drawer .tabs button[data-tab='+t+']').click();return w(250).then(()=>(document.querySelector('#gm-drawer .tabpane.on')||{textContent:''}).textContent.length)};const sbBefore=!!document.getElementById('sb').offsetParent;document.getElementById('gm-sbtab').click();await w(300);const sbOpen=!!document.getElementById('sb').offsetParent&&!document.getElementById('gm-drawer').hidden;const tabs=[...document.querySelectorAll('#gm-drawer .tabs button')].map(b=>b.textContent);const score=await tab('score'),stats=await tab('stats'),players=await tab('players');await tab('feed');document.getElementById('gm-sbtab').click();await w(300);return JSON.stringify({sbBefore,sbOpen,tabs,score,stats,players,closed:document.getElementById('gm-drawer').hidden,homeAgain:!!document.querySelector('#panel #sec-centre')})})()`;
 const yawTest = `JSON.stringify((()=>{const R=HPO.mod.render,b=R.view.yaw,v=[];for(let i=0;i<8;i++){R.view.yaw=R.view.yawT=i*Math.PI/4;R.cameraMode='free';R._updateCamera(0);const p=[[-10,-5],[10,-5],[10,5],[-10,5]].map(a=>new THREE.Vector3(a[0],0,a[1]).project(R.camera));v.push(Math.hypot(p[0].x+p[2].x-p[1].x-p[3].x,p[0].y+p[2].y-p[1].y-p[3].y));}R.view.yaw=b;return v;})())`;
 
 (async () => {
@@ -31,7 +32,8 @@ const yawTest = `JSON.stringify((()=>{const R=HPO.mod.render,b=R.view.yaw,v=[];f
     { eval: `${click('gm-kick')};true` }, { wait: 1500 },
     { eval: snap },                                                                                                                            // 8 mixed match
     { eval: `JSON.stringify(HPO.mod.players.list.map(p=>({name:p.name,gender:p.def.gender})))` },                                              // 9
-    { eval: yawTest }                                                                                                                          // 10
+    { eval: yawTest },                                                                                                                         // 10
+    { eval: drawerTest }                                                                                                                       // 11 chevron opens the full match centre
   ] });
   const errs = r.errors.filter(e => !/ERR_INTERNET_DISCONNECTED|fonts\.g(oogleapis|static)/.test(e));
   assert.deepEqual(errs, []);
@@ -50,7 +52,8 @@ const yawTest = `JSON.stringify((()=>{const R=HPO.mod.render,b=R.view.yaw,v=[];f
   const mixed = v[16]; assert.equal(mixed.type, 'X'); assert.equal(mixed.team[1], 'p5'); assert.equal(mixed.st, 'playing'); assert.deepEqual(mixed.errors, []);
   const names = v[17].map(p => p.name); assert(names.includes('Visitor Man') && names.includes('Annetta Arslan'), names.join());
   assert(v[18].every(x => x < 1e-10), 'court opposite edges parallel at every yaw');
-  console.log('PASS browser (Play mode): title -> create (autofocus, validation) -> setup -> kick off with limited coach bar; reload restores saved player and offers Continue; mixed match with Annetta; orthographic parallel court at 8 yaws; floodlight fade; offline render; no app errors');
+  const dr = v[19]; assert(dr.sbBefore && dr.sbOpen, 'the scoreboard stays while the match centre is open'); assert.deepEqual(dr.tabs, ['Score', 'Stats', 'Players', 'Feed']); assert(dr.score > 50 && dr.stats > 200 && dr.players > 200, 'every tab has content: ' + JSON.stringify(dr)); assert(dr.closed && dr.homeAgain, 'closing hands the section back to the Studio panel');
+  console.log('PASS browser (Play mode): title -> create (autofocus, validation) -> setup -> kick off with limited coach bar; chevron opens the full match centre (score, stats, players, feed); reload restores saved player and offers Continue; mixed match with Annetta; orthographic parallel court at 8 yaws; floodlight fade; offline render; no app errors');
   const mobile = await B.run({ url, width: 390, height: 844, mobile: true, offline: true, waitMs: 1500,
     steps: [{ eval: `${click('gm-play')};true` }, { wait: 400 }, { shot: 'scratch/features-mobile-create.png' }],
     shots: ['scratch/features-mobile.png'], evals: ['JSON.stringify(HPO.util.errors)', 'HPO.mod.render.stats().drawCalls', 'document.documentElement.scrollWidth<=window.innerWidth'] });

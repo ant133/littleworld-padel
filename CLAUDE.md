@@ -7,7 +7,7 @@ Web toy for annetta.dev, feature-complete and deployed through GitHub Pages. Wor
 
 ## Dev commands
 - `node tools/devpage.js` → dev.html (all src/*.js); open via `file:///.../dev.html?cam=club|close|follow|top&tod=day|dusk|night&venue=classicBlue|terracotta|fastBlue|indoor&speed=1&fast=0|1&px=2`. Play mode is the default; add `mode=studio` for the full panel, `title=0` to skip the title.
-- Tests: `node tools/dupcheck.js`, `physics_tests.js`, `scoring_tests.js [--quick]`, `player_ai_tests.js`, `commentary_tests.js`, `matrix.js --part k/3`, `sim_cli.js --n N [--tune {json}]`. Results and gaps: docs/TESTING.md.
+- Tests: `node tools/dupcheck.js`, `physics_tests.js`, `scoring_tests.js [--quick]`, `player_ai_tests.js`, `commentary_tests.js`, `reflex_stats.js [--n N]` (smash and volley-chain statistics), `matrix.js --part k/3`, `sim_cli.js --n N [--tune {json}]`. Results and gaps: docs/TESTING.md.
 - Browser (headless Chrome via `tools/browser.js`): `e2e.js` (match sampler), `features_browser.js` (Play-mode journey, saved players, camera, offline render, phone), `visual_matrix.js` (courts × lighting × cameras). Run `node tools/build.js` first for the ones that load `dist/`.
 - Ship: `node tools/build.js [--check]` → dist/littleworld-online.html + -offline.html; `node tools/make_artifact.js` → dist/littleworld-artifact.html (artifact publish).
 - Key docs: CONTRACT.md, docs/PLAY_MODE.md, docs/VISUAL_CONTRACT.md, docs/API_*.md, docs/TESTING.md, docs/GITHUB_PAGES.md.

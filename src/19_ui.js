@@ -148,7 +148,7 @@
     sync();
     ui.api = { S: S, EL: EL, h: h, add: add, safe: safe, toast: toast, feed: feed, drawPortrait: drawPortrait, flagEl: flagEl, mbar: mbar, teamName: teamName, teamIds: teamIds, rdef: rdef, roster: roster,
       contribution: contribution, teamSum: teamSum, newMatch: newMatch, applyVenueVisuals: applyVenueVisuals, applyTod: applyTod, applyDefaults: applyDefaults, refillPickers: refillPickers,
-      setSpeed: setSpeed, togglePause: togglePause, setMusic: setMusic, setVolume: setVolume, setCallouts: setCallouts, skipCeremony: skipCeremony, doChallenge: doChallenge, callTimeout: callTimeout, setCam: setCam, setSound: setSound, orders: orders,
+      renderTab: renderTab, setSpeed: setSpeed, togglePause: togglePause, setMusic: setMusic, setVolume: setVolume, setCallouts: setCallouts, skipCeremony: skipCeremony, doChallenge: doChallenge, callTimeout: callTimeout, setCam: setCam, setSound: setSound, orders: orders,
       claimCoach: claimCoach, closeModal: closeModal, fmtClock: fmtClock, M_clock: M_clock, savePlayerDef: savePlayerDef, openStudioPanel: null, ARCH: ARCH, ATTRS: ATTRS, FORMAT_NAMES: FORMAT_NAMES,
       PHASE_NAMES: PHASE_NAMES, VENUES: VENUES, CAMS: CAMS, showKeys: showKeys, setScore: setScore, shortName: shortName, other: other, hex: hex,
       isBusy: () => !!tmo, resultsReset: () => { resultsShown = false; } };
@@ -883,7 +883,7 @@
     const M = mod('match'), C = mod('ceremony');
     if (!M) return;
     M.skipCeremony(); if (C && C.skip) safe(() => C.skip(), 'ceremony.skip');
-    toast('Skipping the show. On to the tennis. Padel, sorry.', { kind: 'info' });
+    toast('Skipping the show. On to the game!', { kind: 'info' });
   }
   function gatherCfg() {
     return { format: S.format, scoring: S.scoring, type: S.type, venue: S.venue, seed: S.seed ? +S.seed : (1 + Math.floor(Math.random() * 99998)), teamA: S.teamA.slice(), teamB: S.teamB.slice() };

@@ -438,11 +438,18 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
 
 /* Match centre toggle (Play mode) */
 .mode-play #sb{left:30px;transition:transform .28s cubic-bezier(.3,.8,.3,1)}
-.mode-play.gm-sb-off #sb{transform:translateX(calc(-100% - 40px))}
 .gm-sbtab{position:absolute;left:0;top:12px;width:26px;height:56px;padding:0;display:grid;place-items:center;border:1px solid var(--ink);border-left:0;background:var(--cream);color:var(--ink);box-shadow:3px 3px 0 #12399433;cursor:pointer}
 .gm-sbtab:hover{background:var(--hl)}
 .gm-sbtab svg{transition:transform .28s}
-.gm-sb-off .gm-sbtab svg{transform:rotate(180deg)}
+.gm-sbtab svg{transform:rotate(180deg)}
+.gm-sb-open .gm-sbtab svg{transform:none}
+.gm-drawer{position:absolute;left:30px;bottom:132px;width:min(340px,calc(100% - 44px));overflow-y:auto;background:#fffaf0f5;border:1px solid var(--ink);box-shadow:6px 8px 0 #1264992e;padding:0 12px 10px;z-index:7;pointer-events:auto;overscroll-behavior:contain}
+.gm-drawer[hidden]{display:none}
+.gm-drawer .sec{border:0;margin:0;box-shadow:none;background:none}
+.gm-drawer .sec>summary{display:none}
+.gm-drawer .sec .body{padding:0;display:block}
+.gm-drawer .tabs{margin-top:8px}
+@media (max-width:520px){.gm-drawer{left:8px;width:calc(100% - 66px);bottom:150px}}
 @media (max-height:520px){.gm-sbtab{height:44px}}
 
 /* Sound + Music choices on the title, setup and pause screens */

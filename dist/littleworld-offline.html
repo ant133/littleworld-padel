@@ -440,11 +440,18 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
 
 /* Match centre toggle (Play mode) */
 .mode-play #sb{left:30px;transition:transform .28s cubic-bezier(.3,.8,.3,1)}
-.mode-play.gm-sb-off #sb{transform:translateX(calc(-100% - 40px))}
 .gm-sbtab{position:absolute;left:0;top:12px;width:26px;height:56px;padding:0;display:grid;place-items:center;border:1px solid var(--ink);border-left:0;background:var(--cream);color:var(--ink);box-shadow:3px 3px 0 #12399433;cursor:pointer}
 .gm-sbtab:hover{background:var(--hl)}
 .gm-sbtab svg{transition:transform .28s}
-.gm-sb-off .gm-sbtab svg{transform:rotate(180deg)}
+.gm-sbtab svg{transform:rotate(180deg)}
+.gm-sb-open .gm-sbtab svg{transform:none}
+.gm-drawer{position:absolute;left:30px;bottom:132px;width:min(340px,calc(100% - 44px));overflow-y:auto;background:#fffaf0f5;border:1px solid var(--ink);box-shadow:6px 8px 0 #1264992e;padding:0 12px 10px;z-index:7;pointer-events:auto;overscroll-behavior:contain}
+.gm-drawer[hidden]{display:none}
+.gm-drawer .sec{border:0;margin:0;box-shadow:none;background:none}
+.gm-drawer .sec>summary{display:none}
+.gm-drawer .sec .body{padding:0;display:block}
+.gm-drawer .tabs{margin-top:8px}
+@media (max-width:520px){.gm-drawer{left:8px;width:calc(100% - 66px);bottom:150px}}
 @media (max-height:520px){.gm-sbtab{height:44px}}
 
 /* Sound + Music choices on the title, setup and pause screens */
@@ -1277,7 +1284,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   'use strict';
   const U = HPO.util, G = HPO.cfg.BALL.G, R = HPO.cfg.BALL.R;
   const D2R = Math.PI / 180;
-  HPO.cfg.TUNE.errPhi = HPO.cfg.TUNE.errPhi || 2.0; HPO.cfg.TUNE.errTh = HPO.cfg.TUNE.errTh || 2.0;
+  HPO.cfg.TUNE.errPhi = HPO.cfg.TUNE.errPhi || 1.95; HPO.cfg.TUNE.errTh = HPO.cfg.TUNE.errTh || 1.9;
   HPO.cfg.TUNE.speed = HPO.cfg.TUNE.speed || 0.85; HPO.cfg.TUNE.react = HPO.cfg.TUNE.react || 1.5;
 
   const SHOTS = {
@@ -1291,8 +1298,8 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     lobOff:     { speed: [14, 19], top: 80,  back: 0,   side: 0,   root: 'high', h: [0.4, 2.0], diff: 0.50, att: 0.5, def: 0.5, anim: 'groundstroke' },
     bandeja:    { speed: [11, 15], top: 0,   back: 120, side: 40,  root: 'low',  h: [1.9, 2.9], diff: 0.45, att: 0.4, def: 0.4, anim: 'bandeja' },
     vibora:     { speed: [15, 21], top: 0,   back: 70,  side: 150, root: 'low',  h: [1.9, 2.9], diff: 0.62, att: 0.7, def: 0.1, anim: 'vibora' },
-    smashFlat:  { speed: [24, 32], top: 30,  back: 0,   side: 0,   root: 'low',  h: [2.1, 3.0], diff: 0.70, att: 1.0, def: 0.0, anim: 'smash' },
-    smashKick:  { speed: [21, 28], top: 90,  back: 0,   side: 170, root: 'low',  h: [2.1, 3.0], diff: 0.80, att: 0.9, def: 0.0, anim: 'kickSmash' },
+    smashFlat:  { speed: [27, 35], top: 30,  back: 0,   side: 0,   root: 'low',  h: [2.1, 3.0], diff: 0.52, att: 1.0, def: 0.0, anim: 'smash' },
+    smashKick:  { speed: [24, 32], top: 90,  back: 0,   side: 170, root: 'low',  h: [2.1, 3.0], diff: 0.60, att: 0.9, def: 0.0, anim: 'kickSmash' },
     dejada:     { speed: [5, 8],   top: 0,   back: 150, side: 0,   root: 'low',  h: [0.5, 1.8], diff: 0.60, att: 0.5, def: 0.1, anim: 'volleyFH' },
     chiquita:   { speed: [8, 12],  top: 20,  back: 0,   side: 0,   root: 'low',  h: [0.15, 1.1], diff: 0.55, att: 0.5, def: 0.4, anim: 'lowDef' },
     bajada:     { speed: [16, 25], top: 80,  back: 0,   side: 0,   root: 'low',  h: [0.5, 1.9], diff: 0.62, att: 0.8, def: 0.1, anim: 'groundstroke' },
@@ -1315,12 +1322,18 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     return { th: Math.atan(u), ok: true };
   }
 
-  function dryRun(p, v, w, maxT) {
+  function launchState(p, v, w) {
     const B = HPO.mod.ball;
     const st = B.clone(B.state);
     st.p = { x: p.x, y: p.y, z: p.z }; st.v = { x: v.x, y: v.y, z: v.z }; st.w = { x: w.x, y: w.y, z: w.z };
     st.state = 'live'; st.floorBouncesSinceHit = 0; st.wallContactsSinceFloor = 0; st.tSinceHit = 0;
     st.touchedSinceHit = []; st.resting = false;
+    return st;
+  }
+
+  function dryRun(p, v, w, maxT) {
+    const B = HPO.mod.ball;
+    const st = launchState(p, v, w);
     const pr = B.predict(st, maxT, 30);
     const c = pr.contacts;
     let floor = null, blocked = null;
@@ -1431,9 +1444,9 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     sigmaK(ctx) {
       const acc = levelOf(ctx.accuracy === undefined ? 70 : ctx.accuracy);
       return (1.55 - 1.1 * acc) *
-        (1 + 1.0 * (ctx.difficulty || 0)) * (1 + 0.6 * (ctx.pressure || 0)) *
+        (1 + 1.0 * (ctx.difficulty || 0)) * (1 + (HPO.cfg.TUNE.pressK || 1.0) * (ctx.pressure || 0)) *
         (1 + 0.5 * (ctx.fatigue || 0)) * (1 + 0.4 * (1 - (ctx.confidence === undefined ? 0.5 : ctx.confidence))) *
-        (1 + 0.9 * (ctx.stretch || 0));
+        (1 + (HPO.cfg.TUNE.stretchK || 1.6) * (ctx.stretch || 0));
     },
     difficulty(kind, hitY, ballSpeed, stretch) {
       const def = SHOTS[kind];
@@ -1441,7 +1454,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       const lo = def.h[0], hi = def.h[1];
       if (hitY < lo) d += 0.5 * (lo - hitY);
       if (hitY > hi) d += 0.5 * (hitY - hi);
-      d += 0.012 * Math.max(0, (ballSpeed || 0) - 12);
+      d += 0.018 * Math.max(0, (ballSpeed || 0) - 12);
       d += 0.5 * (stretch || 0);
       return U.clamp(d, 0.05, 1);
     },
@@ -1450,6 +1463,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       if (hitY >= h[0] && hitY <= h[1]) return 1;
       return Math.max(0, 1 - 1.5 * Math.min(Math.abs(hitY - h[0]), Math.abs(hitY - h[1])));
     },
+    trace(p, nom, maxT) { return HPO.mod.ball.predict(launchState(p, nom.v, nom.w), maxT || 3, 30); },
     spinVec: spinVec
   };
 })(HPO);
@@ -1535,7 +1549,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       P.list.forEach(function (p) {
         const sx = HPO.court.sides[p.team];
         p.pos = { x: sx * 7.5, z: (p.slot === 0 ? 1 : -1) * 2.2 };
-        p.vel = { x: 0, z: 0 }; p.heading = P.facing(p.team); p.swing = null; p.intent = { type: 'idle' };
+        p.vel = { x: 0, z: 0 }; p.heading = P.facing(p.team); p.swing = null; p.intent = { type: 'idle' }; p.salvaging = false;
       });
     },
     setIntent(id, intent) { const p = P.byId[id]; if (p) p.intent = intent; },
@@ -1545,6 +1559,23 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     },
     accel(p) { return 9 + 4 * lvl(p.attrs.reflexes); },
     reactDelay(p) { return 0.26 - 0.14 * lvl(p.attrs.reflexes); },
+    readDelay(q, e, hitter) {
+      const T = HPO.cfg.TUNE.readScale === undefined ? 2.3 : HPO.cfg.TUNE.readScale;
+      const sp = Math.hypot(e.v.x, e.v.y, e.v.z), gap = Math.abs(hitter.pos.x - q.pos.x);
+      const fast = U.clamp((sp - 12) / 16, 0, 1), close = U.clamp(1 - gap / 9, 0, 1);
+      const smash = e.shot === 'smashFlat' || e.shot === 'smashKick' ? 1 : 0;
+      const sr = HPO.cfg.TUNE.smashRead === undefined ? 0.2 : HPO.cfg.TUNE.smashRead;
+      return T * (0.12 * fast + 0.12 * close + sr * smash) * (1.35 - 0.7 * lvl(q.attrs.reflexes));
+    },
+    canSalvage(p) {
+      const T = HPO.cfg.TUNE.salvageSkill === undefined ? 80 : HPO.cfg.TUNE.salvageSkill;
+      return p.salvageOK === true && 0.5 * p.attrs.reflexes + 0.5 * p.attrs.coverage >= T;
+    },
+    routeLen(from, to) {
+      const sz = (Math.abs(to.z) > 4.95 ? to.z : from.z) >= 0 ? 1 : -1, g1 = { x: 0, z: sz * 4.2 }, g2 = { x: 0, z: sz * 6.0 };
+      const fromIn = Math.abs(from.z) < 4.9 && Math.abs(from.x) < 9.9;
+      return fromIn ? Math.hypot(from.x - g1.x, from.z - g1.z) + 1.8 + Math.hypot(to.x - g2.x, to.z - g2.z) : Math.hypot(to.x - from.x, to.z - from.z);
+    },
     rightVec(team) { const f = P.facing(team); const d = { x: Math.cos(f), z: Math.sin(f) }; return { x: -d.z, z: d.x }; },
 
     candidates(p) {
@@ -1556,7 +1587,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       const serveRet = bs.hitsSinceServe === 1;
       const own0 = bs.bouncesOnSide[p.team] || 0;
       const out = [], seen = {};
-      const vmax = P.vmax(p), a = P.accel(p), nav = HPO.mod.nav;
+      const vmax = P.vmax(p), a = P.accel(p), nav = HPO.mod.nav, salv = P.canSalvage(p);
       const tStart = Math.max(0.05, p.reactUntil - P.now);
       let ownB = own0, ci = 0, walls = 0;
       const fl = pred.floor, wl = pred.walls;
@@ -1567,19 +1598,24 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
         if (s.t < tStart) continue;
         if (ownB > 1) break;
         if (serveRet && ownB < 1) continue;
-        if (s.p.x * sx < 0.15 || s.p.y < 0.2 || s.p.y > 2.95) continue;
-        if (Math.abs(s.p.x) > 9.9 || Math.abs(s.p.z) > 4.95) continue;
-        const dx = s.p.x - p.pos.x, dz = s.p.z - p.pos.z, d = Math.hypot(dx, dz);
-        const vp = d > 0.01 ? Math.max(0, (p.vel.x * dx + p.vel.z * dz) / d) : 0;
+        if (s.p.x * sx < 0.15 || s.p.y < 0.2) continue;
+        const beyond = Math.abs(s.p.x) > 9.9 || Math.abs(s.p.z) > 4.95;
+        const above = s.p.y > 2.95;
+        if (above && !(beyond && salv && ownB === 1 && s.p.y <= 3.6 && Math.abs(s.p.x) < 10.7 && Math.abs(s.p.z) < 5.7)) continue;
+        const outside = beyond && !above;
+        if (outside && !(salv && ownB === 1 && Math.abs(s.p.x) < 12.5 && Math.abs(s.p.z) < 7.5)) continue;
+        const gx = above ? U.clamp(s.p.x, -9.6, 9.6) : s.p.x, gz = above ? U.clamp(s.p.z, -4.6, 4.6) : s.p.z;
+        const dx = gx - p.pos.x, dz = gz - p.pos.z, d = outside ? P.routeLen(p.pos, s.p) : Math.hypot(dx, dz);
+        const vp = d > 0.01 && !outside ? Math.max(0, (p.vel.x * dx + p.vel.z * dz) / d) : 0;
         const tNeed = nav.timeTo(Math.max(0, d - 0.95), vp, vmax, a);
-        const slack = s.t - tNeed;
+        const slack = s.t - tNeed - (tStart > 0.05 ? tStart : 0);   // the body only starts moving once the shot has been read
         if (slack < 0) continue;
         const key = ownB + ':' + walls;
         if (seen[key] >= 2) continue;
         seen[key] = (seen[key] || 0) + 1;
         out.push({
           t: P.now + s.t, dt: s.t, p: s.p, v: s.v, ownBounces: ownB, walls: walls, slack: slack, reach: d,
-          ballSpeed: U.len3(s.v), afterWall: walls > 0, afterBounce: ownB > 0
+          ballSpeed: U.len3(s.v), afterWall: walls > 0, afterBounce: ownB > 0, outside: outside, above: above
         });
         if (out.length >= 10) break;
       }
@@ -1665,16 +1701,17 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   }
 
   let rallyN = 0;
-  BUS.on('point:start', function () { rallyN = 0; });
+  BUS.on('point:start', function () { rallyN = 0; P.list.forEach(function (q) { q.salvageOK = HPO.streams.ai.chance(0.7); }); });
   BUS.on('shot:hit', function (e) {
     rallyN++;
+    P.lastKind = e.shot; P.lastKindAt = P.now;
     const h = P.byId[e.playerId];
-    P.list.forEach(function (q) { if (h && q.team !== h.team) q.reactUntil = P.now + P.reactDelay(q) * (HPO.cfg.TUNE.react || 1); });
+    P.list.forEach(function (q) { if (h && q.team !== h.team) q.reactUntil = P.now + P.reactDelay(q) * (HPO.cfg.TUNE.react || 1) + P.readDelay(q, e, h); });
   });
   P.execCtx = execCtx;
   function execCtx(p, difficulty, pressure, stretch) {
     const tune = HPO.cfg.TUNE.rally || { from: 10, per: 0.1 };
-    const fat = p.fatigue + Math.max(0, rallyN - tune.from) * tune.per + Math.max(0, rallyN - 24) * 0.2; // very long rallies always crack
+    const fat = p.fatigue + Math.max(0, rallyN - tune.from) * tune.per + Math.max(0, rallyN - 20) * 0.25 + Math.max(0, rallyN - 24) * 0.6; // very long rallies always crack (the 45 s point watchdog is about 34 strokes)
     return { accuracy: p.attrs.accuracy, difficulty: difficulty, pressure: pressure, fatigue: fat, confidence: p.confidence, stretch: stretch };
   }
 
@@ -1695,17 +1732,21 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
         const dx = pl.p.x - p.pos.x, dz = pl.p.z - p.pos.z, d = Math.hypot(dx, dz) || 1;
         const off = Math.min(0.65, d);
         p.target = { x: pl.p.x - dx / d * off, z: pl.p.z - dz / d * off };
+        if (pl.above) { p.target.x = U.clamp(p.target.x, -9.5, 9.5); p.target.z = U.clamp(p.target.z, -4.5, 4.5); }
         if (pl.t - P.now <= COMMIT) commitSwing(p, pl, bs);
       } else {
         p.target = null;
       }
     }
     if (it.type !== 'intercept') p.plan = null;
+    if (p.plan && p.plan.outside) p.salvaging = true;
+    else if (p.salvaging && Math.abs(p.pos.z) < 4.5 && Math.abs(p.pos.x) < 9.4) p.salvaging = false;   // back inside the glass
 
     let tgt = null, cap = 1;
     if (it.type === 'move') { tgt = { x: it.x, z: it.z }; cap = it.cap === undefined ? 1 : it.cap; }
     else if (it.type === 'intercept' && p.target && !reacting) { tgt = p.target; cap = 1; }
     else if (it.type === 'intercept') { tgt = null; }
+    if (tgt && p.salvaging) tgt = viaEntrance(p.pos, tgt);
     const vmax = P.vmax(p) * cap * (p.swing ? 0.9 : 1);
     let dvx = 0, dvz = 0;
     if (tgt && it.type !== 'hold') {
@@ -1723,7 +1764,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     const maxd = (dl > 0 && Math.hypot(dvx, dvz) < Math.hypot(p.vel.x, p.vel.z) ? 13 : a) * dt;
     if (dl > maxd) { p.vel.x += dvx2 / dl * maxd; p.vel.z += dvz2 / dl * maxd; } else { p.vel.x = dvx; p.vel.z = dvz; }
     p.pos.x += p.vel.x * dt; p.pos.z += p.vel.z * dt;
-    nav.clamp(p.pos, nav.bounds(Math.abs(p.pos.x) > 0.55 ? Math.sign(p.pos.x) : sx, p.retrieving));
+    nav.clamp(p.pos, nav.bounds(Math.abs(p.pos.x) > 0.55 ? Math.sign(p.pos.x) : sx, p.retrieving || p.salvaging));
     p.speed = Math.hypot(p.vel.x, p.vel.z);
 
     const step = p.speed * dt;
@@ -1760,11 +1801,21 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     p.anim.t += dt * (p.anim.rate || 1);
   }
 
+  function viaEntrance(pos, t) {
+    const inCourt = q => Math.abs(q.z) < 4.9 && Math.abs(q.x) < 9.9;
+    const pi = inCourt(pos), ti = inCourt(t);
+    if (pi === ti) return t;
+    const sz = (pi ? t.z : pos.z) >= 0 ? 1 : -1, A = { x: 0, z: sz * 4.2 }, B = { x: 0, z: sz * 6.0 }, atGate = Math.abs(pos.x) < 0.8;
+    if (pi) return atGate && Math.abs(pos.z) > 3.6 ? B : A;                               // inside, heading out
+    if (Math.abs(pos.x) > 9.9 && Math.abs(pos.z) < 5.6) return { x: pos.x, z: sz * 6.0 }; // behind the back glass: round the corner first
+    return atGate && Math.abs(pos.z) < 6.4 ? A : B;                                       // outside, heading in
+  }
+
   function commitSwing(p, pl, bs) {
     const ai = HPO.mod.ai;
     const info = {
       p: pl.p, v: pl.v, dt: pl.t - P.now, slack: pl.slack, walls: pl.walls, ownBounces: pl.ownBounces, afterWall: pl.afterWall,
-      ballSpeed: pl.ballSpeed, fh: isForehand(p, pl.p), height: pl.p.y, reach: pl.reach
+      ballSpeed: pl.ballSpeed, fh: isForehand(p, pl.p), height: pl.p.y, reach: pl.reach, outside: !!pl.outside, above: !!pl.above
     };
     const pick = ai && ai.decideShot ? ai.decideShot(p, info) : { kind: 'flatGround', target: { x: -HPO.court.sides[p.team] * 6, z: 0 }, effort: 0.5 };
     if (!pick) { p.plan = null; p.swing = null; p.intent = { type: 'move', x: p.pos.x, z: p.pos.z }; return; }
@@ -1789,20 +1840,33 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     return p.hand === 'R' ? lat >= -0.05 : lat <= 0.05;
   }
 
+  function rescueShot(p, sw, bp, nom0) {
+    const S = HPO.mod.shots, ox = -HPO.court.sides[p.team];
+    const tries = [[sw.kind, sw.target, Math.max(0.16, 0.6 * (sw.netMargin || 0.2)), sw.effort], ['lobDef', { x: ox * 6.4, z: sw.target.z * 0.5 }, 0.35, 0.4], ['lobOff', { x: ox * 5.6, z: sw.target.z * 0.4 }, 0.35, 0.55], ['slice', { x: ox * 6.0, z: sw.target.z * 0.5 }, 0.12, 0.45]];
+    for (let i = 0; i < tries.length; i++) {
+      const t = tries[i];
+      const n = S.nominal(bp, t[0], t[1], { effort: t[3], spinScale: sw.spin, netMargin: t[2] });
+      if (n.feasible) { if (t[0] !== sw.kind) { sw.kind = t[0]; sw.target = t[1]; sw.effort = t[3]; sw.reason = 'rescue'; } return n; }
+    }
+    return nom0;
+  }
+
   function executeSwing(p, bs) {
     const sw = p.swing; sw.done = true;
     const B = HPO.mod.ball, sx = HPO.court.sides[p.team];
     const bpos = bs.p;
     const d = Math.hypot(bpos.x - p.pos.x, bpos.z - p.pos.z);
-    const legal = bs.state === 'live' && bs.lastHitTeam !== p.team && bpos.x * sx > 0.05 && bpos.y > 0.08 && bpos.y < 3.05;
-    if (!legal || d > 1.2) { p.stats.whiffs++; p.plan = null; P.lastWhiff = { id: p.id, legal: legal, d: d, st: bs.state, last: bs.lastHitTeam, x: bpos.x, y: bpos.y, sx: sx, kind: sw.kind }; return; }
+    const legal = bs.state === 'live' && bs.lastHitTeam !== p.team && bpos.x * sx > 0.05 && bpos.y > 0.08 && bpos.y < (sw.reason === 'salvage' ? 3.7 : 3.35);
+    if (!legal || d > (sw.reason === 'salvage' ? 1.5 : 1.2)) { p.stats.whiffs++; p.plan = null; P.lastWhiff = { reason: sw.reason, id: p.id, legal: legal, d: d, st: bs.state, last: bs.lastHitTeam, x: bpos.x, y: bpos.y, sx: sx, kind: sw.kind }; return; }
     const stretch = U.clamp((d - 0.8) / 0.4, 0, 1);
     const speed = U.len3(bs.v);
     const bp = { x: bpos.x, y: bpos.y, z: bpos.z };
-    const diff = sw.warm ? 0.15 : HPO.mod.shots.difficulty(sw.kind, bp.y, speed, stretch);
+    const aftermath = !sw.warm && (P.lastKind === 'smashFlat' || P.lastKind === 'smashKick') && P.now - P.lastKindAt < 3.5 ? (HPO.cfg.TUNE.smashAftermath === undefined ? 0.1 : HPO.cfg.TUNE.smashAftermath) : 0;
+    const diff = sw.warm ? 0.15 : HPO.mod.shots.difficulty(sw.kind, bp.y, speed, stretch) + aftermath + (sw.reason === 'salvage' ? 0.3 : 0);
     const tmargin = U.clamp(sw.info.slack / 0.6, 0, 1);
-    const pressure = sw.warm ? 0.05 : U.clamp(0.75 * (1 - tmargin) + 0.01 * Math.max(0, speed - 12) + (sw.info.afterWall ? 0.08 : 0), 0, 1);
-    const nom = HPO.mod.shots.nominal(bp, sw.kind, sw.target, { effort: sw.effort, spinScale: sw.spin, netMargin: sw.netMargin });
+    const pressure = sw.warm ? 0.05 : U.clamp(0.75 * (1 - tmargin) + 0.5 * aftermath + 0.02 * Math.max(0, speed - 12) + (sw.info.afterWall ? 0.08 : 0), 0, 1);
+    let nom = HPO.mod.shots.nominal(bp, sw.kind, sw.target, { effort: sw.effort, spinScale: sw.spin, netMargin: sw.netMargin });
+    if (!nom.feasible && !sw.warm) nom = rescueShot(p, sw, bp, nom);
     const ex = HPO.mod.shots.execute(nom, execCtx(p, diff, pressure, stretch));
     B.launch({ p: bp, v: ex.v, w: ex.w, hitter: p.id, team: p.team });
     p.stats.shots++;
@@ -1821,7 +1885,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   const lvl = a => U.clamp((a - 30) / 65, 0.02, 1);
   const rgn = () => HPO.streams.ai;
 
-  const T = CFG.TUNE.ai = Object.assign({ sharp: 0.6, smashDepthMax: 9.8, lobBase: 0.45, aimNoise: 1.0, riskMargin: 1.0, volleyWilling: 1.0 }, CFG.TUNE.ai || {});
+  const T = CFG.TUNE.ai = Object.assign({ sharp: 0.6, smashDepthMax: 9.8, lobBase: 0.3, aimNoise: 1.0, riskMargin: 1.0, volleyWilling: 1.0, duelCalm: 2.2, smashWilling: 0.4, dropBack: 1, smashAim: 0.6, netSafe: 2.0, resetCalm: 2.4, depthSafe: 1.0, lobTire: 0.45, lobNet: 0.7 }, CFG.TUNE.ai || {});
 
   const PRESETS = {
     balanced: {}, aggressive: { smash: 1.4, vibora: 1.4, flat: 1.25, lob: 0.7, risk: 0.7 }, safe: { smash: 0.6, vibora: 0.6, lob: 1.3, slice: 1.3, risk: 1.5, flat: 0.8 },
@@ -1835,6 +1899,8 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   };
   let now = 0, assignAt = { A: -9, B: -9 };
   let lastShot = null; // {team, kind, quality, hitterDepth}
+  let volleyRun = 0;   // strokes in a row, both teams, that were volleys
+  let lobRun = 0;      // ... that were lobs
 
   const LOB = { lobDef: 1, lobOff: 1 }, SOFT = { chiquita: 1, dejada: 1 }, SMASH = { smashFlat: 1, smashKick: 1 };
 
@@ -1858,7 +1924,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     },
     orders(team) { return teams[team].orders; },
     setAim(team, x, z, ttl) { teams[team].orders.aimPoint = { x: x, z: z, expires: now + (ttl || 12) }; },
-    reset() { now = 0; assignAt.A = assignAt.B = -9; ['A', 'B'].forEach(t => { teams[t].formation = 'neutral'; teams[t].since = 0; teams[t].claim = null; teams[t].aim = null; }); lastShot = null; },
+    reset() { volleyRun = lobRun = 0; now = 0; assignAt.A = assignAt.B = -9; ['A', 'B'].forEach(t => { teams[t].formation = 'neutral'; teams[t].since = 0; teams[t].claim = null; teams[t].aim = null; }); lastShot = null; },
 
     formation(team) { return teams[team].formation; },
 
@@ -1899,6 +1965,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
         s -= Math.abs(y - (atNet ? 1.35 : 1.0)) * 0.9;              // comfortable contact height
         if (y >= 2.1 && y <= 2.95) s += (deepLob ? 4.0 : 1.8) * m.smash;
         if (c.ownBounces === 0) s += atNet ? 0.9 * T.volleyWilling * (1 + (m.netBias > 0 ? 0.3 : 0)) : -0.5; // volley when at the net
+        if (c.outside) s -= 2.5;                                      // only when nothing inside the glass can be reached
         if (c.afterWall) s += lvl(p.attrs.wallRead) * 0.6 - (atNet ? 0.5 : 0);   // wall specialists let it come back
         if (c.ownBounces === 0 && c.dt < 0.25) s -= 0.5;              // too rushed
         if (d < 1.0) s -= 0.6;                                       // too close to net / body in the net
@@ -1919,6 +1986,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     },
     decideShot(p, info) {
       if (AI.warmup) return AI.warmupShot(p, info);
+      if (info.outside || info.above) return salvageShot(p, info);
       const S = HPO.mod.shots, P = HPO.mod.players;
       const team = p.team, m = mods(team), tm = teams[team];
       const ox = -HPO.court.sides[team];                 // sign of opponent half
@@ -1937,21 +2005,22 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       }
 
       if (high) {
-        const okSmash = (depth <= T.smashDepthMax && h >= 2.05) ? 1 : 0.03;
-        w.smashFlat = 3.6 * okSmash * m.smash; w.smashKick = 2.8 * okSmash * m.smash;
+        const okSmash = (depth <= T.smashDepthMax && h >= 2.05) ? (depth <= 4.8 ? 1 : depth <= 6.5 ? 0.6 : 0.22) : 0.03;
+        w.smashFlat = 3.6 * okSmash * m.smash * T.smashWilling; w.smashKick = 2.8 * okSmash * m.smash * T.smashWilling;
         w.bandeja = 2.6 * m.bandeja * (deep ? 1.1 : 1); w.vibora = 1.5 * m.vibora * (near ? 1.2 : 0.7);
         w.lobOff = deep ? 1.0 * m.lob : 0.35 * m.lob;
         if (info.afterWall && deep) w.bajada = 1.2;
       } else if (near && !low) {
-        w.volleyFH = w.volleyBH = 3.0 * m.volley;
-        w.chiquita = (h < 1.15 ? 1.1 : 0.4) * m.chiquita;
-        w.dejada = 0.5 * (ops.every(q => Math.abs(q.pos.x) > 5.5) ? 2 : 0.3);
-        w.lobOff = 0.35 * m.lob * (oppNet >= 1 ? 1.4 : 0.6);
+        const duel = (oppNet >= 2 ? T.duelCalm : 0) + (volleyRun >= 2 ? T.resetCalm : 0);
+        w.volleyFH = w.volleyBH = 3.0 * m.volley * Math.max(0.25, 1 - 0.55 * duel * (1 - 0.5 * lvl(p.attrs.net)));
+        w.chiquita = (h < 1.15 ? 1.1 : 0.4) * m.chiquita * (1 + 1.6 * duel);
+        w.dejada = 0.5 * (ops.every(q => Math.abs(q.pos.x) > 5.5) ? 2 : 0.3) * (1 + 1.2 * duel);
+        w.lobOff = 0.35 * m.lob * (oppNet >= 1 ? 1.4 : 0.6) * (1 + 3.0 * duel);
       } else if (near && low) {
         w.chiquita = 2.6 * m.chiquita; w.volleyFH = w.volleyBH = 1.4 * m.volley; w.lobDef = 1.0 * m.lob;
       } else {
         w.flatGround = 1.0 * m.flat; w.topGround = 1.7; w.slice = 1.3 * m.slice;
-        w.lobDef = (T.lobBase + 1.1 * oppNet + 1.3 * press) * m.lob;
+        w.lobDef = (T.lobBase + T.lobNet * oppNet + 1.3 * press) * m.lob;
         w.lobOff = 0.5 * m.lob * (oppNet ? 1.2 : 0.4);
         w.chiquita = (oppNet >= 1 && h < 1.15 && mid) ? 1.0 * m.chiquita : 0.0;
         if (info.afterWall && h > 0.85 && deep) w.bajada = 2.0;
@@ -1959,7 +2028,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
         if (info.walls >= 2 && info.slack > 0.12) w.counterDW = 1.3;
         if (mid && h > 0.6) w.volleyFH = w.volleyBH = 0.8 * m.volley;
       }
-      Object.keys(w).forEach(k => { if (LOB[k]) w[k] *= deepLob ? 0 : 0.55; });
+      Object.keys(w).forEach(k => { if (LOB[k]) w[k] *= (deepLob ? 0 : 0.55) * Math.pow(T.lobTire, Math.max(0, lobRun - 1)); });
       if (oppNet >= 2) { if (w.flatGround) w.flatGround *= 0.55; if (w.topGround) w.topGround *= 0.7; }
       if (w.volleyFH !== undefined) { if (info.fh) w.volleyBH = 0; else w.volleyFH = 0; }
 
@@ -2008,6 +2077,25 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     }
   };
 
+  function salvageShot(p, info) {
+    const S = HPO.mod.shots, ox = -HPO.court.sides[p.team], rr = rgn(), h = info.height, ot = opp(p.team);
+    const gap = Math.abs(info.p.x) < 2.4 && Math.abs(info.p.z) > 4.9;
+    const kinds = info.above ? ['smashFlat', 'bandeja', 'vibora', 'lobOff'] : h >= 1.9 ? ['bandeja', 'lobOff', 'lobDef'] : h >= 0.9 ? ['lobOff', 'lobDef', 'flatGround'] : ['lobDef', 'lobOff', 'slice'];
+    if (gap && h < 1.7) kinds.unshift('flatGround', 'slice');                      // low and flat round the net post, through the opening
+    const spots = [[6.5, 0], [7.2, -1.8], [7.2, 1.8], [5.5, 0], [8.2, 0], [4.5, 1.5], [4.5, -1.5]];
+    for (let i = 0; i < kinds.length; i++) {
+      for (let j = 0; j < spots.length; j++) {
+        const target = { x: ox * spots[j][0], z: spots[j][1] + rr.range(-0.3, 0.3) };
+        const nom = S.nominal(info.p, kinds[i], target, { effort: 0.65, netMargin: 0.45 });
+        if (!nom.feasible) continue;
+        const c0 = S.trace(info.p, nom, 3.2).contacts[0];
+        if (!c0 || c0.surf !== 'floor' || HPO.court.regionOf(c0.p.x, c0.p.z) !== ot) continue;
+        return { kind: kinds[i], target: target, effort: 0.65, intent: 'defend', reason: 'salvage', netMargin: 0.45 };
+      }
+    }
+    return null;
+  }
+
   function scoreState() {
     const R = HPO.mod.rules;
     let pressure = 0;
@@ -2032,11 +2120,13 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   function aimFor(p, kind, info, ops, oppNet, press, m, tm) {
     const S = HPO.mod.shots, ox = -HPO.court.sides[p.team];
     const acc = lvl(p.attrs.accuracy);
-    const kEst = S.sigmaK(HPO.mod.players.execCtx(p, S.difficulty(kind, info.height, info.ballSpeed, 0), press, 0.1));
+    const stretchEst = U.clamp((info.reach - 0.8) / 0.4, 0, 1);   // a lunge widens the error, and the ball goes into the net first
+    const kEst = S.sigmaK(HPO.mod.players.execCtx(p, S.difficulty(kind, info.height, info.ballSpeed, stretchEst), press, stretchEst));
     const dist = Math.hypot(info.p.x - ox * 6, info.p.z) * 1.0 + 4;
     const sigLat = dist * Math.tan(kEst * (HPO.cfg.TUNE.errPhi || 1) * Math.PI / 180);
     const wise = 0.6 + 0.6 * lvl(p.attrs.tactics);
-    const marginD = U.clamp(0.4 + 0.35 * (m.risk - 1) + wise * T.riskMargin * 1.2 * sigLat, 0.6, 2.4);
+    const sigDepth = dist * 2 * kEst * (HPO.cfg.TUNE.errTh || 1) * 0.75 * Math.PI / 180 / 0.45;
+    const marginD = U.clamp(Math.max(0.4 + 0.35 * (m.risk - 1) + wise * T.riskMargin * 1.2 * sigLat, 0.5 + wise * T.depthSafe * sigDepth), 0.6, 3.0);
     const marginZ = U.clamp(0.3 + 0.25 * (m.risk - 1) + wise * T.riskMargin * 1.0 * sigLat, 0.45, 2.0);
     const rr = rgn();
     const cands = [];
@@ -2054,7 +2144,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       effort = kind === 'lobOff' ? 0.5 : 0.35;
     } else if (SMASH[kind]) {
       const sk = kind === 'smashKick';
-      [[3.2, -3.4], [3.2, 3.4], [5.5, 0], [4.5, -2.2], [4.5, 2.2]].forEach(a => addAim(a[0], a[1], 'smash'));
+      [[3.2, -3.4], [3.2, 3.4], [5.5, 0], [4.5, -2.2], [4.5, 2.2], [2.8, -3.2], [2.8, 3.2], [2.9, 0], [3.8, -1.4], [3.8, 1.4]].forEach(a => addAim(a[0], a[1], 'smash'));
       if (sk) { addAim(5.2, -5 + marginZ, 'glass'); addAim(5.2, 5 - marginZ, 'glass'); }
       effort = 0.75 + 0.25 * lvl(p.attrs.power);
     } else if (kind === 'chiquita') {
@@ -2068,13 +2158,13 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       addAim(10 - marginD - 1.0, -2.4, 'deep'); addAim(10 - marginD - 1.0, 2.4, 'deep'); addAim(10 - marginD - 1.4, 0, 'deepmid');
       effort = 0.45;
     } else if (kind === 'vibora') {
-      addAim(9 - marginD, -4.2 + 0.2, 'wallside'); addAim(9 - marginD, 4.2 - 0.2, 'wallside'); addAim(6.5, -3, 'wide'); addAim(6.5, 3, 'wide');
+      addAim(8.0 - marginD * 0.6, -2.8, 'wallside'); addAim(8.0 - marginD * 0.6, 2.8, 'wallside');   // bounce inside the line and run into the glass, not into it addAim(6.5, -3, 'wide'); addAim(6.5, 3, 'wide');
       effort = 0.6;
     } else if (kind === 'bajada') {
       addAim(6.0, -3.2, 'angle'); addAim(6.0, 3.2, 'angle'); addAim(7.5, 0, 'mid'); addAim(8, -2, 'deep'); addAim(8, 2, 'deep');
       effort = 0.6;
     } else if (kind.indexOf('volley') === 0) {
-      [[6.5, -3.0], [6.5, 3.0], [8.5, -1.8], [8.5, 1.8], [5.0, 0]].forEach(a => addAim(a[0] - marginD * 0.4, a[1], 'volley'));
+      [[6.5, -3.0], [6.5, 3.0], [7.8, -1.8], [7.8, 1.8], [5.0, 0]].forEach(a => addAim(a[0] - marginD * 0.5, a[1], 'volley'));
       effort = 0.5;
     } else { // ground strokes, slice, counterattack
       const dd = 10 - marginD - 1.2;
@@ -2086,6 +2176,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     const aimOrder = tm.orders.aimPoint && tm.orders.aimPoint.expires > now ? tm.orders.aimPoint : null;
     cands.forEach(function (c) {
       let s = 0;
+      c.s0 = 0;
       let dmin = 99; ops.forEach(q => { dmin = Math.min(dmin, Math.hypot(q.pos.x - c.x, q.pos.z - c.z)); });
       s += Math.min(dmin, 5) * (c.tag === 'feet' ? -0.2 : 0.5);
       if (c.tag === 'feet') s += 1.0;
@@ -2095,15 +2186,49 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       s -= Math.abs(c.z) > 5 - marginZ ? 1 : 0;
       s += rr.range(-1, 1) * T.aimNoise * (1.2 - lvl(p.attrs.tactics));
       if (aimOrder) s -= Math.hypot(aimOrder.x - c.x, aimOrder.z - c.z) * 0.9;
+      c.s0 = s;
       if (s > bs) { bs = s; best = c; }
     });
+    if (SMASH[kind] && T.smashAim > 0 && !aimOrder) {
+      let top = null, tb = -1e9;
+      cands.slice().sort((a, b) => b.s0 - a.s0).slice(0, 6).forEach(function (c) {
+        const r = reachSlack(p, info, kind, c, effort, ops);
+        if (!r) return;
+        const s = c.s0 - T.smashAim * 2.4 * U.clamp(r.slack, -0.6, 1.4);
+        if (s > tb) { tb = s; top = c; }
+      });
+      if (top) best = top;
+    }
     let target = { x: best.x, z: best.z };
     if (aimOrder) { // coach click: honoured only if the shot can really go there
       const nomO = S.nominal(info.p, kind, { x: aimOrder.x, z: aimOrder.z }, { effort: effort });
       if (nomO.feasible && S.difficulty(kind, info.height, info.ballSpeed, 0) < 0.85) { target = { x: aimOrder.x, z: aimOrder.z }; tm.orders.aimPoint = null; }
     }
     const intent = LOB[kind] || kind === 'wallDef' ? 'defend' : (SMASH[kind] || kind === 'vibora' ? 'attack' : (SOFT[kind] ? 'finesse' : 'rally'));
-    return { kind: kind, target: target, effort: effort, intent: intent, reason: best.tag, netMargin: U.clamp(0.10 + 0.05 * kEst, 0.1, 0.45) };
+    return { kind: kind, target: target, effort: effort, intent: intent, reason: best.tag, netMargin: SMASH[kind] ? U.clamp(0.3 + 0.1 * kEst, 0.32, 0.7) : U.clamp(T.netSafe * (0.12 + 0.07 * kEst), 0.12, 0.7) };
+  }
+
+  function reachSlack(p, info, kind, c, effort, ops) {
+    const S = HPO.mod.shots, P = HPO.mod.players, nav = HPO.mod.nav, ot = opp(p.team);
+    const nom = S.nominal(info.p, kind, { x: c.x, z: c.z }, { effort: effort });
+    if (!nom.feasible) return null;
+    const tr = S.trace(info.p, nom, 3.2);
+    const fl = tr.contacts.filter(k => k.surf === 'floor'), first = tr.contacts[0];
+    if (!fl.length || !first || first.surf !== 'floor' || HPO.court.regionOf(fl[0].p.x, fl[0].p.z) !== ot) return null;
+    const react = ops.map(q => P.reactDelay(q) * (HPO.cfg.TUNE.react || 1) + P.readDelay(q, { v: nom.v, shot: kind }, p));
+    let best = -9, ci = 0, ownB = 0;
+    for (let i = 0; i < tr.samples.length; i++) {
+      const s = tr.samples[i];
+      while (ci < fl.length && fl[ci].t <= s.t) { if (HPO.court.regionOf(fl[ci].p.x, fl[ci].p.z) === ot) ownB++; ci++; }
+      if (ownB > 1) break;
+      if (s.p.y < 0.2 || s.p.y > 2.95 || s.p.x * HPO.court.sides[ot] < 0.15 || Math.abs(s.p.x) > 9.9 || Math.abs(s.p.z) > 4.95) continue;
+      for (let k = 0; k < ops.length; k++) {
+        const q = ops[k], d = Math.hypot(s.p.x - q.pos.x, s.p.z - q.pos.z);
+        const sl = s.t - react[k] - nav.timeTo(Math.max(0, d - 0.95), 0, P.vmax(q), P.accel(q));
+        if (sl > best) best = sl;
+      }
+    }
+    return { slack: best };
   }
 
   function weakness(q) { return (1 - lvl(q.attrs.defense)) * 0.6 + q.fatigue * 0.5 + (1 - q.confidence) * 0.2; }
@@ -2176,8 +2301,26 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     const s = pr.samples; return s.length ? s[s.length - 1].p : HPO.mod.ball.state.p;
   }
 
-  const BASE = { attack: [2.2, 2.2], neutral: [2.8, 5.6], defend: [7.0, 7.0] };
+  const BASE = { attack: [2.2, 2.2], neutral: [2.8, 5.6], defend: [7.4, 7.8] };
   const SERVE_BACK = 7.6; // metres from the net: just behind the 6.95 m service line
+
+  const ovCache = { A: { k: -1, v: false }, B: { k: -1, v: false } };
+  function overheadComing(team) {
+    const B = HPO.mod.ball, st = B.state;
+    if (st.state !== 'live' || st.lastHitTeam !== team || T.dropBack <= 0) return false;
+    const key = st.hitsSinceServe * 1000 + Math.floor(now * 6), c = ovCache[team];
+    if (c.k === key) return c.v;
+    const sx = HPO.court.sides[team];
+    let v = false;
+    const s = B.predict(null, 2.4, 20).samples;
+    for (let i = 0; i < s.length; i++) {
+      const q = s[i];
+      if (q.p.x * sx > 0) continue;                       // still on our side of the net
+      if (q.floorBounces > 0 && q.p.y < 1.9) break;       // it comes down before anyone can hit it from above
+      if (q.p.y >= 1.9 && Math.abs(q.p.x) < 9.2 && Math.abs(q.p.x) > 0.8) { v = true; break; }
+    }
+    c.k = key; c.v = v; return v;
+  }
 
   function updateFormation(team) {
     const tm = teams[team], B = HPO.mod.ball.state, m = mods(team);
@@ -2200,6 +2343,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
         else want = ls.hitterDepth > 5.5 ? 'neutral' : tm.formation;
       }
     }
+    if (overheadComing(team)) want = 'defend';
     if (m.netBias > 0 && want === 'neutral') want = 'attack';
     if (m.netBias < 0 && want === 'attack') want = 'neutral';
     const urgent = want === 'defend' && tm.formation !== 'defend';
@@ -2236,8 +2380,10 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   BUS.on('shot:hit', function (e) {
     const p = pr(e.playerId); if (!p) return;
     lastShot = { team: p.team, kind: e.shot, quality: e.quality, hitterDepth: Math.abs(e.p.x), fast: U.len3(e.v) > 20 };
+    volleyRun = e.shot === 'volleyFH' || e.shot === 'volleyBH' ? volleyRun + 1 : 0;
+    lobRun = LOB[e.shot] ? lobRun + 1 : 0;
   });
-  BUS.on('point:start', function () { lastShot = null; ['A', 'B'].forEach(t => { teams[t].formation = 'neutral'; teams[t].since = now; teams[t].claim = null; }); });
+  BUS.on('point:start', function () { lastShot = null; volleyRun = lobRun = 0; ['A', 'B'].forEach(t => { teams[t].formation = 'neutral'; teams[t].since = now; teams[t].claim = null; }); });
 })(HPO);
 
 /* 08_rules.js */
@@ -10183,7 +10329,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     sync();
     ui.api = { S: S, EL: EL, h: h, add: add, safe: safe, toast: toast, feed: feed, drawPortrait: drawPortrait, flagEl: flagEl, mbar: mbar, teamName: teamName, teamIds: teamIds, rdef: rdef, roster: roster,
       contribution: contribution, teamSum: teamSum, newMatch: newMatch, applyVenueVisuals: applyVenueVisuals, applyTod: applyTod, applyDefaults: applyDefaults, refillPickers: refillPickers,
-      setSpeed: setSpeed, togglePause: togglePause, setMusic: setMusic, setVolume: setVolume, setCallouts: setCallouts, skipCeremony: skipCeremony, doChallenge: doChallenge, callTimeout: callTimeout, setCam: setCam, setSound: setSound, orders: orders,
+      renderTab: renderTab, setSpeed: setSpeed, togglePause: togglePause, setMusic: setMusic, setVolume: setVolume, setCallouts: setCallouts, skipCeremony: skipCeremony, doChallenge: doChallenge, callTimeout: callTimeout, setCam: setCam, setSound: setSound, orders: orders,
       claimCoach: claimCoach, closeModal: closeModal, fmtClock: fmtClock, M_clock: M_clock, savePlayerDef: savePlayerDef, openStudioPanel: null, ARCH: ARCH, ATTRS: ATTRS, FORMAT_NAMES: FORMAT_NAMES,
       PHASE_NAMES: PHASE_NAMES, VENUES: VENUES, CAMS: CAMS, showKeys: showKeys, setScore: setScore, shortName: shortName, other: other, hex: hex,
       isBusy: () => !!tmo, resultsReset: () => { resultsShown = false; } };
@@ -11578,9 +11724,11 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     hud.labels = h('div', { class: 'gm-labels' });
     hud.labYou = h('div', { class: 'gm-lab you' }, 'YOU'); hud.labAn = h('div', { class: 'gm-lab an' }, 'ANNETTA');
     hud.labels.append(hud.labYou, hud.labAn);
-    hud.sbTab = h('button', { type: 'button', class: 'gm-sbtab', id: 'gm-sbtab', 'aria-expanded': 'true', 'aria-label': 'Hide match centre', title: 'Match centre', onclick: () => toggleSb() });
+    hud.sbTab = h('button', { type: 'button', class: 'gm-sbtab', id: 'gm-sbtab', 'aria-expanded': 'false', 'aria-controls': 'gm-drawer', 'aria-label': 'Open match centre', title: 'Match centre', onclick: () => toggleSb() });
     hud.sbTab.innerHTML = CHEV;
-    hud.root.append(hud.labels, hud.sbTab, hud.icons, hud.pop, hud.skip, hud.ticker, hud.coach, hud.watchBar);
+    hud.drawer = h('div', { class: 'gm-drawer', id: 'gm-drawer', hidden: true });
+    ['pointerdown', 'wheel', 'touchstart'].forEach(ev => hud.drawer.addEventListener(ev, e => e.stopPropagation(), { passive: true }));
+    hud.root.append(hud.labels, hud.sbTab, hud.drawer, hud.icons, hud.pop, hud.skip, hud.ticker, hud.coach, hud.watchBar);
     EL.stage.appendChild(hud.root);
     hud.root.hidden = true;
   }
@@ -11588,16 +11736,30 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     const open = force === undefined ? hud.pop.hidden : !!force;
     hud.pop.hidden = !open; hud.mix.setAttribute('aria-expanded', open ? 'true' : 'false'); if (open) refreshAudio();
   }
+  let centreHome = null;
   function toggleSb(force) {
-    G.sbOff = force === undefined ? !G.sbOff : !!force;
-    EL.app.classList.toggle('gm-sb-off', G.sbOff);
-    hud.sbTab.setAttribute('aria-expanded', G.sbOff ? 'false' : 'true');
-    hud.sbTab.setAttribute('aria-label', G.sbOff ? 'Show match centre' : 'Hide match centre');
+    const open = force === undefined ? !G.sbOpen : !!force, sec = document.getElementById('sec-centre');
+    G.sbOpen = open && !!sec;
+    if (G.sbOpen) {
+      if (sec.parentNode !== hud.drawer) { centreHome = { parent: sec.parentNode, next: sec.nextSibling }; hud.drawer.appendChild(sec); }
+      sec.open = true;
+      const r = EL.sb.getBoundingClientRect(), s = EL.stage.getBoundingClientRect();
+      hud.drawer.style.top = Math.max(60, Math.round(r.bottom - s.top + 8)) + 'px';
+      hud.drawer.hidden = false;
+      if (API.renderTab) API.renderTab();
+    } else {
+      hud.drawer.hidden = true;
+      if (sec && centreHome && sec.parentNode === hud.drawer) { centreHome.parent.insertBefore(sec, centreHome.next && centreHome.next.parentNode === centreHome.parent ? centreHome.next : null); centreHome = null; }
+    }
+    EL.app.classList.toggle('gm-sb-open', G.sbOpen);
+    hud.sbTab.setAttribute('aria-expanded', G.sbOpen ? 'true' : 'false');
+    hud.sbTab.setAttribute('aria-label', G.sbOpen ? 'Close match centre' : 'Open match centre');
   }
   function showCreateOrSetup() { const s = S.saved && S.saved.length; if (s) { G.player = G.player || S.saved[S.saved.length - 1]; showSetup(); } else showCreate(); }
   function updateVisibility() {
     if (!hud.root) return;
     const show = G.mode === 'play' && (G.st === 'playing' || G.st === 'watch') && !G.scr;
+    if (!show && G.sbOpen) toggleSb(false);
     hud.root.hidden = !show;
     EL.app.classList.toggle('gm-hud-on', show);
     hud.coach.hidden = G.st !== 'playing'; hud.watchBar.hidden = G.st !== 'watch';
@@ -11750,7 +11912,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   const BUS = HPO.BUS;
   const mod = n => HPO.mod[n];
 
-  const SHOT = { smashFlat: 'smash', smashKick: 'smash', lobDef: 'lob', lobOff: 'lob', bandeja: 'bandeja', bajada: 'bajada' };
+  const SHOT = { smashFlat: 'smash', smashKick: 'smash', lobDef: 'lob', lobOff: 'lob', bandeja: 'bandeja', bajada: 'bajada', chiquita: 'chiquita', dejada: 'dropshot' };
   const KIND = {
     out:     { text: 'OUT!',          col: '#e5484d', pri: 5, big: 1, shake: 1, rot: -6 },
     fault:   { text: 'FAULT!',        col: '#ff8a1f', pri: 5, big: 1, shake: 1, rot: 5 },
@@ -11760,7 +11922,9 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     smash:   { text: 'SMASH!',        col: '#ff4d2e', pri: 3, shake: 1, rot: -7 },
     lob:     { text: 'LOB!',          col: '#27a9e1', pri: 2, rot: 5 },
     bandeja: { text: 'BANDEJA!',      col: '#8e5bd9', pri: 2, rot: -4 },
-    bajada:  { text: 'BAJADA!',       col: '#2fb26b', pri: 3, rot: 4 }
+    bajada:  { text: 'BAJADA!',       col: '#2fb26b', pri: 3, rot: 4 },
+    chiquita: { text: 'CHIQUITA!',    col: '#d6409f', pri: 2, rot: -5 },
+    dropshot: { text: 'DROP SHOT!',   col: '#14a89a', pri: 3, rot: 5 }
   };
   const END = { out: 'out', wallFirst: 'out', ceiling: 'out', net: 'net', doubleFault: 'double' };
   const STATE = {

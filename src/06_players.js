@@ -82,7 +82,7 @@
       P.list.forEach(function (p) {
         const sx = HPO.court.sides[p.team];
         p.pos = { x: sx * 7.5, z: (p.slot === 0 ? 1 : -1) * 2.2 };
-        p.vel = { x: 0, z: 0 }; p.heading = P.facing(p.team); p.swing = null; p.intent = { type: 'idle' };
+        p.vel = { x: 0, z: 0 }; p.heading = P.facing(p.team); p.swing = null; p.intent = { type: 'idle' }; p.salvaging = false;
       });
     },
     setIntent(id, intent) { const p = P.byId[id]; if (p) p.intent = intent; },
@@ -92,6 +92,26 @@
     },
     accel(p) { return 9 + 4 * lvl(p.attrs.reflexes); },
     reactDelay(p) { return 0.26 - 0.14 * lvl(p.attrs.reflexes); },
+    // extra time to read a shot: pace, a short distance from the hitter and the overhead swing all leave less to see before the ball arrives
+    readDelay(q, e, hitter) {
+      const T = HPO.cfg.TUNE.readScale === undefined ? 2.3 : HPO.cfg.TUNE.readScale;
+      const sp = Math.hypot(e.v.x, e.v.y, e.v.z), gap = Math.abs(hitter.pos.x - q.pos.x);
+      const fast = U.clamp((sp - 12) / 16, 0, 1), close = U.clamp(1 - gap / 9, 0, 1);
+      const smash = e.shot === 'smashFlat' || e.shot === 'smashKick' ? 1 : 0;
+      const sr = HPO.cfg.TUNE.smashRead === undefined ? 0.2 : HPO.cfg.TUNE.smashRead;
+      return T * (0.12 * fast + 0.12 * close + sr * smash) * (1.35 - 0.7 * lvl(q.attrs.reflexes));
+    },
+    // only the quickest players try to save a ball that has flown out of the court (see candidates)
+    canSalvage(p) {
+      const T = HPO.cfg.TUNE.salvageSkill === undefined ? 80 : HPO.cfg.TUNE.salvageSkill;
+      return p.salvageOK === true && 0.5 * p.attrs.reflexes + 0.5 * p.attrs.coverage >= T;
+    },
+    // walking distance when the way out of the court is the open entrance at the net (x about 0, z +-5)
+    routeLen(from, to) {
+      const sz = (Math.abs(to.z) > 4.95 ? to.z : from.z) >= 0 ? 1 : -1, g1 = { x: 0, z: sz * 4.2 }, g2 = { x: 0, z: sz * 6.0 };
+      const fromIn = Math.abs(from.z) < 4.9 && Math.abs(from.x) < 9.9;
+      return fromIn ? Math.hypot(from.x - g1.x, from.z - g1.z) + 1.8 + Math.hypot(to.x - g2.x, to.z - g2.z) : Math.hypot(to.x - from.x, to.z - from.z);
+    },
     rightVec(team) { const f = P.facing(team); const d = { x: Math.cos(f), z: Math.sin(f) }; return { x: -d.z, z: d.x }; },
 
     // --- candidate strikes along the predicted ball path ---
@@ -104,7 +124,7 @@
       const serveRet = bs.hitsSinceServe === 1;
       const own0 = bs.bouncesOnSide[p.team] || 0;
       const out = [], seen = {};
-      const vmax = P.vmax(p), a = P.accel(p), nav = HPO.mod.nav;
+      const vmax = P.vmax(p), a = P.accel(p), nav = HPO.mod.nav, salv = P.canSalvage(p);
       const tStart = Math.max(0.05, p.reactUntil - P.now);
       let ownB = own0, ci = 0, walls = 0;
       const fl = pred.floor, wl = pred.walls;
@@ -115,20 +135,27 @@
         if (s.t < tStart) continue;
         if (ownB > 1) break;
         if (serveRet && ownB < 1) continue;
-        if (s.p.x * sx < 0.15 || s.p.y < 0.2 || s.p.y > 2.95) continue;
-        if (Math.abs(s.p.x) > 9.9 || Math.abs(s.p.z) > 4.95) continue;
+        if (s.p.x * sx < 0.15 || s.p.y < 0.2) continue;
+        const beyond = Math.abs(s.p.x) > 9.9 || Math.abs(s.p.z) > 4.95;
+        // A top player may still go for a ball that bounced in and flew out. Just clearing the fence (up to 3.6 m): leap and play it from
+        // inside the glass. Lower and further out: through the entrance, then hit it in the air.
+        const above = s.p.y > 2.95;
+        if (above && !(beyond && salv && ownB === 1 && s.p.y <= 3.6 && Math.abs(s.p.x) < 10.7 && Math.abs(s.p.z) < 5.7)) continue;
+        const outside = beyond && !above;
+        if (outside && !(salv && ownB === 1 && Math.abs(s.p.x) < 12.5 && Math.abs(s.p.z) < 7.5)) continue;
         // can the body get close enough in time? racket reach 0.8 m, stretch to 1.15
-        const dx = s.p.x - p.pos.x, dz = s.p.z - p.pos.z, d = Math.hypot(dx, dz);
-        const vp = d > 0.01 ? Math.max(0, (p.vel.x * dx + p.vel.z * dz) / d) : 0;
+        const gx = above ? U.clamp(s.p.x, -9.6, 9.6) : s.p.x, gz = above ? U.clamp(s.p.z, -4.6, 4.6) : s.p.z;
+        const dx = gx - p.pos.x, dz = gz - p.pos.z, d = outside ? P.routeLen(p.pos, s.p) : Math.hypot(dx, dz);
+        const vp = d > 0.01 && !outside ? Math.max(0, (p.vel.x * dx + p.vel.z * dz) / d) : 0;
         const tNeed = nav.timeTo(Math.max(0, d - 0.95), vp, vmax, a);
-        const slack = s.t - tNeed;
+        const slack = s.t - tNeed - (tStart > 0.05 ? tStart : 0);   // the body only starts moving once the shot has been read
         if (slack < 0) continue;
         const key = ownB + ':' + walls;
         if (seen[key] >= 2) continue;
         seen[key] = (seen[key] || 0) + 1;
         out.push({
           t: P.now + s.t, dt: s.t, p: s.p, v: s.v, ownBounces: ownB, walls: walls, slack: slack, reach: d,
-          ballSpeed: U.len3(s.v), afterWall: walls > 0, afterBounce: ownB > 0
+          ballSpeed: U.len3(s.v), afterWall: walls > 0, afterBounce: ownB > 0, outside: outside, above: above
         });
         if (out.length >= 10) break;
       }
@@ -219,17 +246,18 @@
   }
 
   let rallyN = 0;
-  BUS.on('point:start', function () { rallyN = 0; });
+  BUS.on('point:start', function () { rallyN = 0; P.list.forEach(function (q) { q.salvageOK = HPO.streams.ai.chance(0.7); }); });
   BUS.on('shot:hit', function (e) {
     rallyN++;
+    P.lastKind = e.shot; P.lastKindAt = P.now;
     // opponents need a moment to read the shot before they commit to moving
     const h = P.byId[e.playerId];
-    P.list.forEach(function (q) { if (h && q.team !== h.team) q.reactUntil = P.now + P.reactDelay(q) * (HPO.cfg.TUNE.react || 1); });
+    P.list.forEach(function (q) { if (h && q.team !== h.team) q.reactUntil = P.now + P.reactDelay(q) * (HPO.cfg.TUNE.react || 1) + P.readDelay(q, e, h); });
   });
   P.execCtx = execCtx;
   function execCtx(p, difficulty, pressure, stretch) {
     const tune = HPO.cfg.TUNE.rally || { from: 10, per: 0.1 };
-    const fat = p.fatigue + Math.max(0, rallyN - tune.from) * tune.per + Math.max(0, rallyN - 24) * 0.2; // very long rallies always crack
+    const fat = p.fatigue + Math.max(0, rallyN - tune.from) * tune.per + Math.max(0, rallyN - 20) * 0.25 + Math.max(0, rallyN - 24) * 0.6; // very long rallies always crack (the 45 s point watchdog is about 34 strokes)
     return { accuracy: p.attrs.accuracy, difficulty: difficulty, pressure: pressure, fatigue: fat, confidence: p.confidence, stretch: stretch };
   }
 
@@ -252,18 +280,22 @@
         const dx = pl.p.x - p.pos.x, dz = pl.p.z - p.pos.z, d = Math.hypot(dx, dz) || 1;
         const off = Math.min(0.65, d);
         p.target = { x: pl.p.x - dx / d * off, z: pl.p.z - dz / d * off };
+        if (pl.above) { p.target.x = U.clamp(p.target.x, -9.5, 9.5); p.target.z = U.clamp(p.target.z, -4.5, 4.5); }
         if (pl.t - P.now <= COMMIT) commitSwing(p, pl, bs);
       } else {
         p.target = null;
       }
     }
     if (it.type !== 'intercept') p.plan = null;
+    if (p.plan && p.plan.outside) p.salvaging = true;
+    else if (p.salvaging && Math.abs(p.pos.z) < 4.5 && Math.abs(p.pos.x) < 9.4) p.salvaging = false;   // back inside the glass
 
     // --- desired velocity ---
     let tgt = null, cap = 1;
     if (it.type === 'move') { tgt = { x: it.x, z: it.z }; cap = it.cap === undefined ? 1 : it.cap; }
     else if (it.type === 'intercept' && p.target && !reacting) { tgt = p.target; cap = 1; }
     else if (it.type === 'intercept') { tgt = null; }
+    if (tgt && p.salvaging) tgt = viaEntrance(p.pos, tgt);
     const vmax = P.vmax(p) * cap * (p.swing ? 0.9 : 1);
     let dvx = 0, dvz = 0;
     if (tgt && it.type !== 'hold') {
@@ -284,7 +316,7 @@
     p.pos.x += p.vel.x * dt; p.pos.z += p.vel.z * dt;
     // Clamp to the half the player is standing on, not the half their team now owns: when the sides flip at the end of a game the
     // old bounds would shove everyone to the net in one frame. The changeover walks them across through the entrance instead.
-    nav.clamp(p.pos, nav.bounds(Math.abs(p.pos.x) > 0.55 ? Math.sign(p.pos.x) : sx, p.retrieving));
+    nav.clamp(p.pos, nav.bounds(Math.abs(p.pos.x) > 0.55 ? Math.sign(p.pos.x) : sx, p.retrieving || p.salvaging));
     p.speed = Math.hypot(p.vel.x, p.vel.z);
 
     // fatigue and distance
@@ -326,11 +358,22 @@
     p.anim.t += dt * (p.anim.rate || 1);
   }
 
+  // The fence has one gap, the entrance at the net: walk to it, through it, then on to the target (and back the same way).
+  function viaEntrance(pos, t) {
+    const inCourt = q => Math.abs(q.z) < 4.9 && Math.abs(q.x) < 9.9;
+    const pi = inCourt(pos), ti = inCourt(t);
+    if (pi === ti) return t;
+    const sz = (pi ? t.z : pos.z) >= 0 ? 1 : -1, A = { x: 0, z: sz * 4.2 }, B = { x: 0, z: sz * 6.0 }, atGate = Math.abs(pos.x) < 0.8;
+    if (pi) return atGate && Math.abs(pos.z) > 3.6 ? B : A;                               // inside, heading out
+    if (Math.abs(pos.x) > 9.9 && Math.abs(pos.z) < 5.6) return { x: pos.x, z: sz * 6.0 }; // behind the back glass: round the corner first
+    return atGate && Math.abs(pos.z) < 6.4 ? A : B;                                       // outside, heading in
+  }
+
   function commitSwing(p, pl, bs) {
     const ai = HPO.mod.ai;
     const info = {
       p: pl.p, v: pl.v, dt: pl.t - P.now, slack: pl.slack, walls: pl.walls, ownBounces: pl.ownBounces, afterWall: pl.afterWall,
-      ballSpeed: pl.ballSpeed, fh: isForehand(p, pl.p), height: pl.p.y, reach: pl.reach
+      ballSpeed: pl.ballSpeed, fh: isForehand(p, pl.p), height: pl.p.y, reach: pl.reach, outside: !!pl.outside, above: !!pl.above
     };
     const pick = ai && ai.decideShot ? ai.decideShot(p, info) : { kind: 'flatGround', target: { x: -HPO.court.sides[p.team] * 6, z: 0 }, effort: 0.5 };
     if (!pick) { p.plan = null; p.swing = null; p.intent = { type: 'move', x: p.pos.x, z: p.pos.z }; return; }
@@ -355,20 +398,36 @@
     return p.hand === 'R' ? lat >= -0.05 : lat <= 0.05;
   }
 
+  // The ball is not quite where the plan had it and the chosen stroke has no way over the net from here. Instead of swinging anyway (the
+  // solver's last guess is a wild ball that clears the whole court) play the same ball with less margin, then a lob, then a slice.
+  function rescueShot(p, sw, bp, nom0) {
+    const S = HPO.mod.shots, ox = -HPO.court.sides[p.team];
+    const tries = [[sw.kind, sw.target, Math.max(0.16, 0.6 * (sw.netMargin || 0.2)), sw.effort], ['lobDef', { x: ox * 6.4, z: sw.target.z * 0.5 }, 0.35, 0.4], ['lobOff', { x: ox * 5.6, z: sw.target.z * 0.4 }, 0.35, 0.55], ['slice', { x: ox * 6.0, z: sw.target.z * 0.5 }, 0.12, 0.45]];
+    for (let i = 0; i < tries.length; i++) {
+      const t = tries[i];
+      const n = S.nominal(bp, t[0], t[1], { effort: t[3], spinScale: sw.spin, netMargin: t[2] });
+      if (n.feasible) { if (t[0] !== sw.kind) { sw.kind = t[0]; sw.target = t[1]; sw.effort = t[3]; sw.reason = 'rescue'; } return n; }
+    }
+    return nom0;
+  }
+
   function executeSwing(p, bs) {
     const sw = p.swing; sw.done = true;
     const B = HPO.mod.ball, sx = HPO.court.sides[p.team];
     const bpos = bs.p;
     const d = Math.hypot(bpos.x - p.pos.x, bpos.z - p.pos.z);
-    const legal = bs.state === 'live' && bs.lastHitTeam !== p.team && bpos.x * sx > 0.05 && bpos.y > 0.08 && bpos.y < 3.05;
-    if (!legal || d > 1.2) { p.stats.whiffs++; p.plan = null; P.lastWhiff = { id: p.id, legal: legal, d: d, st: bs.state, last: bs.lastHitTeam, x: bpos.x, y: bpos.y, sx: sx, kind: sw.kind }; return; }
+    const legal = bs.state === 'live' && bs.lastHitTeam !== p.team && bpos.x * sx > 0.05 && bpos.y > 0.08 && bpos.y < (sw.reason === 'salvage' ? 3.7 : 3.35);
+    if (!legal || d > (sw.reason === 'salvage' ? 1.5 : 1.2)) { p.stats.whiffs++; p.plan = null; P.lastWhiff = { reason: sw.reason, id: p.id, legal: legal, d: d, st: bs.state, last: bs.lastHitTeam, x: bpos.x, y: bpos.y, sx: sx, kind: sw.kind }; return; }
     const stretch = U.clamp((d - 0.8) / 0.4, 0, 1);
     const speed = U.len3(bs.v);
     const bp = { x: bpos.x, y: bpos.y, z: bpos.z };
-    const diff = sw.warm ? 0.15 : HPO.mod.shots.difficulty(sw.kind, bp.y, speed, stretch);
+    // the ball that follows a smash arrives fast, heavy and off the glass: returning it is the hard part of the exchange
+    const aftermath = !sw.warm && (P.lastKind === 'smashFlat' || P.lastKind === 'smashKick') && P.now - P.lastKindAt < 3.5 ? (HPO.cfg.TUNE.smashAftermath === undefined ? 0.1 : HPO.cfg.TUNE.smashAftermath) : 0;
+    const diff = sw.warm ? 0.15 : HPO.mod.shots.difficulty(sw.kind, bp.y, speed, stretch) + aftermath + (sw.reason === 'salvage' ? 0.3 : 0);
     const tmargin = U.clamp(sw.info.slack / 0.6, 0, 1);
-    const pressure = sw.warm ? 0.05 : U.clamp(0.75 * (1 - tmargin) + 0.01 * Math.max(0, speed - 12) + (sw.info.afterWall ? 0.08 : 0), 0, 1);
-    const nom = HPO.mod.shots.nominal(bp, sw.kind, sw.target, { effort: sw.effort, spinScale: sw.spin, netMargin: sw.netMargin });
+    const pressure = sw.warm ? 0.05 : U.clamp(0.75 * (1 - tmargin) + 0.5 * aftermath + 0.02 * Math.max(0, speed - 12) + (sw.info.afterWall ? 0.08 : 0), 0, 1);
+    let nom = HPO.mod.shots.nominal(bp, sw.kind, sw.target, { effort: sw.effort, spinScale: sw.spin, netMargin: sw.netMargin });
+    if (!nom.feasible && !sw.warm) nom = rescueShot(p, sw, bp, nom);
     const ex = HPO.mod.shots.execute(nom, execCtx(p, diff, pressure, stretch));
     B.launch({ p: bp, v: ex.v, w: ex.w, hitter: p.id, team: p.team });
     p.stats.shots++;

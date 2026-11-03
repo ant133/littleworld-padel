@@ -4,7 +4,7 @@
   'use strict';
   const U = HPO.util, G = HPO.cfg.BALL.G, R = HPO.cfg.BALL.R;
   const D2R = Math.PI / 180;
-  HPO.cfg.TUNE.errPhi = HPO.cfg.TUNE.errPhi || 2.0; HPO.cfg.TUNE.errTh = HPO.cfg.TUNE.errTh || 2.0;
+  HPO.cfg.TUNE.errPhi = HPO.cfg.TUNE.errPhi || 1.95; HPO.cfg.TUNE.errTh = HPO.cfg.TUNE.errTh || 1.9;
   HPO.cfg.TUNE.speed = HPO.cfg.TUNE.speed || 0.85; HPO.cfg.TUNE.react = HPO.cfg.TUNE.react || 1.5;
 
   // spin rates in rad/s (top>0 topspin, back>0 backspin, side>0 curves left of travel direction)
@@ -20,8 +20,8 @@
     lobOff:     { speed: [14, 19], top: 80,  back: 0,   side: 0,   root: 'high', h: [0.4, 2.0], diff: 0.50, att: 0.5, def: 0.5, anim: 'groundstroke' },
     bandeja:    { speed: [11, 15], top: 0,   back: 120, side: 40,  root: 'low',  h: [1.9, 2.9], diff: 0.45, att: 0.4, def: 0.4, anim: 'bandeja' },
     vibora:     { speed: [15, 21], top: 0,   back: 70,  side: 150, root: 'low',  h: [1.9, 2.9], diff: 0.62, att: 0.7, def: 0.1, anim: 'vibora' },
-    smashFlat:  { speed: [24, 32], top: 30,  back: 0,   side: 0,   root: 'low',  h: [2.1, 3.0], diff: 0.70, att: 1.0, def: 0.0, anim: 'smash' },
-    smashKick:  { speed: [21, 28], top: 90,  back: 0,   side: 170, root: 'low',  h: [2.1, 3.0], diff: 0.80, att: 0.9, def: 0.0, anim: 'kickSmash' },
+    smashFlat:  { speed: [27, 35], top: 30,  back: 0,   side: 0,   root: 'low',  h: [2.1, 3.0], diff: 0.52, att: 1.0, def: 0.0, anim: 'smash' },
+    smashKick:  { speed: [24, 32], top: 90,  back: 0,   side: 170, root: 'low',  h: [2.1, 3.0], diff: 0.60, att: 0.9, def: 0.0, anim: 'kickSmash' },
     dejada:     { speed: [5, 8],   top: 0,   back: 150, side: 0,   root: 'low',  h: [0.5, 1.8], diff: 0.60, att: 0.5, def: 0.1, anim: 'volleyFH' },
     chiquita:   { speed: [8, 12],  top: 20,  back: 0,   side: 0,   root: 'low',  h: [0.15, 1.1], diff: 0.55, att: 0.5, def: 0.4, anim: 'lowDef' },
     bajada:     { speed: [16, 25], top: 80,  back: 0,   side: 0,   root: 'low',  h: [0.5, 1.9], diff: 0.62, att: 0.8, def: 0.1, anim: 'groundstroke' },
@@ -45,12 +45,18 @@
     return { th: Math.atan(u), ok: true };
   }
 
-  function dryRun(p, v, w, maxT) {
+  function launchState(p, v, w) {
     const B = HPO.mod.ball;
     const st = B.clone(B.state);
     st.p = { x: p.x, y: p.y, z: p.z }; st.v = { x: v.x, y: v.y, z: v.z }; st.w = { x: w.x, y: w.y, z: w.z };
     st.state = 'live'; st.floorBouncesSinceHit = 0; st.wallContactsSinceFloor = 0; st.tSinceHit = 0;
     st.touchedSinceHit = []; st.resting = false;
+    return st;
+  }
+
+  function dryRun(p, v, w, maxT) {
+    const B = HPO.mod.ball;
+    const st = launchState(p, v, w);
     const pr = B.predict(st, maxT, 30);
     const c = pr.contacts;
     let floor = null, blocked = null;
@@ -170,9 +176,9 @@
     sigmaK(ctx) {
       const acc = levelOf(ctx.accuracy === undefined ? 70 : ctx.accuracy);
       return (1.55 - 1.1 * acc) *
-        (1 + 1.0 * (ctx.difficulty || 0)) * (1 + 0.6 * (ctx.pressure || 0)) *
+        (1 + 1.0 * (ctx.difficulty || 0)) * (1 + (HPO.cfg.TUNE.pressK || 1.0) * (ctx.pressure || 0)) *
         (1 + 0.5 * (ctx.fatigue || 0)) * (1 + 0.4 * (1 - (ctx.confidence === undefined ? 0.5 : ctx.confidence))) *
-        (1 + 0.9 * (ctx.stretch || 0));
+        (1 + (HPO.cfg.TUNE.stretchK || 1.6) * (ctx.stretch || 0));
     },
     // fast estimate for AI (no integration): difficulty 0..1 for kind at contact height / ball speed
     difficulty(kind, hitY, ballSpeed, stretch) {
@@ -181,7 +187,7 @@
       const lo = def.h[0], hi = def.h[1];
       if (hitY < lo) d += 0.5 * (lo - hitY);
       if (hitY > hi) d += 0.5 * (hitY - hi);
-      d += 0.012 * Math.max(0, (ballSpeed || 0) - 12);
+      d += 0.018 * Math.max(0, (ballSpeed || 0) - 12);
       d += 0.5 * (stretch || 0);
       return U.clamp(d, 0.05, 1);
     },
@@ -190,6 +196,8 @@
       if (hitY >= h[0] && hitY <= h[1]) return 1;
       return Math.max(0, 1 - 1.5 * Math.min(Math.abs(hitY - h[0]), Math.abs(hitY - h[1])));
     },
+    // sampled path + contacts of a nominal launch, for the AI to judge where a shot leaves the other pair
+    trace(p, nom, maxT) { return HPO.mod.ball.predict(launchState(p, nom.v, nom.w), maxT || 3, 30); },
     spinVec: spinVec
   };
 })(HPO);

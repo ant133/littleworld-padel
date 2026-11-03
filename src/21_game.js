@@ -350,10 +350,12 @@
     hud.labels = h('div', { class: 'gm-labels' });
     hud.labYou = h('div', { class: 'gm-lab you' }, 'YOU'); hud.labAn = h('div', { class: 'gm-lab an' }, 'ANNETTA');
     hud.labels.append(hud.labYou, hud.labAn);
-    // chevron tab on the left edge: slides the match centre (scoreboard) out of the way and back
-    hud.sbTab = h('button', { type: 'button', class: 'gm-sbtab', id: 'gm-sbtab', 'aria-expanded': 'true', 'aria-label': 'Hide match centre', title: 'Match centre', onclick: () => toggleSb() });
+    // chevron tab on the left edge: the scoreboard stays, the chevron opens the full match centre (score, stats, players, feed) under it
+    hud.sbTab = h('button', { type: 'button', class: 'gm-sbtab', id: 'gm-sbtab', 'aria-expanded': 'false', 'aria-controls': 'gm-drawer', 'aria-label': 'Open match centre', title: 'Match centre', onclick: () => toggleSb() });
     hud.sbTab.innerHTML = CHEV;
-    hud.root.append(hud.labels, hud.sbTab, hud.icons, hud.pop, hud.skip, hud.ticker, hud.coach, hud.watchBar);
+    hud.drawer = h('div', { class: 'gm-drawer', id: 'gm-drawer', hidden: true });
+    ['pointerdown', 'wheel', 'touchstart'].forEach(ev => hud.drawer.addEventListener(ev, e => e.stopPropagation(), { passive: true }));
+    hud.root.append(hud.labels, hud.sbTab, hud.drawer, hud.icons, hud.pop, hud.skip, hud.ticker, hud.coach, hud.watchBar);
     EL.stage.appendChild(hud.root);
     hud.root.hidden = true;
   }
@@ -361,16 +363,31 @@
     const open = force === undefined ? hud.pop.hidden : !!force;
     hud.pop.hidden = !open; hud.mix.setAttribute('aria-expanded', open ? 'true' : 'false'); if (open) refreshAudio();
   }
+  // The Studio panel owns the match-centre section; Play mode borrows it for the drawer and hands it back when the drawer closes.
+  let centreHome = null;
   function toggleSb(force) {
-    G.sbOff = force === undefined ? !G.sbOff : !!force;
-    EL.app.classList.toggle('gm-sb-off', G.sbOff);
-    hud.sbTab.setAttribute('aria-expanded', G.sbOff ? 'false' : 'true');
-    hud.sbTab.setAttribute('aria-label', G.sbOff ? 'Show match centre' : 'Hide match centre');
+    const open = force === undefined ? !G.sbOpen : !!force, sec = document.getElementById('sec-centre');
+    G.sbOpen = open && !!sec;
+    if (G.sbOpen) {
+      if (sec.parentNode !== hud.drawer) { centreHome = { parent: sec.parentNode, next: sec.nextSibling }; hud.drawer.appendChild(sec); }
+      sec.open = true;
+      const r = EL.sb.getBoundingClientRect(), s = EL.stage.getBoundingClientRect();
+      hud.drawer.style.top = Math.max(60, Math.round(r.bottom - s.top + 8)) + 'px';
+      hud.drawer.hidden = false;
+      if (API.renderTab) API.renderTab();
+    } else {
+      hud.drawer.hidden = true;
+      if (sec && centreHome && sec.parentNode === hud.drawer) { centreHome.parent.insertBefore(sec, centreHome.next && centreHome.next.parentNode === centreHome.parent ? centreHome.next : null); centreHome = null; }
+    }
+    EL.app.classList.toggle('gm-sb-open', G.sbOpen);
+    hud.sbTab.setAttribute('aria-expanded', G.sbOpen ? 'true' : 'false');
+    hud.sbTab.setAttribute('aria-label', G.sbOpen ? 'Close match centre' : 'Open match centre');
   }
   function showCreateOrSetup() { const s = S.saved && S.saved.length; if (s) { G.player = G.player || S.saved[S.saved.length - 1]; showSetup(); } else showCreate(); }
   function updateVisibility() {
     if (!hud.root) return;
     const show = G.mode === 'play' && (G.st === 'playing' || G.st === 'watch') && !G.scr;
+    if (!show && G.sbOpen) toggleSb(false);
     hud.root.hidden = !show;
     EL.app.classList.toggle('gm-hud-on', show);
     hud.coach.hidden = G.st !== 'playing'; hud.watchBar.hidden = G.st !== 'watch';
