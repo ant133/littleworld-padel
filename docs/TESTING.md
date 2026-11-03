@@ -1,58 +1,82 @@
 # Testing summary
 
-## Visitor players and gameplay update — 2 November 2026
+Run everything from the repo root with Node 22+. The headless suites need no browser. The browser suites use headless Chrome through `tools/browser.js` (SwiftShader WebGL) and read `dist/`, so run `node tools/build.js` first.
 
-- `node tools/dupcheck.js`: 22 modules, all event declarations valid.
-- `node tools/physics_tests.js`: 20/20, including immediate exterior-ground termination and swept exterior-item collision at 60 m/s; prediction agrees with live physics.
-- `node tools/scoring_tests.js`: 119/119, including immediate outside-contact scoring before/after a legal bounce, during retrieval, with one point awarded per contact.
-- `node tools/matrix.js`: 18/18 full matches across all three formats, both scoring modes, all match types, and rotating venues; no watchdogs or application errors. This is an 18-case matrix, not the full Cartesian product of every venue and presentation setting.
-- `node tools/player_ai_tests.js`: custom-player validation, repeatable stats/appearance after restoration, gender restrictions, duplicate prevention, reachable deep-lob kick smashes on both ends, and overhead interception preference.
-- Seeded high-ball comparison (200 identical situations): previous AI 41 smash choices; new balanced AI 101; new More Smashes preset 173. This measures tactical selection, not smash success rate.
-- `node tools/features_browser.js`: female/male creation, IndexedDB write and exact roster restoration after reload, team-up with Annetta, mixed match start, parallel court edges at eight camera angles, obstructing floodlight visibility near 5%, desktop/mobile screenshots, and rendering with network disabled. No application errors. IndexedDB is asynchronous; the test waits for restored records rather than assuming a fixed refresh delay.
-- Both HTML files rebuilt. Desktop and mobile screenshots inspected. Real GPU frame rate and real touch input were not measured in this update.
+| Command | What it checks |
+| --- | --- |
+| `node tools/dupcheck.js` | IIFE wrapping, duplicate module/global names, bus events vs CONTRACT §6 |
+| `node tools/physics_tests.js` | 20 ball/court cases: tunnelling at 60 m/s, energy, spin, glass/mesh/net/entrance, exterior ground and items, prediction vs live, watchdogs |
+| `node tools/scoring_tests.js [--quick]` | 119 cases: 6 format×scoring combos × 10,000 random matches vs an independent reference scorer; serve rotation; tie-breaks; live point FSM; outside-contact scoring |
+| `node tools/player_ai_tests.js` | custom-player validation and restoration, gender eligibility, duplicate prevention, kick smashes on both ends, overhead preference, full women's and mixed matches with Annetta |
+| `node tools/commentary_tests.js` | commentary generator over simulated events |
+| `node tools/matrix.js [--part k/3]` | 18 full matches: 3 formats × 2 scorings × M/W/X, venues rotated |
+| `node tools/sim_cli.js --n N [--seed S] [--tune '{json}']` | aggregate match statistics |
+| `node tools/build.js --check` | build, dupcheck, external-reference scan of the offline file, headless smoke test |
+| `node tools/e2e.js "?speed=12" prefix` | browser: samples a match at 12× through the end-of-match phases |
+| `node tools/features_browser.js` | browser, offline build: the Play-mode journey (see below) plus a phone render |
+| `node tools/visual_matrix.js` | browser: courts × lighting × cameras on desktop, plus mobile |
 
-## Integration (CP2–CP5, browser)
-Headless Chrome (SwiftShader WebGL) via tools/browser.js:
-- `node tools/build.js --check`: dupcheck OK, offline file loads with no console errors, drawCalls ≈ 200, no network needed (only the optional Google Fonts link is requested when online).
-- `node tools/e2e.js`: a Quick Match plays at 12× through 1100 simulated seconds (3–3 in games) with 0 errors; forcing the match end walks matchEnd → handshake → ceremony (podium, confetti) → results card with 0 errors.
-- `node tools/visual_matrix.js`: 10 configs (classic/terracotta/fast/indoor × day/dusk/night × close/follow/top/club, mobile 390×844) – 0 console errors, mobile has no horizontal scroll, mobile pixel size 3.
-- Unit suites: physics 19/19, scoring 119/119, commentary 1805/1805, dupcheck OK (22 files).
-- Headless matrix (`node tools/matrix.js --part k/3`): all format×scoring×type×venue combinations finish with valid scores.
-- Budgets: ≈ 200 draw calls, ≈ 250k tris desktop; ≈ 145k tris mobile (target 120k – slightly over).
+## Latest results — 3 November 2026 (Play mode build)
 
-Not verifiable here: real GPU frame rate (SwiftShader ≈ 10–50 fps), real speechSynthesis voices and audible mix quality, touch gestures (pinch / two-finger pan), WebGL1 fallback.
+- `dupcheck`: OK, 23 files, 23 modules, 36 contract events.
+- `physics_tests`: 20/20.
+- `scoring_tests --quick`: 119/119.
+- `player_ai_tests`: pass (custom players and restoration, gender rules, duplicates, kick smash on both ends, overhead interception; full women's and mixed matches with no watchdogs and repeatable by seed).
+- `commentary_tests`: 1620 passed, 0 failed.
+- `matrix`: 18/18 full matches finished with valid scores and 0 watchdog trips (quick/one set/best of 3 × advantage/golden × men's/women's/mixed, venues rotated). This is an 18-case sample, not every combination of venue, lighting and camera.
+- `build --check`: CHECK OK. Online 754 KB, offline 1343 KB (artifact 754 KB). Title shows the runtime year ("… Cup 2026"). The offline file's only network request is the optional Google Fonts stylesheet; there are no HPO errors, about 203 draw calls and 251k triangles on desktop.
+- `features_browser` (offline build, headless Chrome, no network): title offers "Play with Annetta"; the create screen autofocuses the name field and an empty name is refused; a woman is saved and kicked off into a women's match with Annetta (`p5`) as partner, coach team A, close camera, and the coach bar present (six tactics + two middle buttons, Timeout, Challenge); obstructing floodlights fade to about 5%; after a page reload the saved player is restored from IndexedDB and the title offers "Continue as Visitor Woman"; a new man player starts a mixed match; opposite court edges stay parallel at eight yaws; a 390×844 phone render has no horizontal scroll. No application errors.
+- `e2e` (12 samples at 12×, dev build): no console errors or warnings. The match played through to the handshake, and the later samples show a fresh match starting from its intro (the attract loop). Ceremony and results frames fall between samples, so the ceremony itself was not inspected in this run.
+- `visual_matrix`: 10 configurations spanning all four courts, day/dusk/night and the close, follow, top and club cameras, plus phone 390×844 club and close (not the full cross-product), 0 console errors; the phone layout has no horizontal scroll and uses pixel size 3.
 
-# Testing summary — CP0/CP1 (headless simulation)
+### Performance budgets
 
-Run everything from the repo root with Node (no browser needed).
+| | Measured | Target (CONTRACT §15) |
+| --- | --- | --- |
+| Draw calls, desktop | about 180–210 | ≤ 350 |
+| Triangles, desktop | about 250k | ≤ 350k |
+| Draw calls, mobile | about 200 | ≤ 160 (**over**) |
+| Triangles, mobile | about 145k | ≤ 120k (**over**) |
+| Offline file | 1.34 MB | ≤ 3 MB |
 
-| Command | What it checks | Last result |
-|---|---|---|
-| `node tools/dupcheck.js` | IIFE wrapping, duplicate module/global names, bus events vs CONTRACT §6 | OK (9 files, 8 modules) |
-| `node tools/physics_tests.js` | 19 ball/court cases: tunnelling at 60 m/s, energy, spin, glass/mesh/net, prediction vs live, watchdogs | 19/19 pass |
-| `node tools/scoring_tests.js` | 119 cases: 6 format×scoring combos × 10,000 random matches vs an independent reference scorer; serve rotation; tie-breaks; live point FSM | 119/119 pass |
-| `node tools/matrix.js --part k/n` | 18 full matches: 3 formats × 2 scorings × M/W/X, venues rotated | 18/18 finish, 0 errors, valid final scores |
-| `node tools/sim_cli.js --n 12 --seed 200` | Aggregate match statistics | below |
+Frame rates seen in headless Chrome with software WebGL (12–24 fps) say nothing about real devices.
 
-## Simulated statistics (12 Quick Match runs, 488 points, seed 200, default tuning)
+### Simulation statistics (12 Quick Match runs, 500 points, seed 200, current tuning)
 
-| Metric | Result | Target (SPEC) | Status |
-|---|---|---|---|
-| First serve in | 90.4 % | 85–95 % | ok |
-| Aces | 0.0 % | rare | too low — receivers return everything |
-| Double faults | 0.4 % of points | 1–3 % | low |
-| Rally length (strokes incl. serve) | median 12, mean 13.3, p10 3, p90 24 | 6–12 | upper edge |
-| Lobs | 21 % of strokes | frequent | ok (a bit high) |
-| Volleys | 22 % of strokes | frequent | ok |
-| Wall-assisted returns | 8.4 % of strokes | integral | ok |
-| Smash winners | 4.1 % of points | occasional | ok |
-| Volley winners | 17.8 % of points | — | high |
-| Winners / forced / unforced | 34 % / 54 % / 10 % | plausible mix | unforced too low |
-| Watchdog-ended points (45 s) | 1.4 % | 0 | needs more tuning |
+| Metric | Result | Target | Status |
+| --- | --- | --- | --- |
+| First serve in | 88.8 % | 85–95 % | ok |
+| Aces | 0.0 % | 0.5–2 % | low: receivers return every serve |
+| Double faults | 0.6 % of points | 1–3 % | slightly low |
+| Rally length (strokes incl. serve) | median 7, mean 9.0, p10 2, p90 19 | 6–12 | ok |
+| Lobs | 8.5 % of strokes | 8–14 % | ok |
+| Volleys | 23.1 % of strokes | 25–35 % | slightly low |
+| Wall-assisted returns | 12.1 % of strokes | 15–25 % | low |
+| Smash winners | 7.6 % of points | 2–6 % | high after the more-smashes change |
+| Winners / forced / unforced | 33.6 % / 52.4 % / 13.2 % | unforced 25–40 % | unforced low |
+| Watchdog-ended points | 1 of 500 (0.2 %) | 0 | nearly there |
 
-Tuning knobs (all under `HPO.cfg.TUNE`, overridable via `sim_cli --tune '{...}'`): `errPhi`, `errTh`, `errSpeed` (execution error), `speed` (player speed), `react` (reaction delay multiplier), `rally` (`{from, per}` fatigue in long rallies), `ai` (`sharp`, `smashDepthMax`, `lobBase`, `aimNoise`, `riskMargin`, `volleyWilling`).
+Tuning knobs live under `HPO.cfg.TUNE` and can be overridden with `sim_cli --tune '{...}'`: `errPhi`, `errTh`, `errSpeed` (execution error), `speed`, `react`, `rally` (`{from, per}`), `ai` (`sharp`, `smashDepthMax`, `lobBase`, `aimNoise`, `riskMargin`, `volleyWilling`).
 
-## Fixed during this checkpoint (found by the harness)
+## Not verified / known gaps
+
+- Real GPU frame rate and real touch input (pinch, two-finger pan) on phones; the WebGL1 fallback.
+- Audible audio mix and real `speechSynthesis` voices.
+- A real challenge call and timeout request through the Play-mode buttons mid-match, and the Play-mode results card at a natural match end (the results card was only opened by forcing the end).
+- Portrait phone close-up is small; faded buildings can leave a dither ghost at some camera angles.
+- Aces never occur and unforced errors are rare; a point can still rarely end by watchdog.
+- Mobile triangle and draw-call counts are above the CONTRACT §15 targets.
+- Foot-fault and double-hit detection are out of scope of the rules module.
+
+## History
+
+### Visitor players and gameplay update — 2 November 2026
+- Physics 20/20 (immediate exterior-ground termination, swept exterior-item collision at 60 m/s), scoring 119/119 (outside-contact scoring before/after a legal bounce, during retrieval, one point per contact), matrix 18/18, player-AI suite added, seeded high-ball comparison (200 situations): previous AI 41 smash choices, new balanced AI 101, More Smashes preset 173 (tactical selection, not smash success rate). The browser test then covered the old Studio-panel creator; it now covers Play mode.
+
+### Integration (CP2–CP5)
+- Browser build checks, `e2e` and `visual_matrix` introduced; unit suites physics 19/19, scoring 119/119, commentary 1805/1805 at that time; headless matrix across all format × scoring × type × venue combinations finished with valid scores.
+
+### Fixed during the first headless checkpoint (found by the harness)
 - Serve aim measured depth from the wrong box edge on the negative-x half.
 - Rules module was not attached in headless runs (no `HPO.boot()`).
 - AI role-assignment timer wasn't reset between matches, silently breaking every match after the first (would have broken "New Match" in the browser).
@@ -60,9 +84,6 @@ Tuning knobs (all under `HPO.cfg.TUNE`, overridable via `sim_cli --tune '{...}'`
 - A post-solve "power" multiplier changed range by up to 12 % after the shot had been aimed.
 - Unforced/forced classification ignored time pressure.
 
-## Not implemented yet / known gaps (CP1)
-- Out-of-court retrieval relaunch (rules flag exists, default off; no ball-boy/door walk yet).
-- Warm-up cooperative rallies (phase exists, no rallies yet).
-- AI use of challenges, tactical timeouts, and the coach "focus on one opponent" target selection UI hook.
-- Commentary generator (`18_commentary.js`) and everything in CP2+ (rendering, rigs, crowd, audio, UI).
-- Foot-fault and double-hit detection are out of scope of the rules module.
+### Later fixes
+- Court geometry: open entrance, 3 m side fence, header mesh and second glass panel replaced the original door layout; tunnelling test updated.
+- Night lighting looked like day (per-vertex point lights) → light clamp and flood pool; indoor roof no longer blocked by the cutaway; `render.zoom` sign; skip-intro now skips; camera returns to the chosen view after the intro; court skew fixed with quarter-turn snapping.

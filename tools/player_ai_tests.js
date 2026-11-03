@@ -7,7 +7,7 @@ const m = P.createCustom({ name: 'Visitor Man', gender: 'M', seed: 5678 });
 assert.equal(f.name, 'Visitor Woman');
 assert.equal(f.country.code, 'IDN');
 assert(Object.values(f.attrs).every(n => n >= 55 && n <= 95));
-assert.equal(P.roster().find(p => p.id === 'p5').name, 'Annetta Arslan H');
+assert.equal(P.roster().find(p => p.id === 'p5').name, 'Annetta Arslan');
 const restored = load().mod.players.restoreCustom(JSON.parse(JSON.stringify(f)));
 assert.equal(JSON.stringify(f), JSON.stringify(restored));
 assert.throws(() => P.createCustom({ name: ' ', gender: 'F', seed: 7 }));

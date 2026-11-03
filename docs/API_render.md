@@ -16,7 +16,7 @@ Shadows: one sun/moon directional light, 1024 map, refreshed every 2nd frame, on
 | `render.patch(material)` | Make a foreign `MeshLambertMaterial`/`MeshBasicMaterial` cutaway/flood capable. |
 | `render.snap(hex)` | Nearest palette colour as `0xRRGGBB`. Prefer `HPO.mod.palette.ramps.*` / `palette.ramp(name,i)` so surfaces land on exact palette steps (flat, no dither noise). |
 | `render.addPointGlow(pos, colour, radius, {intensity, always, parent})` | Additive sprite, opacity = `todParams.lamps * intensity`, hidden by day and in `quality:'low'` (unless `always`). Returns the Sprite. |
-| `render.cutaway.add(obj, {role, fadeTo, lift})` | roles + default fadeTo: stand .22, building .25, wall .2, tree .3, prop .55, roof .15 (roof also lifts 9 m). `lift` (metres) optional for any role. Also `remove`, `setEnabled(bool)`, `refresh(obj?)`, `list()`. |
+| `render.cutaway.add(obj, {role, fadeTo, lift})` | roles + default fadeTo: stand .22, building .25, wall .2, tree .3, prop .55, light .05, roof .15 (roof also lifts 9 m). `light` is for floodlight masts and heads: any court-grid ray overlap makes them nearly transparent, so they never hide play. A roof is never skipped by the "encloses the court centre" rule. `lift` (metres) optional for any role. Also `remove`, `setEnabled(bool)`, `refresh(obj?)`, `list()`. |
 | `render.quality = 'high'\|'low'` / `setQuality` | low: shadows off, glows hidden (auto on `HPO.cfg.mobile`). |
 | `render.setOutline(bool)`, `render.setDither(0..1)`, `render.debugRaw(bool)` | debugRaw bypasses palette + dither + outline. |
 | `render.renderNow(dt)`, `render.debugReadPixels()` | test helpers (draw one frame / read canvas pixels, RGBA bottom-up). |
@@ -37,7 +37,7 @@ Indoor venue: `render.setTimeOfDay('indoor')` (init does it automatically when `
 
 ### Camera
 Modes: `follow` (rally centroid = ball .65 / players .35; `followPlayer(id)` biases to that player and switches to follow; `setFollowBall(false)` -> players centroid), `club` (fits a r=47 island + clubhouse/mast heights, aspect-aware), `close` (fits the court enclosure), `top` (89 deg, yaw base 0 so the long axis is horizontal), `free`.
-Pointer: left-drag orbit, right/shift-drag or two-finger pan, wheel/pinch zoom; any drag in a non-free mode switches to `free` (emits `cam:mode`). A click (no drag, <600 ms) inside the court rectangle (|x|<=10.5, |z|<=5.5) emits `ui:setting {key:'canvasClick', value:{x,z,clientX,clientY}}`.
+Pointer: left-drag orbit, right/shift-drag or two-finger pan, wheel/pinch zoom; any drag in a non-free mode switches to `free` (emits `cam:mode`). On release the yaw snaps to the nearest isometric quarter turn (`view.yawK`, `render.yawIndex` 0-3), so opposite court edges stay parallel and the court never looks skewed. The camera is orthographic at 40 deg elevation; `features_browser.js` checks parallelism at eight yaws. A click (no drag, <600 ms) inside the court rectangle (|x|<=10.5, |z|<=5.5) emits `ui:setting {key:'canvasClick', value:{x,z,clientX,clientY}}`.
 Camera target is snapped to the low-res pixel grid so static scenery does not crawl.
 
 ### Palette (`HPO.mod.palette`)

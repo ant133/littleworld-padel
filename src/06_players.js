@@ -16,8 +16,8 @@
       attrs: { power: 95, accuracy: 70, reflexes: 70, coverage: 68, stamina: 72, net: 82, defense: 56, wallRead: 62, tactics: 66 }, look: { skin: 0, hair: 0xd8b25c, hairStyle: 'short', outfit: [0xf28c28, 0x222222], racket: 0x222222 } },
     { id: 'p4', name: 'Camila Ferreyra', nick: 'Cami', gender: 'F', country: { code: 'ARG', name: 'Argentina' }, ranking: 3, hand: 'R', side: 'either', archetype: 'allRound',
       attrs: { power: 74, accuracy: 84, reflexes: 82, coverage: 80, stamina: 84, net: 80, defense: 80, wallRead: 82, tactics: 86 }, look: { skin: 1, hair: 0x4a2a16, hairStyle: 'ponytail', outfit: [0x8a5cf6, 0xffffff], racket: 0xff7ab6 } },
-    { id: 'p5', name: 'Annetta Arslan H', nick: 'Annetta', gender: 'F', country: { code: 'IDN', name: 'Indonesia' }, ranking: 6, hand: 'R', side: 'reves', archetype: 'counterpuncher',
-      attrs: { power: 62, accuracy: 82, reflexes: 90, coverage: 90, stamina: 86, net: 66, defense: 88, wallRead: 90, tactics: 84 }, look: { skin: 3, hair: 0x0b0b0d, hairStyle: 'bun', outfit: [0xe5484d, 0xfff4b3], racket: 0xfff4b3 } },
+    { id: 'p5', name: 'Annetta Arslan', nick: 'Annetta', gender: 'F', country: { code: 'IDN', name: 'Indonesia' }, ranking: 6, hand: 'R', side: 'reves', archetype: 'counterpuncher',
+      attrs: { power: 62, accuracy: 82, reflexes: 90, coverage: 90, stamina: 86, net: 66, defense: 88, wallRead: 90, tactics: 84 }, look: { skin: 2, hair: 0x14203d, hairStyle: 'bob', outfit: [0x177dc5, 0xfffaf0], racket: 0x177dc5 } },
     { id: 'p6', name: 'Hana Kobayashi', nick: 'Glass Hana', gender: 'F', country: { code: 'JPN', name: 'Japan' }, ranking: 8, hand: 'L', side: 'reves', archetype: 'wallSpecialist',
       attrs: { power: 58, accuracy: 80, reflexes: 82, coverage: 78, stamina: 90, net: 60, defense: 90, wallRead: 92, tactics: 78 }, look: { skin: 1, hair: 0x14100c, hairStyle: 'bob', outfit: [0x14b8a6, 0xffffff], racket: 0x1e6bd6 } },
     { id: 'p7', name: 'Marta Lindqvist', nick: 'Viking', gender: 'F', country: { code: 'SWE', name: 'Sweden' }, ranking: 5, hand: 'R', side: 'drive', archetype: 'smasher',
@@ -42,7 +42,7 @@
       const rg = HPO.makeRng(input.seed), attrs = {};
       ['power', 'accuracy', 'reflexes', 'coverage', 'stamina', 'net', 'defense', 'wallRead', 'tactics'].forEach(k => { attrs[k] = rg.int(55, 95); });
       const colors = [0x177dc5, 0xe5484d, 0x14b8a6, 0x8a5cf6, 0xf28c28, 0x123954];
-      const def = { id, name, nick: name.split(' ')[0], gender: input.gender, country: { code: 'IDN', name: 'Indonesia' },
+      const def = { id, name, nick: name.split(' ')[0], gender: input.gender, country: (input.country && /^[A-Z]{3}$/.test(input.country.code) && typeof input.country.name === 'string' && input.country.name.length <= 40) ? { code: input.country.code, name: input.country.name } : { code: 'IDN', name: 'Indonesia' },
         seed: input.seed, custom: true, ranking: rg.int(10, 99), hand: rg.pick(['R', 'R', 'L']), side: 'either',
         archetype: rg.pick(['netAttacker', 'wallSpecialist', 'allRound', 'smasher', 'precision', 'counterpuncher']), attrs,
         look: { skin: rg.int(0, 3), hair: rg.pick([0x15110e, 0x4a2a16, 0x2a1d14]),

@@ -1,6 +1,6 @@
 # CONTRACT.md — Littleworld Jakarta Padel Cup
 
-Source of truth for module boundaries. If an interface must change, change this file first, then the code. Version: **0.1 (draft for approval)**.
+Source of truth for module boundaries. If an interface must change, change this file first, then the code. Version: **0.4 (as built)**. The change log in §18 lists where the build differs from the original draft.
 
 Tournament title is always built as `"Littleworld Jakarta Padel Cup " + new Date().getFullYear()` via `HPO.cfg.TITLE()`; never hard-code the year.
 
@@ -10,7 +10,7 @@ Tournament title is always built as `"Littleworld Jakarta Padel Cup " + new Date
 
 1. **Physics-driven, AI-decided.** Points are decided by ball physics + rules, never by dice. Randomness only enters as noise on AI intent and execution (seeded).
 2. **Sim ≠ render.** Everything in sections 3–9 runs headless in Node (no `THREE`, no `document`). Rendering reads sim state; it never writes it.
-3. **Deterministic.** Same seed + same inputs ⇒ same match. All randomness via `HPO.rng`. `Math.random` is forbidden in sim and AI code (allowed only for cosmetic FX, in `fx*` modules).
+3. **Deterministic.** Same seed + same inputs ⇒ same match. All randomness via `HPO.rng`. `Math.random` is forbidden in sim and AI code (allowed only for cosmetic FX in `fx*` modules, and for Play-mode UI choices such as shuffles and the new-player seed, which are then passed into the sim as explicit seeds).
 4. **Fixed timestep.** Physics `DT = 1/240 s`; sim logic (AI, movement) `1/60 s`; rendering uses interpolation between the last two sim states.
 5. **One namespace.** The only new global is `window.HPO` (plus `THREE`). No other `window.*`/top-level `var` leaks.
 
@@ -38,8 +38,8 @@ Right-handed, **Y up**, units are **metres** (1 unit = 1 m). Origin at the centr
 | Service line | x = ±6.95 (6.95 m from net); centre service line z = 0 from x=-6.95..6.95 |
 | Service boxes | for serving at x<0 side: target boxes are x ∈ [0, 6.95], z ∈ [0,5] (`+Z` box) or [-5,0] (`-Z` box); mirrored for x>0 |
 | Back wall (x = ±10) | glass 0–3 m, metallic mesh 3–4 m |
-| Side wall (z = ±5) | glass 0–3 m for \|x\| ∈ [6, 10] (corner panels), mesh 0–4 m for \|x\| < 6 (and mesh above glass to 4 m) |
-| Doors | 1.0 m wide, in the side mesh at (x = ±3.0, z = ±5), 4 total; closed by default; open on `ball_out_retrieve` |
+| Side wall (z = ±5) | 3 m glass for \|x\| ∈ [6, 10] (two panels from each back corner; mesh above only on the corner panel \|x\| ∈ [8, 10], up to 4 m); 3 m mesh fence for \|x\| ∈ [1, 6] |
+| Entrance | open 2 m gap centred on the net (\|x\| < 1, z = ±5): free below 1.9 m, so a ball can leave through it; mesh header 1.9–3 m. No door leaves or door colliders. The net posts (z = ±5.05) stand in the entrance |
 | Ball | radius 0.0335 m, mass 0.0565 kg |
 | Player body radius (collision) | 0.35 m; reach (racket centre) ≤ 1.05 m horizontally, up to 2.7 m vertical for smash |
 | Island | circular-ish, centred at origin, radius ≈ 48 m; court floor at y = 0; ground plane y = -0.2 |
@@ -95,19 +95,21 @@ Source in `src/`, concatenated in numeric order by `tools/build.js` into `dist/`
 | `08_rules.js` | `rules` | M8 | scoring, serve procedure + rotation, fault/let/out decisions, challenge logic, point FSM |
 | `09_match.js` | `match` | M8 | match state machine, generator-coroutine sequence (walk-on→ceremony), changeovers, stats aggregation |
 | `10_render_core.js` | `render` | Core/M3 | renderer, low-res target, depth outline, palette snap, dither, cameras, cutaway, lighting rigs, shadows |
-| `11_world_court.js` | `worldCourt` | M1 | court meshes: turf textures, lines, glass, mesh fence, posts, net, doors, signage |
+| `11_world_court.js` | `worldCourt` | M1 | court meshes: turf textures, lines, glass, mesh fence, posts, net, entrance, signage |
 | `12_world_island.js` | `worldIsland` | M2 | island, garden, trees, paths, practice court (+2 practice players), marquee, booth, merchandise, props, visitors |
 | `13_world_club.js` | `worldClub` | M3 | clubhouse, clock, balcony, flags, stands, umpire chair, benches, scoreboard, LED screen canvas, cameras, floodlights |
-| `14_rigs.js` | `rigs` | M4 | voxel/pixel character rigs, rackets, outfits, animation clips + blender |
+| `14_rigs.js` | `rigs`, `actors` | M4 | voxel/pixel character rigs, rackets, outfits, animation clips + blender |
+| `15b_assets.js` | — | M9 | embedded mascot sprite as a data URI (source in `assets_src/`) |
 | `15_crowd_fx.js` | `crowd`, `fx` | M9 | spectators, reactions, wave, flags, confetti, ball trail/shadow, particles |
 | `16_replay_ceremony.js` | `replay`, `ceremony` | M9 | ring-buffer recording, replay playback + slow-mo, line-call visual, handshake, podium, trophy |
 | `17_audio.js` | `audio` | M10 | WebAudio synth, mixer, rate-limiter, speech |
 | `18_commentary.js` | `commentary` | M9/M8 | event→English line generator with variety memory |
-| `19_ui.js` | `ui` | M11 | panel, match centre, scoreboard overlay, coach controls, camera controls, debug overlay |
-| `20_main.js` | — | Core | `HPO.boot()` call, default-state autoplay |
+| `19_ui.js` | `ui` | M11 | Studio panel, match centre, scoreboard overlay, full coach controls, camera controls, debug overlay, IndexedDB saved players, shared helpers (`ui.api`) |
+| `20_main.js` | — | Core | query flags, `HPO.boot()`, background match autoplay |
+| `21_game.js` | `game` | M11 | Play mode: title, create player, quick setup, HUD, limited coach box, pause menu, results (docs/PLAY_MODE.md) |
 | `shell.html` / `shell.css` | — | M11 | page chrome (annetta.dev look) |
 
-`tools/`: `build.js` (online + offline builds), `dupcheck.js`, `sim_cli.js` (headless match runner), `physics_tests.js`, `scoring_tests.js`, `stats_tune.js`.
+`tools/`: `build.js` (online + offline builds, `--check`), `make_artifact.js`, `devpage.js`, `dupcheck.js`, `sim_cli.js` (headless match runner), `matrix.js`, `physics_tests.js`, `scoring_tests.js`, `player_ai_tests.js`, `commentary_tests.js`, and the headless-Chrome drivers `browser.js`, `e2e.js`, `features_browser.js`, `visual_matrix.js`. Commands and latest results: docs/TESTING.md.
 
 ---
 
@@ -131,7 +133,7 @@ Streams: `rng.fork('ai')`, `'exec'` (shot execution error), `'ball'` (net-cord/m
 ## 5. Data models
 
 ### 5.1 Player
-Custom players: `players.createCustom({name, gender, seed})` creates an Indonesian roster definition using an isolated seeded RNG; `players.restoreCustom(def)` validates and restores a saved definition. UI owns IndexedDB persistence (`littleworld-padel`, store `players`), reports failures, and never uses localStorage. Custom IDs start with `custom-`; gender eligibility is enforced at match start (M=men, W=women, X=one of each per team). The Indonesian woman is Annetta Arslan H, and visitors may choose her as a teammate in Women's/Mixed matches.
+Custom players: `players.createCustom({name, gender, seed})` creates a roster definition (nationality defaults to Indonesia; `input.country {code, name}` overrides it) using an isolated seeded RNG; `players.restoreCustom(def)` validates and restores a saved definition. UI owns IndexedDB persistence (`littleworld-padel`, store `players`), reports failures, and never uses localStorage. Custom IDs start with `custom-`; gender eligibility is enforced at match start (M=men, W=women, X=one of each per team). The Indonesian woman is Annetta Arslan (id `p5`, shown as "Annetta" in the scoreboard and commentary), and visitors may choose her as a teammate in Women's/Mixed matches.
 
 Exterior collisions: `court.setOutsideTriangles(triangles)` accepts plain world-space triangle vertices from the static world at boot, with no renderer dependency. Only exterior triangles near the playable enclosure are indexed. Contacts use `outsideItem`; all exterior ground/item contacts immediately end the rally, even during retrieval: after a legal opponent-floor bounce the hitter wins, otherwise the hitter loses. Airborne exits can still be recovered before an exterior contact.
 
@@ -168,7 +170,7 @@ Integrator (semi-implicit, substeps until the frame budget is consumed, **swept-
 - Per-surface constants live in `HPO.mod.court.SURF[venue]` (§7.3) and include a `jitter` term (std dev in degrees applied to outgoing direction, drawn from `rng 'ball'`) — larger for mesh.
 - **Anti-loop safety:** a rally watchdog ends the point if `t_since_hit > 12 s` or `wallContactsSinceFloor > 6` (ball treated as dead and the point awarded per rule §8.4).
 
-Surfaces (ids): `floor`, `glassBack`, `glassSide`, `meshBack`, `meshSide`, `net`, `netTape` (top 5 cm, cord), `post`, `door`, `ceiling` (indoor roof only, as a dead surface), `ground` (outside enclosure).
+Surfaces (ids): `floor`, `glassBack`, `glassSide`, `meshBack`, `meshSide`, `net`, `netTape` (top 5 cm, cord), `post`, `door` (id kept in the surface tables but no collider uses it since the entrance became open), `ceiling` (indoor roof only, as a dead surface), `ground` (outside enclosure).
 
 Ball emits `BUS 'ball:contact'` for every surface contact with `{surf, p, vIn, vOut, t}`.
 
@@ -277,7 +279,7 @@ Above y = 4 m on the enclosure is open (balls may leave over the top: out). Indo
 | player speed mult | 1.00 | 0.97 | 1.00 | 1.00 |
 | visuals | blue turf, blue glass tint | terracotta turf, warm lighting | brighter blue, glossy | roof, hall lighting |
 
-Numbers are initial values; `tools/stats_tune.js` may adjust them within ±15 % and records final values here.
+Numbers are initial values. Tuning goes through `cfg.TUNE` (`sim_cli.js --tune '{json}'`); current surface values live in `src/02_court_data.js`.
 
 ---
 
@@ -305,7 +307,7 @@ Numbers are initial values; `tools/stats_tune.js` may adjust them within ±15 % 
 ### 8.4 Point decision (state machine in `rules`)
 A rally is a sequence of strokes alternating teams. After each stroke the ball is tracked until: second floor bounce on a side, or an out-event, or a hit by the next player. Rules:
 - **In play** after a stroke if the ball's first floor bounce is on the opponent's side within court lines (line = in). A direct hit on any WALL/fence/net/post/door/ceiling/outside **before** that first bounce ⇒ **out**; point to the opponent of the hitter.
-- After the opponent-side bounce, the ball may hit back/side glass and **mesh** (any number of times ≤ cap) and remain in play. If it exits the enclosure (over the top, through the open section above 4 m, or via an open door) before being hit ⇒ ball lost for the receiving team *unless* `outOfCourtRetrieval` and the ball bounced in court first and left over the side/back: then the receiving player may exit via nearest door (`ball:out_retrieve`) and play it (legal only if the ball goes back into the opponent's court by the same rules). Ball leaving after being struck by the receiver and not first bouncing in the opponent court ⇒ point to the original hitter's opponent.
+- After the opponent-side bounce, the ball may hit back/side glass and **mesh** (any number of times ≤ cap) and remain in play. If it exits the enclosure (over the top, through the open section above 4 m, or through the open entrance) before being hit ⇒ ball lost for the receiving team *unless* `outOfCourtRetrieval` (on by default) and the ball bounced in court first and left over the side/back: then the receiving player may exit via the entrance (`ball:out_retrieve`) and play it (legal only if the ball goes back into the opponent's court by the same rules). Ball leaving after being struck by the receiver and not first bouncing in the opponent court ⇒ point to the original hitter's opponent.
 - A team may return the ball after its first floor bounce and any subsequent wall rebounds, up to the moment of a second floor bounce. **Own-wall defensive shots** (ball bounced on own side, then struck off own back glass → comes back) are legal. The ball may be struck on the volley **before** the floor bounce too.
 - **Second floor bounce** on a side without a legal strike ⇒ point to the other team.
 - Ball touching a player's body/clothing/racket illegally (hit twice, carry), net contact by player/racket during live ball, or player touching the net post ⇒ point to opponent.
@@ -354,7 +356,7 @@ Typical envelopes (hit at contact height `h`):
 ### 10.1 Movement / kinematics (`players`, `nav`)
 - Each player has max speed `5.0–6.3 m/s` (scaled by coverage, fatigue 1→0.82×), accel 11 m/s², brake 14 m/s², turn rate 12 rad/s. Split step: 120 ms pre-contact crouch event for opponent shots.
 - `players.setIntent(playerId, intent)` where `intent = { type:'moveTo'|'intercept'|'recover'|'idle'|'serve'|..., target:{x,z}, speedCap, faceBall:bool }`.
-- `nav.path(from,to,opts)` → waypoints (A* on NAV grid; courts are open so paths are mainly door/out-of-court trips); `nav.steer(...)` uses separation force between teammates (min 1.2 m centre distance) and net avoidance (≥ 0.35 m).
+- `nav.path(from,to,opts)` → waypoints (A* on NAV grid; courts are open so paths are mainly entrance/out-of-court trips through the two exits at (0, ±5)); `nav.steer(...)` uses separation force between teammates (min 1.2 m centre distance) and net avoidance (≥ 0.35 m).
 - **Predictive interception:** `ai.predict(ball, horizon)` returns the ball trajectory samples at 60 Hz (including predicted wall bounces, using the *same* integrator in a sandboxed copy). `players` computes for each candidate strike sample `(t_i, p_i)` whether the player can reach `p_i` by `t_i` (given accel/brake); the earliest feasible sample with acceptable contact height is the intercept. If none feasible, the player runs to the closest approach and the shot is `desperation` (reach cap 1.05 m + 0.25 m dive stretch, quality ↓).
 - **Strike contract (no phantom contacts):** a player may hit the ball only when, in a fixed update, `dist(racketTip, ball) ≤ 0.9 m && ballHeight within shot window && strikeWindow open (anim contact frame)`. The swing animation's contact frame time `t_contact` is scheduled from the intercept; the physics hit is applied *at that frame*, and the ball must be within reach at that instant, otherwise the swing whiffs (ball keeps going; possible miss-point).
 - `players` exposes `players.get(id)`, `players.team(team)`, `players.setCoach(...)` (no) — coaching lives in `ai`.
@@ -400,7 +402,7 @@ render.frame(alpha)                  // draws interpolated state
 render.stats() -> {fps, drawCalls}
 ```
 - Pipeline: scene → low-res `WebGLRenderTarget` (colour + depth) → fullscreen pass: depth/normal edge outline, **OKLab nearest-colour snap to the fixed 90-colour palette** (LUT texture 32³ built at boot), 8×8 Bayer ordered dither strength by lighting, upscale nearest.
-- Camera: orthographic, elevation 31°, yaw in quarter turns (Q/E ±90°), wheel zoom, drag orbit/pan in Free mode. Follow mode smooths toward ball/rally centroid.
+- Camera: orthographic, elevation 40°, yaw in quarter turns (Q/E ±90°), wheel zoom, drag orbit/pan in Free mode. When a drag is released the yaw snaps to the nearest isometric quarter turn, so opposite court edges stay parallel and the court never looks skewed. Follow mode smooths toward ball/rally centroid.
 - **Cutaway:** near-camera stands/walls/clubhouse parts register as `cutaway` objects; each frame set opacity/lift based on camera yaw and whether they occlude the court rectangle in screen space; transparency uses dithered discard (palette-friendly), never hides ball/players (court glass never occludes: it is `glass` material with separate depth write off + outline suppression).
 - Shadows: one directional shadow map for sun/moon (1024², updated every 2nd frame), blob shadows for ball and players as fallback; night uses 4 floodlight decals + emissive glows (no real-time spot shadows).
 
@@ -420,7 +422,7 @@ Voxel-blocky skeleton: pelvis, torso, head, 2×(upper/lower arm), 2×(thigh/shin
 Synth-only. `audio.unlock()` on first user gesture; master default muted/off. Buses: `fx`, `crowd`, `commentary`, `ambience` with independent gains. Per-sound voice limiter (e.g. ≤ 6 racket hits/s, ≤ 8 footsteps/s overall) and speed-aware gain ducking at 2×/4×. Sound mapping: `shot:hit` → racket (pitch by shot), `ball:bounce` → turf, `ball:contact` by `surf` → glass back/side, mesh, net; `crowd:react`; `speak` → speechSynthesis if available and enabled.
 
 ### 12.5 UI (`ui`)
-Responsive grid: desktop = canvas left, panel right (min 340 px); mobile = canvas on top, panel stacked. Panel sections: Match, Court, Coach, Camera, Audio, Stats (tabs), Event feed. Scoreboard overlay (TV style) inside canvas container. Debug overlay toggled with backtick `` ` `` (hidden by default). All strings English. Style rules: §13.
+Two experiences share the same sim and canvas. **Play mode** (default, `21_game.js`, docs/PLAY_MODE.md): title → create player → quick setup → full-screen match with a limited coach box for the visitor's team only (six tactics, middle-ball choice, timeout, challenge), pause menu and results card; the panel is hidden. **Studio mode** (`19_ui.js`, optional via the ⚙ Studio button or `?mode=studio`): responsive grid, desktop = canvas left, panel right (min 340 px); mobile = canvas on top, panel stacked. Panel sections: Match, Court, Coach, Camera, Audio, Stats (tabs), Event feed. Scoreboard overlay (TV style) inside canvas container. Debug overlay toggled with backtick `` ` `` (hidden by default). All strings English. Style rules: §13.
 
 ---
 
@@ -473,10 +475,10 @@ Headless (Node, no DOM):
 - `tools/scoring_tests.js` — exhaustive scoring/serve-rotation/tie-break tests independent of physics (feed point sequences).
 - `tools/physics_tests.js` — scripted cases: serve into box; back-glass-then-mesh fault; glass-before-bounce out; back-glass recovery; side-glass; double-wall; legal own-glass defensive shot; net cord/let; double bounce; tunnelling at 45 m/s; smash back across net; assert determinism via seed.
 - `tools/sim_cli.js --format --scoring --type --venue --seed --n` — runs N full matches (no rendering) and prints the §11 stats vs. `cfg.TUNE` targets and flags any watchdog trips (must be 0).
-- `tools/stats_tune.js` — loop to nudge `cfg.TUNE` weights/σ; result recorded under "Tuning log" in this file.
+- `tools/matrix.js [--part k/n]` — full matches across formats, scoring, types and venues; `tools/player_ai_tests.js` — custom players, smash tactics, women's and mixed matches; `tools/commentary_tests.js`.
 
 Browser:
-- `?test=1` exposes `HPO.test` with `runMatch(config, speed)`, `setSeed`, `teleportBall`, `forceShot` (not shipped in production build unless `?debug`).
+- Query flags (`src/20_main.js`, `src/21_game.js`): `auto`, `cam`, `tod`, `venue`, `format`, `scoring`, `type`, `seed`, `speed`, `fast`, `px`, `mode`, `title`. Tests drive the page through `HPO.mod.*` from `tools/browser.js`; there is no separate `HPO.test` API.
 - Matrix run: venue × format × type × scoring × tod × camera × layout, check no console errors, no watchdog trips, reaches `results`.
 - Screenshots (if Chrome/Edge available): default camera, each camera mode, each tod, mobile viewport. Anything unverified is reported, not claimed.
 
@@ -494,7 +496,8 @@ Integration checkpoints (each ends in running `dupcheck` + headless matrix):
 
 - GitHub Pages: `.github/workflows/pages.yml` builds on pushes to `main`, publishes the online build as `index.html`, and includes the offline HTML as a download. The repository is `ant133/littleworld-padel`; the intended custom domain is `padel.annetta.dev`, configured in GitHub Pages settings and DNS (see `docs/GITHUB_PAGES.md`).
 - `dist/littleworld-online.html` — loads `three@0.128.0/build/three.min.js` from cdnjs; all game code inline; publishable as artifact.
-- `dist/littleworld-offline.html` — identical plus three.js r128 inlined; **deploy as `annetta-website/padel/index.html`** (annetta.dev/padel) when the user asks.
+- `dist/littleworld-offline.html` — identical plus three.js r128 inlined; published beside the online page as `littleworld-offline.html` and works with no network.
+- `dist/littleworld-artifact.html` — the online build prepared by `tools/make_artifact.js` for artifact publishing.
 - Google Fonts `<link>` injected only when online; no other external requests.
 
 ---
@@ -503,3 +506,4 @@ Integration checkpoints (each ends in running `dupcheck` + headless matrix):
 - 0.1 — initial draft for user approval.
 - 0.2 — CP1 (headless sim) implemented. Deviations: `HPO.court` is an alias of `HPO.mod.court` (holds `sides`); `match:end` is emitted by rules, `match:finished` added; Quick format is first to 4 *win by 2* with tie-break at 4–4; `outOfCourtRetrieval` defaults to false; `cfg.TUNE` holds the tuning knobs listed in docs/TESTING.md; first-pass numbers: floor e 0.80 kept, Magnus scaled by `ball.PRM.magnus`. Per-module API notes: docs/API_court_ball.md, docs/API_rules.md.
 - 0.3 — Visual layer implemented (see docs/VISUAL_CONTRACT.md, docs/API_render.md). Court geometry corrected to match real padel references: back wall 3 m glass + mesh to 4 m; on each long side the first TWO glass panels from each back corner are 3 m glass (only the first, |x| in [8,10], has mesh above to 4 m); between them a 3 m mesh fence; an OPEN 2 m entrance centred on the net (|x|<1, z=±5) is free below 1.9 m (ball can leave through it) with a mesh header from 1.9–3 m; no doors/leaves. Out-of-court retrieval is ON by default: the receiving team nearest player fetches a validly-bounced ball that left the court and returns it (match.js retrieve()). New match behaviours: warm-up rallies, AI Eagle-Eye challenges (rules lineErrorCm default 2 cm on serve calls), AI tactical timeouts, coach returnDir honoured. Sim speed multiplier is applied in match.advance. cfg.TUNE defaults: errPhi/errTh 2.0, speed 0.85, react 1.5, rally {from:10,per:0.1}.
+- 0.4 — As built, current. Added: visitor-created players (`players.createCustom/restoreCustom`, IndexedDB `littleworld-padel`, nationality), Annetta Arslan renamed and shown as "Annetta"; **Play mode** (`21_game.js`, docs/PLAY_MODE.md) as the default experience with the full panel kept as optional Studio mode; camera orbit snaps to isometric quarter turns on release (elevation 40°, parallel court edges at every yaw); obstructing floodlights fade through a dedicated `light` cutaway role; exterior ground/item collisions end the rally (`court.setOutsideTriangles`, `outsideItem`); more smashes by default and kick smashes for lobs that land within 2 m of the back glass; `15b_assets.js` embedded mascot sprite; `tools/features_browser.js`, `player_ai_tests.js`, `make_artifact.js`; GitHub Pages workflow and `padel.annetta.dev` hosting (docs/GITHUB_PAGES.md). Superseded: the `stats_tune.js` tool and the `HPO.test` hook were never built; the `annetta-website/padel/` deployment plan was replaced by the standalone repo `ant133/littleworld-padel`.

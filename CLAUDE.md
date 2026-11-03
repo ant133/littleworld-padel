@@ -3,61 +3,60 @@
 Read `AGENTS.md` first; it holds the shared rules. This file adds Claude Code specifics.
 
 ## Project
-Web toy for annetta.dev. Working dir: `C:\Hermes\project\annetta\padel` (not a git repo yet). Platform: Windows 11, PowerShell primary, Bash available.
+Web toy for annetta.dev, feature-complete and deployed through GitHub Pages. Working dir: `C:\Hermes\project\annetta\padel`, git repo `ant133/littleworld-padel` (branch `main`). Platform: Windows 11, PowerShell primary, Bash available. Overview and how to play: `README.md`.
 
 ## Dev commands
-- `node tools/devpage.js` → dev.html (all src/*.js); open via `file:///.../dev.html?cam=club|close|follow|top&tod=day|dusk|night&venue=classicBlue|terracotta|fastBlue|indoor&speed=1&fast=0|1&px=2`.
-- Tests: `node tools/dupcheck.js`, `physics_tests.js`, `scoring_tests.js [--quick]`, `commentary_tests.js`, `matrix.js --part k/3`, `sim_cli.js --n N [--tune {json}]`.
-- Browser: `tools/browser.js` (headless Chrome driver), `e2e.js`, `visual_matrix.js`.
+- `node tools/devpage.js` → dev.html (all src/*.js); open via `file:///.../dev.html?cam=club|close|follow|top&tod=day|dusk|night&venue=classicBlue|terracotta|fastBlue|indoor&speed=1&fast=0|1&px=2`. Play mode is the default; add `mode=studio` for the full panel, `title=0` to skip the title.
+- Tests: `node tools/dupcheck.js`, `physics_tests.js`, `scoring_tests.js [--quick]`, `player_ai_tests.js`, `commentary_tests.js`, `matrix.js --part k/3`, `sim_cli.js --n N [--tune {json}]`. Results and gaps: docs/TESTING.md.
+- Browser (headless Chrome via `tools/browser.js`): `e2e.js` (match sampler), `features_browser.js` (Play-mode journey, saved players, camera, offline render, phone), `visual_matrix.js` (courts × lighting × cameras). Run `node tools/build.js` first for the ones that load `dist/`.
 - Ship: `node tools/build.js [--check]` → dist/littleworld-online.html + -offline.html; `node tools/make_artifact.js` → dist/littleworld-artifact.html (artifact publish).
-- Key docs: CONTRACT.md, docs/VISUAL_CONTRACT.md, docs/API_*.md, docs/TESTING.md.
+- Key docs: CONTRACT.md, docs/PLAY_MODE.md, docs/VISUAL_CONTRACT.md, docs/API_*.md, docs/TESTING.md, docs/GITHUB_PAGES.md.
+- Windows tips: the Bash tool mangles big heredocs with quotes; write files with the Write tool. Node one-liners that match markdown table cells must account for escaped pipes (`\|`).
 
 ## Layout
-- `SPEC.md` — original full prompt/spec (source of requirements)
-- `CONTRACT.md` — architecture and interfaces (write before modules)
-- `src/` — modules, one file per responsibility, all under namespace `HPO`
-- `tools/` — build (inline modules + three.js into offline HTML), `dupcheck`, headless match harness
-- `dist/` — `littleworld-online.html`, `littleworld-offline.html`
+- `SPEC.md` — original brief (requirements source; some items superseded, see CONTRACT.md §18)
+- `CONTRACT.md` — architecture and interfaces
+- `src/` — one file per module under namespace `HPO` (00–09 headless sim, 10–20 presentation, 21 Play mode), plus `shell.html`/`shell.css`
+- `tools/` — build, dupcheck, headless and browser test drivers
+- `docs/` — API notes, Play mode, visual contract, testing, Pages setup
+- `dist/` — build output (online, offline, artifact)
+- `vendor/` — three.js r128; `assets_src/` — mascot sprite source; `scratch/` — local screenshots and test output (not source)
+- `.github/workflows/pages.yml` — dupcheck, build, physics/scoring/player-AI tests, deploy
 
-## Workflow
-1. Core first: render pipeline, pixel post-process, palette, coordinates, NAV grid, BUS, physics loop, seeded RNG, match state machine.
-2. Write `CONTRACT.md`, then build the 11 modules in parallel via subagents in isolated worktrees (if git is initialised) or sequentially against the same interfaces.
-3. Integrate, run `dupcheck`, run headless match matrix, then visual checks per camera/lighting/layout.
-4. Publish artifact; build offline file.
+## Workflow for changes
+1. Read CONTRACT.md for the module; change the contract first if an interface changes.
+2. Sim, rules or AI change → run the headless suites (`physics_tests`, `scoring_tests`, `player_ai_tests`, `matrix`).
+3. UI, camera or world change → `node tools/build.js`, then `features_browser.js` and look at screenshots (desktop and 390×844).
+4. Update the docs the change touches (CONTRACT.md change log, docs/TESTING.md numbers) in the same pass.
+5. Do not commit or push unless asked; a push to `main` publishes the site.
 
-## Site & hosting (confirmed)
-- Site source: `C:\Hermes\project\annetta\annetta-website` — static GitHub Pages, no build step, `CNAME` annetta.dev. The toy ships as its own page (e.g. `/padel/`), neutral padel theme, light UI, launches straight into the club (no intro splash). Annetta may appear in-world (sponsor board, spectator/mascot, "Made in Jakarta" sign).
-- Reference prior build: artifact EoFoLuqfiLm3q9PiYTTbeD (tennis "Hollybrook Open", ~1.0 MB single HTML with three.js inline). Use ~1–2 MB as the size ballpark for the offline file.
+## Site & hosting (current)
+- Hosting: free GitHub Pages from `ant133/littleworld-padel`, built by the Actions workflow. Intended address `https://padel.annetta.dev` (CNAME `padel` → `ant133.github.io`, custom domain set in the repo's Pages settings); default address `https://ant133.github.io/littleworld-padel/`. Steps: docs/GITHUB_PAGES.md.
+- This supersedes the earlier plan to ship as `padel/index.html` inside `annetta-website` (that repo is a project repo with its own CNAME, so a separate repo cannot inherit `annetta.dev`; the subdomain route avoids touching it). Site source for reference: `C:\Hermes\project\annetta\annetta-website`, which should link to the toy ("Jump in" style CTA) if the user asks.
+- The online page loads three.js r128 from cdnjs; the offline file is published beside it as `littleworld-offline.html`.
+- Reference prior build: artifact EoFoLuqfiLm3q9PiYTTbeD (tennis "Hollybrook Open", ~1.0 MB). Current files: online ~0.75 MB, offline ~1.3 MB.
 
-## Decisions (from Q&A rounds 1–2)
-- Default load: Quick Match, Golden Point, Men's doubles, Classic Blue, Day; autoplay on load with a visible New Match button; sim speed default 1x.
-- Full coach set (all tactics, aim-click, timeout, challenge). Full Eagle-Eye-style challenge + replay, limited challenges per set.
-- Audio off by default with a prominent "Sound off ♪" toggle; speech commentary off by default.
-- Auto-detect device tier (pixel size, reduced mobile mode); slider overrides.
-- Fonts: load Google Fonts when online, fall back to system fonts offline.
-- Deploy the offline, fully embedded file at annetta.dev/padel; artifact version loads three.js r128 from cdnjs.
-- Annetta in-world: sponsor board (annetta.dev), mascot/spectator sprite, "A✦" logo on LED screen. Do NOT reuse her sprite art; create a new inspired sprite via Higgsfield MCP, then embed small (data URI / procedural palette-snapped) — no external asset files.
-- Players/clubs fictional; Indonesian-flavoured sponsors as puns on: Metro Tennis Terminal, Pedal Padel, Bank Mandiri, Bank Syariah Indonesia, Aquviva, Go-jek, Pocari Sweat. Keep puns clearly altered (no real logos/marks).
+## Decisions in force
+- Experience: Play mode by default (title → create player → quick setup → full-screen match with a limited coach box for the visitor's team only); full panel optional as Studio. Match defaults: Quick, Golden Point, Classic Blue, Day, 1×; the title screen plays a live match behind it. Visitor teams up with Annetta Arslan (id `p5`, shown as "Annetta"); women's doubles for a woman, mixed for a man.
+- Coach: Play mode has six tactics, middle-ball choice, one timeout, two challenges per set; Studio has the full set (all presets, serve/return direction, aim-click, focus opponent). Eagle-Eye-style challenge with replay.
+- Audio and speech commentary are off by default with a visible sound toggle.
+- Device tier is auto-detected (pixel size, reduced mobile mode); the slider overrides.
+- Fonts: Google Fonts when online, system fallbacks offline. Pixel art stays in the canvas; UI text is not pixelated.
+- Persistence: visitor players in IndexedDB only; no `localStorage`.
+- Annetta in-world: sponsor board (annetta.dev), mascot spectator sprite (new art, embedded as a data URI; do NOT reuse her original sprite art), "A✦" on the LED screen.
+- Fictional Indonesian-flavoured sponsors (puns, no real marks): Lintas Court Rail, Tapak Smash, Bank Mandau Raya, Bank Lapang Amanah, Aquvivo, Go-Jeg, Pokari Sweet. The user approved the names; the user is responsible for the final real-world clearance check.
+- Court: 3 m glass back wall and corner panels, 3 m mesh between, open 2 m entrance at the net with a mesh header; no doors. Camera is orthographic at 40° and snaps to isometric quarter turns after a drag.
+- Scope: full version, no feature cuts; accessibility intentionally deprioritised, polish kept.
 
 ## Tournament name
 "Littleworld Jakarta Padel Cup <YEAR>" — YEAR must come from `new Date().getFullYear()` at runtime (title, scoreboard, banners, trophy, results screen, page <title>). Never hard-code the year. The SPEC.md name "Hollybrook Padel Open" is superseded; sponsor/boards/LED/ceremony text all use the new name.
-
-## Decisions (round 3)
-- Sponsor names (pending final user OK): Lintas Court Rail, Tapak Smash, Bank Mandau Raya, Bank Lapang Amanah, Aquvivo, Go-Jeg, Pokari Sweet. Avoid any name matching a real brand; unverifiable offline, so user must sanity-check.
-- Hosting: free GitHub Pages only. Main site repo is github.com/ant133/annetta-website (a project repo with CNAME annetta.dev, NOT a user-site repo), so a separate project repo would NOT inherit annetta.dev. Plan: ship as `padel/index.html` inside annetta-website → annetta.dev/padel. Do not commit/push in any repo unless asked.
-- Build: many files in `src/`, concatenated by a build script into one HTML. Git init in this folder is OK for worktrees; commit only on request.
-- Pause for user approval after CONTRACT.md before spawning module agents.
-- Testing: headless Node harness for physics/scoring; browser screenshots if Chrome/Edge present; report anything unverified.
-- Accessibility: skipped, polish kept. Scope: FULL version, no feature cuts planned.
-- Build is underway/complete: all modules exist; keep CONTRACT.md and docs/ in sync with code changes.
-- Higgsfield: user approved generating ~1–3 reference images for the Annetta mascot; check balance first, show result before use.
 
 ## Design tokens (read from annetta-website/styles.css)
 - Colors: ink `#123954`, blue `#177dc5`, cream `#fffaf0`, accent blue `#268cc2`, tag blue `#257bad`, highlight `#fff4b3`, border `#12395421`.
 - Fonts: DM Sans (body), Manrope 700/800 (headings, tight `-.055em` tracking), Georgia italic for accent words.
 - Cards: cream `#fffaf0f0`, 1px ink-tint border, hard offset shadow `15px 18px 0 #1264992e`, no rounded corners. Section tags: 10px, 700, uppercase, `.2em` tracking.
 - Stickers: slight rotation (-3deg), 2px blue border, cream fill.
-- Fonts are loaded from Google Fonts on the site; the toy must NOT rely on that offline — use system fallbacks (`Manrope`→ system-ui, Georgia) unless the user approves embedding.
+- Fonts are loaded from Google Fonts on the site; the toy must NOT rely on that offline — use system fallbacks (`Manrope`→ system-ui, Georgia).
 
 ## Design language (annetta.dev)
 Observed from the live site (copy and structure):

@@ -92,10 +92,11 @@
     if (!def) return '';
     const parts = def.name.split(' ');
     const mobile = HPO.cfg.mobile || (EL.stage && EL.stage.clientWidth < 520);
-    if (long) return def.name;
+    if (def.id === 'p5' && !long) return 'Annetta';
+    if (long || parts.length < 2) return def.name;
     return mobile ? parts[parts.length - 1] : parts[0][0] + '. ' + parts.slice(1).join(' ');
   }
-  function pairName(ids) { return ids.map(id => { const d = rdef(id); return d ? d.name.split(' ').slice(-1)[0] : id; }).join(' / '); }
+  function pairName(ids) { return ids.map(id => { const d = rdef(id); return d ? (d.id === 'p5' ? 'Annetta' : d.name.split(' ').slice(-1)[0]) : id; }).join(' / '); }
   function teamIds(team) { const pl = mod('players'); if (pl && pl.list && pl.list.length) return pl.list.filter(p => p.team === team).sort((a, b) => a.slot - b.slot).map(p => p.id); return team === 'A' ? S.teamA : S.teamB; }
   function teamName(team) { return pairName(teamIds(team)); }
 
@@ -145,6 +146,13 @@
     const M = mod('match');
     if (M && M.cfg) onMatchNew({ config: M.cfg });
     sync();
+    ui.api = { S: S, EL: EL, h: h, add: add, safe: safe, toast: toast, feed: feed, drawPortrait: drawPortrait, flagEl: flagEl, mbar: mbar, teamName: teamName, teamIds: teamIds, rdef: rdef, roster: roster,
+      contribution: contribution, teamSum: teamSum, newMatch: newMatch, applyVenueVisuals: applyVenueVisuals, applyTod: applyTod, applyDefaults: applyDefaults, refillPickers: refillPickers,
+      setSpeed: setSpeed, togglePause: togglePause, skipCeremony: skipCeremony, doChallenge: doChallenge, callTimeout: callTimeout, setCam: setCam, setSound: setSound, orders: orders,
+      claimCoach: claimCoach, closeModal: closeModal, fmtClock: fmtClock, M_clock: M_clock, savePlayerDef: savePlayerDef, openStudioPanel: null, ARCH: ARCH, ATTRS: ATTRS, FORMAT_NAMES: FORMAT_NAMES,
+      PHASE_NAMES: PHASE_NAMES, VENUES: VENUES, CAMS: CAMS, showKeys: showKeys, setScore: setScore, shortName: shortName, other: other, hex: hex,
+      isBusy: () => !!tmo, resultsReset: () => { resultsShown = false; } };
+    const G = mod('game'); if (G && G.init) safe(() => G.init(ctx, ui.api), 'game.init');
   }
 
   let fontsLoaded = false;
@@ -283,6 +291,7 @@
       EL.feedList.insertBefore(feedNode(it), EL.feedList.firstChild);
       while (EL.feedList.children.length > 200) EL.feedList.removeChild(EL.feedList.lastChild);
     }
+    const G = mod('game'); if (G && G.onFeed) safe(() => G.onFeed(it, entry), 'game.onFeed');
   }
   function feedNode(it) { return h('div', { class: 'it' + (it.key ? ' key' : '') }, h('span', { class: 'ic' }, it.icon), h('span', null, it.text), h('span', { class: 'tm' }, it.t)); }
   function M_clock() { const M = mod('match'); return M ? fmtClock((M.simTime || 0) - playStartSim) : '00:00'; }
@@ -391,46 +400,40 @@
     return playerDB;
   }
   async function loadSavedPlayers() {
+    S.saved = []; S.savedOk = true;
     try {
       const db = await openPlayerDB();
       const saved = await new Promise((resolve, reject) => {
         const tx = db.transaction('players', 'readonly'), req = tx.objectStore('players').getAll();
         req.onsuccess = () => resolve(req.result); req.onerror = () => reject(req.error);
       });
-      saved.forEach(def => { try { mod('players').restoreCustom(def); } catch (e) { /* skip invalid records */ } });
+      saved.sort((x, y) => (x.savedAt || 0) - (y.savedAt || 0));
+      saved.forEach(def => {
+        try {
+          const live = mod('players').restoreCustom(def);
+          if (def.country && def.country.code) live.country = { code: def.country.code, name: def.country.name };
+          live.savedAt = def.savedAt || 0; S.saved.push(live);
+        } catch (e) { /* skip invalid records */ }
+      });
       refillPickers();
-      if (EL.playerStatus && saved.length) EL.playerStatus.textContent = 'Saved players loaded. Select them above, or create another player.';
-    } catch (e) {
-      if (EL.playerStatus) EL.playerStatus.textContent = 'Local saving is unavailable. You can still create a player for this visit.';
-    }
+    } catch (e) { S.savedOk = false; }
+    const G = mod('game'); if (G && G.onSaved) safe(() => G.onSaved(), 'game.onSaved');
+  }
+  async function savePlayerDef(def) {
+    try {
+      def.savedAt = Date.now();
+      const db = await openPlayerDB();
+      await new Promise((resolve, reject) => {
+        const tx = db.transaction('players', 'readwrite'); tx.objectStore('players').put(JSON.parse(JSON.stringify(def)));
+        tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); tx.onabort = () => reject(tx.error);
+      });
+      return true;
+    } catch (err) { return false; }
   }
   function buildCreatePlayer() {
-    const name = h('input', { id: 'create-name', type: 'text', maxlength: '40', placeholder: 'Your name', 'aria-label': 'Player name', autocomplete: 'nickname' });
-    const nationality = h('select', { id: 'create-nationality', 'aria-label': 'Nationality' }, h('option', { value: 'IDN' }, 'Indonesia'));
-    const gender = h('select', { id: 'create-gender', 'aria-label': 'Player gender' }, h('option', { value: 'F' }, 'Woman'), h('option', { value: 'M' }, 'Man'));
-    EL.playerStatus = h('p', { class: 'hint', role: 'status', id: 'create-status' }, 'Random stats and appearance. Saved on this device and browser.');
-    const submit = h('button', { class: 'btn primary block', type: 'submit', id: 'btn-create-player' }, 'Create player & team up with Annetta');
-    const form = h('form', { id: 'create-player', onsubmit: async e => {
-      e.preventDefault(); submit.disabled = true;
-      try {
-        const seed = window.crypto.getRandomValues(new Uint32Array(1))[0] || 1;
-        const def = mod('players').createCustom({ name: name.value, gender: gender.value, seed });
-        S.type = def.gender === 'M' ? 'X' : 'W'; applyDefaults(S.type);
-        S.teamA = [def.id, 'p5']; refillPickers(); sync();
-        let saved = true;
-        try {
-          const db = await openPlayerDB();
-          await new Promise((resolve, reject) => {
-            const tx = db.transaction('players', 'readwrite'); tx.objectStore('players').put(def);
-            tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); tx.onabort = () => reject(tx.error);
-          });
-        } catch (err) { saved = false; }
-        EL.playerStatus.textContent = def.name + ' · ' + ARCH[def.archetype] + ' · Power ' + def.attrs.power + ', accuracy ' + def.attrs.accuracy + '. ' +
-          (saved ? 'Saved on this device. ' : 'Available this visit; local saving failed. ') + 'Team A is ready with Annetta. Press New Match to play.';
-      } catch (err) { EL.playerStatus.textContent = err.message; }
-      finally { submit.disabled = false; }
-    } }, field('Name', name), field('Nationality', nationality), field('Gender', gender), submit, EL.playerStatus);
-    return h('details', { class: 'adv', id: 'create-player-section' }, h('summary', null, 'Create player · Play with Annetta'), form);
+    EL.playerStatus = h('p', { class: 'hint', role: 'status', id: 'create-status' }, 'Random stats and look. Saved on this device and browser.');
+    const btn = h('button', { class: 'btn primary block', type: 'button', id: 'btn-create-player', onclick: () => { const G = mod('game'); if (G && G.showCreate) G.showCreate(); } }, 'Create player · play with Annetta');
+    return h('div', { class: 'field', id: 'create-player-section' }, btn, EL.playerStatus);
   }
 
   function refillPickers() {
@@ -606,7 +609,7 @@
   function startRest(label, secs) {
     const M = mod('match'); tmo = { label: label, left: secs, resumeMatch: !(M && M.paused) };
     if (M) M.pause(true);
-    feed({ icon: '⏸', text: label + ' (' + secs + ' s). Coaching time.', key: true });
+    feed({ src: 'ui', icon: '⏸', text: label + ' (' + secs + ' s). Coaching time.', key: true });
     sync();
   }
   function endRest() { const M = mod('match'); if (tmo && tmo.resumeMatch && M) M.pause(false); tmo = null; banner(null); sync(); }
@@ -885,6 +888,7 @@
   function buildResults() {
     const Rl = mod('rules'), M = mod('match'), P = mod('players');
     const st = Rl && Rl.state; if (!st || !P) return;
+    const G = mod('game'); if (G && G.active && G.active()) { resultsShown = true; G.results(); return; }
     resultsShown = true; closeModal();
     const win = st.winner || (M.result && M.result.winner) || 'A';
     let sets = ''; try { sets = Rl.describe(st).setsText; } catch (e) { /* ignore */ }
@@ -915,7 +919,7 @@
     EL.modal = h('div', { class: 'modal', id: 'results' }, card);
     EL.stage.appendChild(EL.modal);
     if (S.autoNext) nextAt = performance.now() + 15000;
-    feed({ icon: '★', text: 'Final: ' + names.join(' & ') + ' win ' + (sets || ''), key: true });
+    feed({ src: 'ui', icon: '★', text: 'Final: ' + names.join(' & ') + ' win ' + (sets || ''), key: true });
   }
   function closeModal() { if (EL.modal) { EL.modal.remove(); EL.modal = null; } }
 
@@ -934,8 +938,9 @@
     const tg = e.target, tn = tg && tg.tagName;
     if (tn === 'INPUT' && tg.type !== 'range' && tg.type !== 'checkbox') return;
     if (tn === 'TEXTAREA') return;
-    const k = e.key;
-    if (k === 'Escape') { if (S.aim) toggleAim(); if (EL.sheet) showKeys(); return; }
+    const k = e.key, G = mod('game');
+    if (k === 'Escape') { if (S.aim) { toggleAim(); return; } if (EL.sheet) { showKeys(); return; } if (G && G.onEscape) G.onEscape(); return; }
+    if (G && G.blocking && G.blocking()) return;
     if (tn === 'SELECT' && k !== '`' && k !== '?') return;
     const lk = k.length === 1 ? k.toLowerCase() : k;
     let used = true;
@@ -1024,7 +1029,7 @@
       if (e.phase === 'play' && lastPhase !== 'play' && lastPhase !== 'changeover') playStartSim = M ? M.simTime : 0;
       lastPhase = e.phase; updatePhaseLabel();
       if (e.phase === 'results') buildResults();
-      if (e.phase === 'setBreak') feed({ icon: '☕', text: 'Set break. Towels out.', key: false });
+      if (e.phase === 'setBreak') feed({ src: 'ui', icon: '☕', text: 'Set break. Towels out.', key: false });
     });
     BUS.on('match:finished', function () { if (!EL.modal && !resultsShown) buildResults(); });
     BUS.on('score:change', function (e) { setScore(e && e.state); });
@@ -1032,7 +1037,7 @@
       flags = { matchPoint: e.matchPoint || null, setPoint: e.setPoint || null, breakPoint: e.breakPoint || null, golden: !!e.golden };
       updateStickers(lastScoreState);
       const key = e.matchPoint ? 'Match point, Team ' + e.matchPoint : e.setPoint ? 'Set point, Team ' + e.setPoint : e.breakPoint ? 'Break point, Team ' + e.breakPoint : e.golden ? 'Golden point' : null;
-      if (key) feed({ icon: '▲', text: key + '.', key: true });
+      if (key) feed({ src: 'ui', icon: '▲', text: key + '.', key: true });
     });
     BUS.on('point:start', function (e) {
       rallyN = 0; EL.chipRally.hidden = true;
@@ -1047,13 +1052,13 @@
     BUS.on('rally:stroke', function (e) { rallyN = e.n; EL.chipRally.hidden = rallyN < 2; EL.chipRally.textContent = 'Rally ' + rallyN; });
     BUS.on('point:end', function (e) {
       const who = teamName(e.winner);
-      feed({ icon: '●', text: who + ' · ' + (KIND_TXT[e.kind] || e.kind) + (e.rallyLen > 1 ? ' (' + e.rallyLen + ' strokes)' : ''), key: e.kind === 'ace' || e.rallyLen >= 14 });
+      feed({ src: 'ui', icon: '●', text: who + ' · ' + (KIND_TXT[e.kind] || e.kind) + (e.rallyLen > 1 ? ' (' + e.rallyLen + ' strokes)' : ''), key: e.kind === 'ace' || e.rallyLen >= 14 });
       if (e.rallyLen >= 14) toast('Rally of ' + e.rallyLen + ' strokes!', { kind: 'good', ms: 2400 });
       if (S.tab === 'stats') renderStats();
     });
-    BUS.on('game:end', function (e) { feed({ icon: '◆', text: 'Game ' + teamName(e.winner) + (e.score ? ' (' + e.score.A + '-' + e.score.B + ')' : ''), key: true }); });
-    BUS.on('set:end', function (e) { feed({ icon: '★', text: 'Set ' + teamName(e.winner) + (e.score ? ' (' + e.score.A + '-' + e.score.B + ')' : ''), key: true }); toast('Set to ' + teamName(e.winner), { kind: 'good' }); });
-    BUS.on('match:end', function (e) { feed({ icon: '★', text: 'Match to ' + teamName(e.winner) + '.', key: true }); });
+    BUS.on('game:end', function (e) { feed({ src: 'ui', icon: '◆', text: 'Game ' + teamName(e.winner) + (e.score ? ' (' + e.score.A + '-' + e.score.B + ')' : ''), key: true }); });
+    BUS.on('set:end', function (e) { feed({ src: 'ui', icon: '★', text: 'Set ' + teamName(e.winner) + (e.score ? ' (' + e.score.A + '-' + e.score.B + ')' : ''), key: true }); toast('Set to ' + teamName(e.winner), { kind: 'good' }); });
+    BUS.on('match:end', function (e) { feed({ src: 'ui', icon: '★', text: 'Match to ' + teamName(e.winner) + '.', key: true }); });
     BUS.on('coach:change', function (e) {
       const prev = lastOrders[e.team] || {}, o = e.orders || {}; const bits = [];
       if (o.preset !== prev.preset) bits.push((PRESET_LABELS.find(p => p[0] === o.preset) || [0, o.preset])[1]);
@@ -1063,26 +1068,26 @@
       if (o.focusOpponent !== prev.focusOpponent && o.focusOpponent !== undefined) bits.push('focus opponent ' + (o.focusOpponent + 1));
       if (o.aimPoint && o.aimPoint !== prev.aimPoint) bits.push('aim set');
       lastOrders[e.team] = Object.assign({}, o);
-      if (bits.length) feed({ icon: '✎', text: 'Coach ' + e.team + ': ' + bits.join(', '), key: false });
+      if (bits.length) feed({ src: 'ui', icon: '✎', text: 'Coach ' + e.team + ': ' + bits.join(', '), key: false });
       sync();
     });
     let fmTs = {};
     BUS.on('ai:formation', function (e) {
       const k = e.team + e.formation, now = performance.now(); if (fmTs[k] && now - fmTs[k] < 4000) return; fmTs[k] = now;
-      feed({ icon: '⇄', text: 'Team ' + e.team + ' shifts to ' + e.formation + '.', key: false });
+      feed({ src: 'ui', icon: '⇄', text: 'Team ' + e.team + ' shifts to ' + e.formation + '.', key: false });
     });
     BUS.on('changeover:start', function (e) {
       if (e.kind === 'timeout') { banner(h('span', null, 'Timeout, Team ' + e.team, h('small', null, 'Adjust the tactics in the coach box'))); }
       else toast('Changeover. A good moment for new orders.', { kind: 'info' });
       const c = $('#sec-coach'); if (c) { c.classList.remove('pulse'); void c.offsetWidth; c.classList.add('pulse'); setTimeout(() => c.classList.remove('pulse'), 4000); }
-      feed({ icon: '⇅', text: (e.kind === 'timeout' ? 'Timeout, Team ' + e.team : e.kind === 'set' ? 'Set changeover' : 'Changeover') + '.', key: e.kind === 'timeout' });
+      feed({ src: 'ui', icon: '⇅', text: (e.kind === 'timeout' ? 'Timeout, Team ' + e.team : e.kind === 'set' ? 'Set changeover' : 'Changeover') + '.', key: e.kind === 'timeout' });
     });
     BUS.on('changeover:end', function (e) { if (e.kind === 'timeout') banner(null); });
     BUS.on('challenge:result', function (e) {
       const fin = e.overturned ? (e.call === 'in' ? 'OUT' : 'IN') : (e.call || '').toUpperCase();
       const txt = 'Eagle Eye: ' + fin + ' — ' + (e.overturned ? 'call overturned' : 'call stands');
       toast(txt + ' (Team ' + e.team + ')', { kind: e.overturned ? 'good' : 'warn', ms: 4500 });
-      feed({ icon: '◎', text: txt + ', challenge by Team ' + e.team + '.', key: true });
+      feed({ src: 'ui', icon: '◎', text: txt + ', challenge by Team ' + e.team + '.', key: true });
       const rp = mod('replay'); const M = mod('match');
       // the match flow plays the replay for AI challenges; a coach challenge plays it here
       if (rp && rp.play && !rp.active && S.coachClaimed && e.team === S.coachTeam && !(M && M.cfg && M.cfg.fast)) safe(() => rp.play({ kind: 'challenge' }), 'replay');
@@ -1120,7 +1125,7 @@
     feedReset();
     buildPlayerCards(); refillFollow();
     const Rl = mod('rules'); if (Rl && Rl.state) setScore(Rl.state);
-    feed({ icon: '✦', text: 'New match: ' + teamName('A') + ' vs ' + teamName('B') + ' · ' + (FORMAT_NAMES[S.format] || S.format) + ' · ' + (S.type === 'M' ? "men's" : S.type === 'W' ? "women's" : 'mixed') + '.', key: true });
+    feed({ src: 'ui', icon: '✦', text: 'New match: ' + teamName('A') + ' vs ' + teamName('B') + ' · ' + (FORMAT_NAMES[S.format] || S.format) + ' · ' + (S.type === 'M' ? "men's" : S.type === 'W' ? "women's" : 'mixed') + '.', key: true });
     sync(); renderTab();
   }
 
@@ -1186,6 +1191,7 @@
     }
     if (accStats > 1 && S.tab === 'stats') { accStats = 0; renderStats(); }
     if (S.debug && accDbg > 0.1) { accDbg = 0; safe(() => updateDebug(dt), 'debug'); }
+    const G = mod('game'); if (G && G.update) safe(() => G.update(dt), 'game.update');
   }
   let lastBannerKey = '';
   void lastBannerKey;

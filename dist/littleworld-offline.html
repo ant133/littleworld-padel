@@ -261,6 +261,148 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
 }
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 
+/* =====================================================================
+   PLAY MODE (default). Studio mode = the original layout above.
+   ===================================================================== */
+.mode-play #panel{display:none}
+.mode-play #fab{display:none}
+#app.mode-play{height:100vh;height:100dvh;min-height:0;overflow:hidden}
+.mode-play #topbar{height:40px;padding:0 10px;gap:10px}
+.mode-play #topbar .mark{width:24px;height:24px;font-size:12px}
+.mode-play #title{font-size:14px}
+.mode-play #layout{flex:1;min-height:0;position:relative;display:block}
+.mode-play #stagewrap{position:absolute;inset:0;padding:0}
+.mode-play #stage{position:absolute;inset:0;height:auto;min-height:0;left:0;right:0;top:0;bottom:0;border:0;box-shadow:none}
+.mode-play #toasts{top:56px;right:12px}
+.btn.big{min-height:46px;font-size:15px;padding:8px 16px}
+.btn.primary.big{font-size:16px;min-height:50px}
+
+/* screens */
+.gm-screen{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:14px;background:#12395447;overflow:auto;overscroll-behavior:contain}
+.gm-card{position:relative;width:min(500px,100%);max-height:100%;overflow:auto;border:1px solid var(--ink);background:var(--card);box-shadow:var(--shadow);padding:20px 22px;animation:toastin .3s ease-out;margin:auto}
+.gm-card.small{width:min(340px,100%)}
+.gm-card.title{width:min(520px,100%);padding:24px 26px}
+.gm-top{display:flex;align-items:center;gap:14px;margin-bottom:6px}
+.gm-top .sticker{position:static;display:inline-block;margin-top:6px}
+.gm-h{font-size:clamp(30px,6vw,44px);line-height:1;letter-spacing:-.05em;margin:8px 0 6px}
+.gm-h.sm{font-size:26px;margin:2px 0 10px}
+.gm-h em{font-family:Georgia,serif;font-style:italic;font-weight:400;color:var(--blue);letter-spacing:-.02em}
+.gm-p{margin:0 0 16px;font-size:15px;max-width:34ch}
+.gm-acts{display:grid;gap:8px;margin-top:10px}
+.gm-acts.row{grid-template-columns:1fr 2fr}
+.gm-foot{margin:14px 0 0;font-size:12px}
+.gm-foot.it{font-family:Georgia,serif;font-style:italic;opacity:.75;margin-top:4px}
+.gm-portrait{image-rendering:pixelated;border:1px solid var(--hair);background:var(--sky);display:block}
+.gm-portrait.sm{width:64px;height:64px}
+.gm-portrait.xs{width:48px;height:48px}
+.gm-portrait.lg{width:112px;height:112px;border:2px solid var(--ink)}
+.gm-prev{display:flex;gap:14px;align-items:center;margin-bottom:6px}
+.gm-prevtxt{display:grid;gap:6px;justify-items:start;min-width:0}
+.gm-nm{font:800 18px/1.1 var(--head);letter-spacing:-.04em;display:flex;align-items:center;gap:6px}
+.gm-nm.sm{font-size:14px}
+.gm-meta{font-size:12px;opacity:.75;display:flex;align-items:center;gap:6px}
+.gm-bars{display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;margin:8px 0}
+.gm-partner{display:flex;gap:10px;align-items:center;padding:8px 10px;border:1px dashed var(--ink);background:#fff4b366;margin:8px 0}
+.gm-err{color:var(--bad);min-height:18px;margin:4px 0}
+.gm-seg button{min-height:42px}
+.gm-courts{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.gm-courts button{display:grid;gap:4px;padding:5px;border:1px solid var(--hair);background:#fff;cursor:pointer;font-size:11px;text-align:center}
+.gm-courts button[aria-pressed=true]{border-color:var(--ink);box-shadow:3px 3px 0 var(--ink);background:var(--hl)}
+.gm-courts b{font-size:11px;line-height:1.1}
+.ct{display:block;position:relative;height:42px;background:#bfe6f0;overflow:hidden}
+.ct i{position:absolute;left:12%;right:12%;top:18%;bottom:18%;border:2px solid #fff;background:#2f6fd0}
+.ct i::after{content:'';position:absolute;left:50%;top:-2px;bottom:-2px;width:2px;background:#fff}
+.ct-terracotta{background:#e9d3b0}.ct-terracotta i{background:#c8643c}
+.ct-fastBlue{background:#cfeaf8}.ct-fastBlue i{background:#25a3e6}
+.ct-indoor{background:#46557e}.ct-indoor i{background:#3b7bd0}
+.ct-indoor::before{content:'';position:absolute;left:0;right:0;top:0;height:5px;background:#e8e2d0}
+.gm-team{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:13px;margin-bottom:8px}
+.gm-team .chip{margin-left:auto}
+.gm-opp{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.gm-oppp{display:flex;align-items:center;gap:7px;padding:7px 9px;border:1px solid var(--hair);background:#fff;font:700 13px var(--head);letter-spacing:-.03em;min-width:0}
+.gm-oppp span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.gm-score{font:800 34px var(--head);letter-spacing:-.05em;margin:2px 0 6px}
+.gm-score small{font:500 13px var(--body);letter-spacing:0;opacity:.7}
+.gm-ks{display:grid;grid-template-columns:1fr auto;gap:4px 14px;margin:8px 0;font-size:14px}
+.gm-ks .l{opacity:.7}
+.gm-ks b{text-align:right}
+
+/* HUD */
+#gm-hud{position:absolute;inset:0;z-index:9;pointer-events:none}
+#gm-hud button{pointer-events:auto}
+.gm-icons{position:absolute;right:10px;top:10px;display:flex;gap:6px}
+.gm-ib{width:40px;height:40px;border:1px solid var(--ink);background:var(--cream);box-shadow:3px 3px 0 #12399433;cursor:pointer;font:800 13px var(--head);padding:0;display:grid;place-items:center;transition:background .15s}
+.gm-ib:hover{background:var(--hl)}
+.gm-ib.txt{font-size:14px}.gm-ib.sm{font-size:10px;letter-spacing:.12em}
+.gm-ib.snd{font-size:19px;position:relative}
+.gm-ib.snd.off{color:#12395488}
+.gm-ib.snd.off::after{content:'';position:absolute;left:8px;right:8px;top:50%;height:2px;background:var(--bad);transform:rotate(-40deg)}
+.gm-coach{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);width:min(1000px,calc(100% - 20px));padding:8px 10px;background:var(--card);border:1px solid var(--ink);box-shadow:5px 6px 0 #1264992e}
+.gm-coachrow{display:flex;align-items:center;gap:10px}
+.gm-chips{display:flex;align-items:center;gap:6px;flex:1;min-width:0;overflow-x:auto;scrollbar-width:none;padding:2px}
+.gm-chips::-webkit-scrollbar{display:none}
+.gm-chip{flex:none;min-height:40px;padding:6px 12px;border:1px solid var(--ink);background:#fff;font:800 14px var(--head);letter-spacing:-.03em;cursor:pointer}
+.gm-chip:hover{background:var(--hl)}
+.gm-chip[aria-pressed=true]{background:var(--blue);color:#fff;box-shadow:2px 2px 0 var(--ink)}
+.gm-chip.m{font-size:13px;padding:6px 10px}
+.gm-chip.m[aria-pressed=true]{background:var(--ink)}
+.gm-sep{flex:none;width:1px;height:24px;background:var(--hair);margin:0 4px}
+.gm-ctag,.gm-mtag{flex:none}
+.gm-acts2{display:flex;gap:6px;flex:none}
+.gm-act{min-height:40px;padding:6px 12px;border:1px solid var(--ink);background:var(--cream);font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap}
+.gm-act:disabled{opacity:.4;cursor:not-allowed}
+.gm-act.ready{background:var(--hl);animation:pulse 1.2s ease-in-out infinite}
+.gm-ticker{position:absolute;left:50%;bottom:78px;transform:translateX(-50%);max-width:min(640px,calc(100% - 24px));padding:6px 14px;background:#123954e8;color:var(--cream);font-size:13.5px;font-weight:600;text-align:center;line-height:1.3;transition:opacity .5s}
+.gm-ticker.fade{opacity:0}
+.gm-skip{position:absolute;right:10px;bottom:84px;pointer-events:auto;background:var(--hl);min-height:36px}
+.gm-watchbar{position:absolute;left:50%;bottom:14px;transform:translateX(-50%)}
+.gm-watchbar .btn{min-height:46px;font-size:15px;padding:8px 18px}
+.gm-labels{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.gm-lab{position:absolute;left:0;top:0;will-change:transform;padding:1px 7px;border:2px solid var(--blue);background:var(--hl);color:var(--ink);font:800 11px var(--head);letter-spacing:.12em;white-space:nowrap}
+.gm-lab.an{border-color:var(--ink);background:var(--cream);font-size:9.5px}
+.gm-covered #sb,.gm-covered #toasts{visibility:hidden}
+.gm-covered #gm-hud{visibility:hidden}
+
+@media (max-width:899px){
+  .gm-card{box-shadow:6px 8px 0 #1264992e;padding:16px 16px}
+  .mode-play #title{display:none}
+  .mode-play #topbar{justify-content:space-between}
+  .mode-play #toasts{top:auto;bottom:128px;right:10px;left:10px;justify-items:center}
+  .gm-icons{flex-direction:column;top:10px;right:8px;gap:5px}
+  .gm-ib{width:44px;height:44px}
+  .gm-coach{bottom:8px;width:calc(100% - 16px);padding:6px}
+  .gm-ctag,.gm-mtag{display:none}
+  .gm-coachrow{gap:6px}
+  .gm-chip{min-height:44px;padding:6px 11px;font-size:13.5px}
+  .gm-act{min-height:44px;padding:4px 8px;font-size:11.5px;line-height:1.05;white-space:normal;width:68px}
+  .gm-ticker{bottom:72px;font-size:12.5px}
+  .gm-skip{bottom:126px;right:8px}
+  .gm-courts{grid-template-columns:repeat(2,1fr)}
+  .gm-score{font-size:30px}
+}
+@media (max-height:520px){
+  .gm-card{padding:12px 16px}
+  .gm-h{font-size:26px}
+  .gm-ib{width:36px;height:36px}
+  .gm-coach{padding:4px 6px}
+  .gm-chip,.gm-act{min-height:36px}
+  .gm-ticker{bottom:52px}
+  .sb-card{transform:scale(.85);transform-origin:top left}
+  .mode-play #toasts{display:none}
+}
+
+.gm-menu #banner{display:none}
+
+.gm-card{overflow-x:hidden}
+.gm-card>.gm-stk{position:absolute;right:14px;top:16px}
+
+@media (max-width:899px){.gm-skip{min-height:44px}}
+@media (max-height:520px){.gm-ib{width:40px;height:40px}.gm-chip,.gm-act{min-height:40px}}
+
+@media (max-height:520px){.gm-skip{right:58px;top:10px;bottom:auto}}
+
 </style></head><body>
 <div id="app">
   <header id="topbar">
@@ -268,6 +410,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     <h1 id="title">Littleworld Jakarta Padel Cup</h1>
     <div class="top-actions">
       <span id="top-status" class="chip" hidden></span>
+      <button id="btn-mode" type="button" class="btn small" title="Switch between Play and Studio">&#9881;&#xFE0E; Studio</button>
       <button id="btn-help" type="button" class="icon-btn" title="Keyboard shortcuts (?)" aria-label="Keyboard shortcuts">?</button>
     </div>
   </header>
@@ -1259,8 +1402,8 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       attrs: { power: 95, accuracy: 70, reflexes: 70, coverage: 68, stamina: 72, net: 82, defense: 56, wallRead: 62, tactics: 66 }, look: { skin: 0, hair: 0xd8b25c, hairStyle: 'short', outfit: [0xf28c28, 0x222222], racket: 0x222222 } },
     { id: 'p4', name: 'Camila Ferreyra', nick: 'Cami', gender: 'F', country: { code: 'ARG', name: 'Argentina' }, ranking: 3, hand: 'R', side: 'either', archetype: 'allRound',
       attrs: { power: 74, accuracy: 84, reflexes: 82, coverage: 80, stamina: 84, net: 80, defense: 80, wallRead: 82, tactics: 86 }, look: { skin: 1, hair: 0x4a2a16, hairStyle: 'ponytail', outfit: [0x8a5cf6, 0xffffff], racket: 0xff7ab6 } },
-    { id: 'p5', name: 'Annetta Arslan H', nick: 'Annetta', gender: 'F', country: { code: 'IDN', name: 'Indonesia' }, ranking: 6, hand: 'R', side: 'reves', archetype: 'counterpuncher',
-      attrs: { power: 62, accuracy: 82, reflexes: 90, coverage: 90, stamina: 86, net: 66, defense: 88, wallRead: 90, tactics: 84 }, look: { skin: 3, hair: 0x0b0b0d, hairStyle: 'bun', outfit: [0xe5484d, 0xfff4b3], racket: 0xfff4b3 } },
+    { id: 'p5', name: 'Annetta Arslan', nick: 'Annetta', gender: 'F', country: { code: 'IDN', name: 'Indonesia' }, ranking: 6, hand: 'R', side: 'reves', archetype: 'counterpuncher',
+      attrs: { power: 62, accuracy: 82, reflexes: 90, coverage: 90, stamina: 86, net: 66, defense: 88, wallRead: 90, tactics: 84 }, look: { skin: 2, hair: 0x14203d, hairStyle: 'bob', outfit: [0x177dc5, 0xfffaf0], racket: 0x177dc5 } },
     { id: 'p6', name: 'Hana Kobayashi', nick: 'Glass Hana', gender: 'F', country: { code: 'JPN', name: 'Japan' }, ranking: 8, hand: 'L', side: 'reves', archetype: 'wallSpecialist',
       attrs: { power: 58, accuracy: 80, reflexes: 82, coverage: 78, stamina: 90, net: 60, defense: 90, wallRead: 92, tactics: 78 }, look: { skin: 1, hair: 0x14100c, hairStyle: 'bob', outfit: [0x14b8a6, 0xffffff], racket: 0x1e6bd6 } },
     { id: 'p7', name: 'Marta Lindqvist', nick: 'Viking', gender: 'F', country: { code: 'SWE', name: 'Sweden' }, ranking: 5, hand: 'R', side: 'drive', archetype: 'smasher',
@@ -1285,7 +1428,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       const rg = HPO.makeRng(input.seed), attrs = {};
       ['power', 'accuracy', 'reflexes', 'coverage', 'stamina', 'net', 'defense', 'wallRead', 'tactics'].forEach(k => { attrs[k] = rg.int(55, 95); });
       const colors = [0x177dc5, 0xe5484d, 0x14b8a6, 0x8a5cf6, 0xf28c28, 0x123954];
-      const def = { id, name, nick: name.split(' ')[0], gender: input.gender, country: { code: 'IDN', name: 'Indonesia' },
+      const def = { id, name, nick: name.split(' ')[0], gender: input.gender, country: (input.country && /^[A-Z]{3}$/.test(input.country.code) && typeof input.country.name === 'string' && input.country.name.length <= 40) ? { code: input.country.code, name: input.country.name } : { code: 'IDN', name: 'Indonesia' },
         seed: input.seed, custom: true, ranking: rg.int(10, 99), hand: rg.pick(['R', 'R', 'L']), side: 'either',
         archetype: rg.pick(['netAttacker', 'wallSpecialist', 'allRound', 'smasher', 'precision', 'counterpuncher']), attrs,
         look: { skin: rg.int(0, 3), hair: rg.pick([0x15110e, 0x4a2a16, 0x2a1d14]),
@@ -2616,7 +2759,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
 
   function serveSkill(id) { const a = P().get(id).attrs; return a.accuracy * 0.5 + a.tactics * 0.3 + a.power * 0.2; }
   function setPhase(ph) { const prev = M.phase; M.phase = ph; BUS.emit('match:phase', { phase: ph, prev: prev }); }
-  const wait = sec => M.cfg && M.cfg.fast ? S.wait(0) : S.wait(sec);
+  const wait = sec => M.cfg && (M.cfg.fast || M.skip) ? S.wait(0) : S.wait(sec);
 
   function newStats() {
     return { rallies: [], longest: 0, pointsPlayed: 0, teams: { A: tm(), B: tm() }, points: [], startedAt: 0 };
@@ -2735,6 +2878,8 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     setPhase('introductions'); yield* phaseHook('introductions', function* () { yield wait(8); });
     setPhase('toss'); yield* phaseHook('toss', function* () { yield wait(5); });
     setPhase('warmup'); yield* phaseHook('warmup', warmup);
+    if (M.skip) { P().place(); P().list.forEach(p => { p.retrieving = false; p.intent = { type: 'idle' }; }); Bl().reset(); A().warmup = false; }
+    M.skip = false;                                                  // 'Skip intro' only skips the pre-match phases
     setPhase('play');
     while (!R().state.over) {
       yield* playPoint();
@@ -2761,6 +2906,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       p.retrieving = true;
       p.pos = { x: sx * 12.5, z: 6.5 * (p.slot ? -1 : 1) };
       p.intent = { type: 'move', x: sx * 5, z: (p.slot ? -1 : 1) * 2, cap: 0.4 };
+      if (M.skip) p.pos = { x: p.intent.x, z: p.intent.z };
     });
     yield S.until(() => pl.list.every(p => Math.hypot(p.pos.x - p.intent.x, p.pos.z - p.intent.z) < 0.4), 14);
     pl.list.forEach(p => { p.retrieving = false; });
@@ -3478,7 +3624,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     },
 
     _bindInput() {
-      const cv = R.renderer.domElement, ptrs = new Map(); let pinch = 0, moved = false, tdown = 0, startX = 0, startY = 0, multi = false;
+      const cv = R.renderer.domElement, ptrs = new Map(); let orbited = false, pinch = 0, moved = false, tdown = 0, startX = 0, startY = 0, multi = false;
       cv.addEventListener('contextmenu', function (e) { e.preventDefault(); });
       cv.addEventListener('wheel', function (e) { e.preventDefault(); R.zoom(-Math.sign(e.deltaY) * Math.min(3, Math.abs(e.deltaY) / 100 + 0.5)); }, { passive: false });
       function mpp() { return 2 * R.view.half / (cv.clientHeight || 1); }
@@ -3504,11 +3650,14 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
         if (!moved && Math.hypot(e.clientX - startX, e.clientY - startY) < 5) return;
         moved = true;
         if (p.button === 2 || p.shift || e.shiftKey || (e.buttons & 2)) panPx(dx, dy);
-        else { R._toFree(); R.view.yawT -= dx * 0.006; R.view.yaw = R.view.yawT; }
+        else { R._toFree(); R.view.yawT -= dx * 0.006; R.view.yaw = R.view.yawT; orbited = true; }
       });
       function up(e) {
         const had = ptrs.delete(e.pointerId);
         if (ptrs.size < 2) pinch = 0;
+        if (orbited && ptrs.size === 0) { // an orthographic view of the court only looks right at a true isometric yaw: settle on the nearest quarter turn
+          const v = R.view; v.yawK = Math.round((v.yawT - YAW0) / (Math.PI / 2)); v.yawT = YAW0 + v.yawK * Math.PI / 2; R.yawIndex = ((v.yawK % 4) + 4) % 4; orbited = false;
+        }
         if (!had || e.type === 'pointercancel') return;
         if (!moved && !multi && ptrs.size === 0 && performance.now() - tdown < 600) {
           const h = R.pickCourt(e.clientX, e.clientY);
@@ -9468,9 +9617,9 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     ctx.labelOf = { A: 'Team A', B: 'Team B' };
     const byTeam = { A: [], B: [] };
     P.list.forEach(function (p) {
-      ctx.names[p.id] = p.name; ctx.short[p.id] = lastWord(p.name); ctx.first[p.id] = firstWord(p.name);
+      ctx.names[p.id] = p.name; ctx.short[p.id] = p.id === 'p5' ? 'Annetta' : lastWord(p.name); ctx.first[p.id] = firstWord(p.name);
       ctx.nick[p.id] = p.def && p.def.nick || ''; ctx.gender[p.id] = p.def && p.def.gender || 'M'; ctx.teamOf[p.id] = p.team;
-      if (byTeam[p.team]) byTeam[p.team].push(lastWord(p.name));
+      if (byTeam[p.team]) byTeam[p.team].push(p.id === 'p5' ? 'Annetta' : lastWord(p.name));
     });
     ctx.pair = { A: byTeam.A.join(' and ') || 'Team A', B: byTeam.B.join(' and ') || 'Team B' };
   }
@@ -9844,10 +9993,11 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     if (!def) return '';
     const parts = def.name.split(' ');
     const mobile = HPO.cfg.mobile || (EL.stage && EL.stage.clientWidth < 520);
-    if (long) return def.name;
+    if (def.id === 'p5' && !long) return 'Annetta';
+    if (long || parts.length < 2) return def.name;
     return mobile ? parts[parts.length - 1] : parts[0][0] + '. ' + parts.slice(1).join(' ');
   }
-  function pairName(ids) { return ids.map(id => { const d = rdef(id); return d ? d.name.split(' ').slice(-1)[0] : id; }).join(' / '); }
+  function pairName(ids) { return ids.map(id => { const d = rdef(id); return d ? (d.id === 'p5' ? 'Annetta' : d.name.split(' ').slice(-1)[0]) : id; }).join(' / '); }
   function teamIds(team) { const pl = mod('players'); if (pl && pl.list && pl.list.length) return pl.list.filter(p => p.team === team).sort((a, b) => a.slot - b.slot).map(p => p.id); return team === 'A' ? S.teamA : S.teamB; }
   function teamName(team) { return pairName(teamIds(team)); }
 
@@ -9892,6 +10042,13 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     const M = mod('match');
     if (M && M.cfg) onMatchNew({ config: M.cfg });
     sync();
+    ui.api = { S: S, EL: EL, h: h, add: add, safe: safe, toast: toast, feed: feed, drawPortrait: drawPortrait, flagEl: flagEl, mbar: mbar, teamName: teamName, teamIds: teamIds, rdef: rdef, roster: roster,
+      contribution: contribution, teamSum: teamSum, newMatch: newMatch, applyVenueVisuals: applyVenueVisuals, applyTod: applyTod, applyDefaults: applyDefaults, refillPickers: refillPickers,
+      setSpeed: setSpeed, togglePause: togglePause, skipCeremony: skipCeremony, doChallenge: doChallenge, callTimeout: callTimeout, setCam: setCam, setSound: setSound, orders: orders,
+      claimCoach: claimCoach, closeModal: closeModal, fmtClock: fmtClock, M_clock: M_clock, savePlayerDef: savePlayerDef, openStudioPanel: null, ARCH: ARCH, ATTRS: ATTRS, FORMAT_NAMES: FORMAT_NAMES,
+      PHASE_NAMES: PHASE_NAMES, VENUES: VENUES, CAMS: CAMS, showKeys: showKeys, setScore: setScore, shortName: shortName, other: other, hex: hex,
+      isBusy: () => !!tmo, resultsReset: () => { resultsShown = false; } };
+    const G = mod('game'); if (G && G.init) safe(() => G.init(ctx, ui.api), 'game.init');
   }
 
   let fontsLoaded = false;
@@ -10025,6 +10182,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       EL.feedList.insertBefore(feedNode(it), EL.feedList.firstChild);
       while (EL.feedList.children.length > 200) EL.feedList.removeChild(EL.feedList.lastChild);
     }
+    const G = mod('game'); if (G && G.onFeed) safe(() => G.onFeed(it, entry), 'game.onFeed');
   }
   function feedNode(it) { return h('div', { class: 'it' + (it.key ? ' key' : '') }, h('span', { class: 'ic' }, it.icon), h('span', null, it.text), h('span', { class: 'tm' }, it.t)); }
   function M_clock() { const M = mod('match'); return M ? fmtClock((M.simTime || 0) - playStartSim) : '00:00'; }
@@ -10131,46 +10289,40 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     return playerDB;
   }
   async function loadSavedPlayers() {
+    S.saved = []; S.savedOk = true;
     try {
       const db = await openPlayerDB();
       const saved = await new Promise((resolve, reject) => {
         const tx = db.transaction('players', 'readonly'), req = tx.objectStore('players').getAll();
         req.onsuccess = () => resolve(req.result); req.onerror = () => reject(req.error);
       });
-      saved.forEach(def => { try { mod('players').restoreCustom(def); } catch (e) { /* skip invalid records */ } });
+      saved.sort((x, y) => (x.savedAt || 0) - (y.savedAt || 0));
+      saved.forEach(def => {
+        try {
+          const live = mod('players').restoreCustom(def);
+          if (def.country && def.country.code) live.country = { code: def.country.code, name: def.country.name };
+          live.savedAt = def.savedAt || 0; S.saved.push(live);
+        } catch (e) { /* skip invalid records */ }
+      });
       refillPickers();
-      if (EL.playerStatus && saved.length) EL.playerStatus.textContent = 'Saved players loaded. Select them above, or create another player.';
-    } catch (e) {
-      if (EL.playerStatus) EL.playerStatus.textContent = 'Local saving is unavailable. You can still create a player for this visit.';
-    }
+    } catch (e) { S.savedOk = false; }
+    const G = mod('game'); if (G && G.onSaved) safe(() => G.onSaved(), 'game.onSaved');
+  }
+  async function savePlayerDef(def) {
+    try {
+      def.savedAt = Date.now();
+      const db = await openPlayerDB();
+      await new Promise((resolve, reject) => {
+        const tx = db.transaction('players', 'readwrite'); tx.objectStore('players').put(JSON.parse(JSON.stringify(def)));
+        tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); tx.onabort = () => reject(tx.error);
+      });
+      return true;
+    } catch (err) { return false; }
   }
   function buildCreatePlayer() {
-    const name = h('input', { id: 'create-name', type: 'text', maxlength: '40', placeholder: 'Your name', 'aria-label': 'Player name', autocomplete: 'nickname' });
-    const nationality = h('select', { id: 'create-nationality', 'aria-label': 'Nationality' }, h('option', { value: 'IDN' }, 'Indonesia'));
-    const gender = h('select', { id: 'create-gender', 'aria-label': 'Player gender' }, h('option', { value: 'F' }, 'Woman'), h('option', { value: 'M' }, 'Man'));
-    EL.playerStatus = h('p', { class: 'hint', role: 'status', id: 'create-status' }, 'Random stats and appearance. Saved on this device and browser.');
-    const submit = h('button', { class: 'btn primary block', type: 'submit', id: 'btn-create-player' }, 'Create player & team up with Annetta');
-    const form = h('form', { id: 'create-player', onsubmit: async e => {
-      e.preventDefault(); submit.disabled = true;
-      try {
-        const seed = window.crypto.getRandomValues(new Uint32Array(1))[0] || 1;
-        const def = mod('players').createCustom({ name: name.value, gender: gender.value, seed });
-        S.type = def.gender === 'M' ? 'X' : 'W'; applyDefaults(S.type);
-        S.teamA = [def.id, 'p5']; refillPickers(); sync();
-        let saved = true;
-        try {
-          const db = await openPlayerDB();
-          await new Promise((resolve, reject) => {
-            const tx = db.transaction('players', 'readwrite'); tx.objectStore('players').put(def);
-            tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); tx.onabort = () => reject(tx.error);
-          });
-        } catch (err) { saved = false; }
-        EL.playerStatus.textContent = def.name + ' · ' + ARCH[def.archetype] + ' · Power ' + def.attrs.power + ', accuracy ' + def.attrs.accuracy + '. ' +
-          (saved ? 'Saved on this device. ' : 'Available this visit; local saving failed. ') + 'Team A is ready with Annetta. Press New Match to play.';
-      } catch (err) { EL.playerStatus.textContent = err.message; }
-      finally { submit.disabled = false; }
-    } }, field('Name', name), field('Nationality', nationality), field('Gender', gender), submit, EL.playerStatus);
-    return h('details', { class: 'adv', id: 'create-player-section' }, h('summary', null, 'Create player · Play with Annetta'), form);
+    EL.playerStatus = h('p', { class: 'hint', role: 'status', id: 'create-status' }, 'Random stats and look. Saved on this device and browser.');
+    const btn = h('button', { class: 'btn primary block', type: 'button', id: 'btn-create-player', onclick: () => { const G = mod('game'); if (G && G.showCreate) G.showCreate(); } }, 'Create player · play with Annetta');
+    return h('div', { class: 'field', id: 'create-player-section' }, btn, EL.playerStatus);
   }
 
   function refillPickers() {
@@ -10344,7 +10496,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   function startRest(label, secs) {
     const M = mod('match'); tmo = { label: label, left: secs, resumeMatch: !(M && M.paused) };
     if (M) M.pause(true);
-    feed({ icon: '⏸', text: label + ' (' + secs + ' s). Coaching time.', key: true });
+    feed({ src: 'ui', icon: '⏸', text: label + ' (' + secs + ' s). Coaching time.', key: true });
     sync();
   }
   function endRest() { const M = mod('match'); if (tmo && tmo.resumeMatch && M) M.pause(false); tmo = null; banner(null); sync(); }
@@ -10614,6 +10766,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   function buildResults() {
     const Rl = mod('rules'), M = mod('match'), P = mod('players');
     const st = Rl && Rl.state; if (!st || !P) return;
+    const G = mod('game'); if (G && G.active && G.active()) { resultsShown = true; G.results(); return; }
     resultsShown = true; closeModal();
     const win = st.winner || (M.result && M.result.winner) || 'A';
     let sets = ''; try { sets = Rl.describe(st).setsText; } catch (e) { /* ignore */ }
@@ -10644,7 +10797,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     EL.modal = h('div', { class: 'modal', id: 'results' }, card);
     EL.stage.appendChild(EL.modal);
     if (S.autoNext) nextAt = performance.now() + 15000;
-    feed({ icon: '★', text: 'Final: ' + names.join(' & ') + ' win ' + (sets || ''), key: true });
+    feed({ src: 'ui', icon: '★', text: 'Final: ' + names.join(' & ') + ' win ' + (sets || ''), key: true });
   }
   function closeModal() { if (EL.modal) { EL.modal.remove(); EL.modal = null; } }
 
@@ -10661,8 +10814,9 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     const tg = e.target, tn = tg && tg.tagName;
     if (tn === 'INPUT' && tg.type !== 'range' && tg.type !== 'checkbox') return;
     if (tn === 'TEXTAREA') return;
-    const k = e.key;
-    if (k === 'Escape') { if (S.aim) toggleAim(); if (EL.sheet) showKeys(); return; }
+    const k = e.key, G = mod('game');
+    if (k === 'Escape') { if (S.aim) { toggleAim(); return; } if (EL.sheet) { showKeys(); return; } if (G && G.onEscape) G.onEscape(); return; }
+    if (G && G.blocking && G.blocking()) return;
     if (tn === 'SELECT' && k !== '`' && k !== '?') return;
     const lk = k.length === 1 ? k.toLowerCase() : k;
     let used = true;
@@ -10749,7 +10903,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       if (e.phase === 'play' && lastPhase !== 'play' && lastPhase !== 'changeover') playStartSim = M ? M.simTime : 0;
       lastPhase = e.phase; updatePhaseLabel();
       if (e.phase === 'results') buildResults();
-      if (e.phase === 'setBreak') feed({ icon: '☕', text: 'Set break. Towels out.', key: false });
+      if (e.phase === 'setBreak') feed({ src: 'ui', icon: '☕', text: 'Set break. Towels out.', key: false });
     });
     BUS.on('match:finished', function () { if (!EL.modal && !resultsShown) buildResults(); });
     BUS.on('score:change', function (e) { setScore(e && e.state); });
@@ -10757,7 +10911,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       flags = { matchPoint: e.matchPoint || null, setPoint: e.setPoint || null, breakPoint: e.breakPoint || null, golden: !!e.golden };
       updateStickers(lastScoreState);
       const key = e.matchPoint ? 'Match point, Team ' + e.matchPoint : e.setPoint ? 'Set point, Team ' + e.setPoint : e.breakPoint ? 'Break point, Team ' + e.breakPoint : e.golden ? 'Golden point' : null;
-      if (key) feed({ icon: '▲', text: key + '.', key: true });
+      if (key) feed({ src: 'ui', icon: '▲', text: key + '.', key: true });
     });
     BUS.on('point:start', function (e) {
       rallyN = 0; EL.chipRally.hidden = true;
@@ -10772,13 +10926,13 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     BUS.on('rally:stroke', function (e) { rallyN = e.n; EL.chipRally.hidden = rallyN < 2; EL.chipRally.textContent = 'Rally ' + rallyN; });
     BUS.on('point:end', function (e) {
       const who = teamName(e.winner);
-      feed({ icon: '●', text: who + ' · ' + (KIND_TXT[e.kind] || e.kind) + (e.rallyLen > 1 ? ' (' + e.rallyLen + ' strokes)' : ''), key: e.kind === 'ace' || e.rallyLen >= 14 });
+      feed({ src: 'ui', icon: '●', text: who + ' · ' + (KIND_TXT[e.kind] || e.kind) + (e.rallyLen > 1 ? ' (' + e.rallyLen + ' strokes)' : ''), key: e.kind === 'ace' || e.rallyLen >= 14 });
       if (e.rallyLen >= 14) toast('Rally of ' + e.rallyLen + ' strokes!', { kind: 'good', ms: 2400 });
       if (S.tab === 'stats') renderStats();
     });
-    BUS.on('game:end', function (e) { feed({ icon: '◆', text: 'Game ' + teamName(e.winner) + (e.score ? ' (' + e.score.A + '-' + e.score.B + ')' : ''), key: true }); });
-    BUS.on('set:end', function (e) { feed({ icon: '★', text: 'Set ' + teamName(e.winner) + (e.score ? ' (' + e.score.A + '-' + e.score.B + ')' : ''), key: true }); toast('Set to ' + teamName(e.winner), { kind: 'good' }); });
-    BUS.on('match:end', function (e) { feed({ icon: '★', text: 'Match to ' + teamName(e.winner) + '.', key: true }); });
+    BUS.on('game:end', function (e) { feed({ src: 'ui', icon: '◆', text: 'Game ' + teamName(e.winner) + (e.score ? ' (' + e.score.A + '-' + e.score.B + ')' : ''), key: true }); });
+    BUS.on('set:end', function (e) { feed({ src: 'ui', icon: '★', text: 'Set ' + teamName(e.winner) + (e.score ? ' (' + e.score.A + '-' + e.score.B + ')' : ''), key: true }); toast('Set to ' + teamName(e.winner), { kind: 'good' }); });
+    BUS.on('match:end', function (e) { feed({ src: 'ui', icon: '★', text: 'Match to ' + teamName(e.winner) + '.', key: true }); });
     BUS.on('coach:change', function (e) {
       const prev = lastOrders[e.team] || {}, o = e.orders || {}; const bits = [];
       if (o.preset !== prev.preset) bits.push((PRESET_LABELS.find(p => p[0] === o.preset) || [0, o.preset])[1]);
@@ -10788,26 +10942,26 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       if (o.focusOpponent !== prev.focusOpponent && o.focusOpponent !== undefined) bits.push('focus opponent ' + (o.focusOpponent + 1));
       if (o.aimPoint && o.aimPoint !== prev.aimPoint) bits.push('aim set');
       lastOrders[e.team] = Object.assign({}, o);
-      if (bits.length) feed({ icon: '✎', text: 'Coach ' + e.team + ': ' + bits.join(', '), key: false });
+      if (bits.length) feed({ src: 'ui', icon: '✎', text: 'Coach ' + e.team + ': ' + bits.join(', '), key: false });
       sync();
     });
     let fmTs = {};
     BUS.on('ai:formation', function (e) {
       const k = e.team + e.formation, now = performance.now(); if (fmTs[k] && now - fmTs[k] < 4000) return; fmTs[k] = now;
-      feed({ icon: '⇄', text: 'Team ' + e.team + ' shifts to ' + e.formation + '.', key: false });
+      feed({ src: 'ui', icon: '⇄', text: 'Team ' + e.team + ' shifts to ' + e.formation + '.', key: false });
     });
     BUS.on('changeover:start', function (e) {
       if (e.kind === 'timeout') { banner(h('span', null, 'Timeout, Team ' + e.team, h('small', null, 'Adjust the tactics in the coach box'))); }
       else toast('Changeover. A good moment for new orders.', { kind: 'info' });
       const c = $('#sec-coach'); if (c) { c.classList.remove('pulse'); void c.offsetWidth; c.classList.add('pulse'); setTimeout(() => c.classList.remove('pulse'), 4000); }
-      feed({ icon: '⇅', text: (e.kind === 'timeout' ? 'Timeout, Team ' + e.team : e.kind === 'set' ? 'Set changeover' : 'Changeover') + '.', key: e.kind === 'timeout' });
+      feed({ src: 'ui', icon: '⇅', text: (e.kind === 'timeout' ? 'Timeout, Team ' + e.team : e.kind === 'set' ? 'Set changeover' : 'Changeover') + '.', key: e.kind === 'timeout' });
     });
     BUS.on('changeover:end', function (e) { if (e.kind === 'timeout') banner(null); });
     BUS.on('challenge:result', function (e) {
       const fin = e.overturned ? (e.call === 'in' ? 'OUT' : 'IN') : (e.call || '').toUpperCase();
       const txt = 'Eagle Eye: ' + fin + ' — ' + (e.overturned ? 'call overturned' : 'call stands');
       toast(txt + ' (Team ' + e.team + ')', { kind: e.overturned ? 'good' : 'warn', ms: 4500 });
-      feed({ icon: '◎', text: txt + ', challenge by Team ' + e.team + '.', key: true });
+      feed({ src: 'ui', icon: '◎', text: txt + ', challenge by Team ' + e.team + '.', key: true });
       const rp = mod('replay'); const M = mod('match');
       if (rp && rp.play && !rp.active && S.coachClaimed && e.team === S.coachTeam && !(M && M.cfg && M.cfg.fast)) safe(() => rp.play({ kind: 'challenge' }), 'replay');
     });
@@ -10844,7 +10998,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     feedReset();
     buildPlayerCards(); refillFollow();
     const Rl = mod('rules'); if (Rl && Rl.state) setScore(Rl.state);
-    feed({ icon: '✦', text: 'New match: ' + teamName('A') + ' vs ' + teamName('B') + ' · ' + (FORMAT_NAMES[S.format] || S.format) + ' · ' + (S.type === 'M' ? "men's" : S.type === 'W' ? "women's" : 'mixed') + '.', key: true });
+    feed({ src: 'ui', icon: '✦', text: 'New match: ' + teamName('A') + ' vs ' + teamName('B') + ' · ' + (FORMAT_NAMES[S.format] || S.format) + ' · ' + (S.type === 'M' ? "men's" : S.type === 'W' ? "women's" : 'mixed') + '.', key: true });
     sync(); renderTab();
   }
 
@@ -10906,6 +11060,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     }
     if (accStats > 1 && S.tab === 'stats') { accStats = 0; renderStats(); }
     if (S.debug && accDbg > 0.1) { accDbg = 0; safe(() => updateDebug(dt), 'debug'); }
+    const G = mod('game'); if (G && G.update) safe(() => G.update(dt), 'game.update');
   }
   let lastBannerKey = '';
   void lastBannerKey;
@@ -10930,6 +11085,438 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     HPO.BUS.emit('match:new', { config: HPO.mod.match && HPO.mod.match.cfg });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
+})(HPO);
+
+/* 21_game.js */
+(function (HPO) {
+  'use strict';
+  const BUS = HPO.BUS;
+  const mod = n => HPO.mod[n];
+  let API = null, S = null, EL = null, h = null, add = null, safe = null;
+  const AN = 'p5'; // Annetta Arslan
+  const NATIONS = [['IDN', 'Indonesia'], ['ESP', 'Spain'], ['ARG', 'Argentina'], ['NED', 'Netherlands'], ['JPN', 'Japan'], ['SWE', 'Sweden'], ['ITA', 'Italy'], ['BRA', 'Brazil'], ['FRA', 'France'], ['GER', 'Germany'], ['POR', 'Portugal'], ['CHI', 'Chile'], ['AUS', 'Australia'], ['GBR', 'United Kingdom']];
+  const PRESETS = [['balanced', 'Balanced'], ['aggressive', 'Attack'], ['safe', 'Safe'], ['controlNet', 'Net'], ['defensive', 'Lobs'], ['moreSmashes', 'Smash']];
+  const COURTS = [['classicBlue', 'Classic Blue'], ['terracotta', 'Terracotta'], ['fastBlue', 'Fast Blue'], ['indoor', 'Indoor']];
+  const CAM_CYCLE = [['close', 'Close-up'], ['follow', 'TV follow'], ['club', 'Whole club'], ['top', 'Top-down']];
+  const PRE = { intro: 1, walkon: 1, introductions: 1, toss: 1, warmup: 1 };
+  const NATION_NAME = {}; NATIONS.forEach(n => { NATION_NAME[n[0]] = n[1]; });
+
+  const G = HPO.mod.game = {
+    mode: 'play', st: 'boot', scr: null, player: null, opp: null,
+    cfg: { format: 'quick', scoring: 'golden', venue: 'classicBlue', tod: 'day' },
+    init: init, update: update, onFeed: onFeed, onEscape: onEscape, blocking: blocking, active: active, results: results,
+    showTitle: showTitle, showCreate: showCreate, showSetup: showSetup, setMode: setMode, onSaved: onSaved, suppressResults: suppressResults
+  };
+  let cp = { seed: 1, name: '', gender: 'F', nat: 'IDN' };
+  let hud = {}, pauseEl = null, wasPaused = false, tickerT = 0, acc = 0, hlKey = '', lastFlagToast = '', attractT = 0;
+  const rnd = () => 1 + Math.floor(Math.random() * 4294967294);
+
+  const players = () => (mod('players') && mod('players').roster && mod('players').roster()) || [];
+  function pdef(id) { return players().find(r => r.id === id); }
+  function lastName(d) { return d ? d.name.split(' ').slice(-1)[0] : ''; }
+  function flag(d) { return API.flagEl(d && d.country && d.country.code); }
+  function portrait(def, cls) { const c = h('canvas', { class: cls || 'gm-portrait', width: 24, height: 24 }); API.drawPortrait(c, def); return c; }
+  function segBtns(opts, get, set, cls) {
+    const root = h('div', { class: 'seg gm-seg ' + (cls || '') });
+    const btns = opts.map(o => { const b = h('button', { type: 'button', 'aria-pressed': 'false', onclick: () => { set(o[0]); paint(); } }, o[1]); b.dataset.v = String(o[0]); root.appendChild(b); return b; });
+    function paint() { const v = String(get()); btns.forEach(b => b.setAttribute('aria-pressed', b.dataset.v === v ? 'true' : 'false')); }
+    paint(); return { root: root, paint: paint, btns: btns };
+  }
+  function openScreen(id, kids, cls) {
+    closeScreen();
+    const card = h('div', { class: 'gm-card ' + (cls || ''), role: 'dialog', 'aria-label': id });
+    add(card, kids);
+    const el = h('div', { class: 'gm-screen', id: id }, card);
+    EL.stage.appendChild(el); EL.stage.classList.add('gm-covered');
+    G.scr = el; updateVisibility();
+    return card;
+  }
+  function closeScreen() { if (G.scr) { G.scr.remove(); G.scr = null; } EL.stage.classList.remove('gm-covered'); }
+  function stamp(t) { return h('span', { class: 'sticker gm-stk' }, t); }
+  function setSt(s) { G.st = s; EL.app.setAttribute('data-gm', s); updateVisibility(); }
+
+  function init(ctx, api) {
+    API = api; S = api.S; EL = api.EL; h = api.h; add = api.add; safe = api.safe;
+    EL.app = document.getElementById('app') || document.body;
+    buildHud();
+    const modeBtn = document.getElementById('btn-mode');
+    if (modeBtn) modeBtn.addEventListener('click', () => setMode(G.mode === 'play' ? 'studio' : 'play'));
+    BUS.on('match:new', function () { hlKey = ''; if (G.st === 'title' || G.st === 'create' || G.st === 'setup') return; });
+    BUS.on('match:phase', function (e) { if (e.phase === 'results' && (G.st === 'title' || G.st === 'create' || G.st === 'setup' || G.st === 'watch')) { clearTimeout(attractT); attractT = setTimeout(() => { if (G.st === 'title' || G.st === 'create' || G.st === 'setup') startAttract(); }, 5000); } });
+    BUS.on('flag:update', onFlags);
+    BUS.on('match:phase', function (e) { if (e.phase === 'play' && G.st === 'playing' && G.camPref) safe(() => { API.setCam(G.camPref); const R = mod('render'); if (R && R.setFollowBall && G.camPref === 'follow') R.setFollowBall(true); }, 'camPref'); });
+    const q = HPO.query;
+    const m = q && q.get('mode');
+    if (m === 'studio') { G.mode = 'studio'; applyModeClass(); setSt('studio'); }
+    else if (q && q.get('title') === '0') { G.mode = 'play'; applyModeClass(); startWatch(true); }
+    else { G.mode = 'play'; applyModeClass(); showTitle(true); }
+  }
+  function applyModeClass() {
+    EL.app.classList.toggle('mode-play', G.mode === 'play'); EL.app.classList.toggle('mode-studio', G.mode === 'studio');
+    const b = document.getElementById('btn-mode'); if (b) b.textContent = G.mode === 'play' ? '⚙︎ Studio' : '▶ Play mode';
+    window.dispatchEvent(new Event('resize'));
+  }
+  function setMode(m) {
+    if (m === G.mode) return;
+    if (m === 'studio') {
+      G.resume = G.st; closePause(); closeScreen(); G.mode = 'studio'; applyModeClass(); setSt('studio'); clearHighlights();
+    } else {
+      G.mode = 'play'; applyModeClass();
+      const r = G.resume;
+      if (r === 'playing' || r === 'watch') { setSt(r); } else showTitle();
+    }
+    BUS.emit('ui:setting', { key: 'mode', value: G.mode });
+  }
+  function active() { return G.mode === 'play' && G.st === 'playing'; }
+  function blocking() { return G.mode === 'play' && (!!G.scr || !!pauseEl); }
+  function suppressResults() { return G.mode === 'play' && (G.st === 'title' || G.st === 'create' || G.st === 'setup'); }
+  function onSaved() { if (G.st === 'title') showTitle(true); }
+
+  function startAttract() {
+    S.coachClaimed = false; const M = mod('match'); if (M) M.coachTeam = null;
+    S.type = 'M'; S.speed = 1; S.seed = '';
+    API.newMatch({ draw: true });
+    API.setCam('club');
+    const A = mod('audio'); void A;
+  }
+  function startWatch(first) {
+    closeScreen(); closePause(); setSt('watch'); clearHighlights();
+    if (!first) API.setCam('club');
+    updateVisibility();
+  }
+
+  function showTitle(keep) {
+    closePause(); clearHighlights();
+    setSt('title');
+    const M = mod('match');
+    if (!keep) { const R = mod('render'); if (R && R.cameraMode !== 'club') API.setCam('club'); if (M && M.coachTeam) { startAttract(); } }
+    if (M && M.paused) M.pause(false);
+    const saved = (S.saved && S.saved.length) ? S.saved[S.saved.length - 1] : null;
+    const an = pdef(AN);
+    const kids = [
+      h('div', { class: 'gm-top' }, an ? portrait(an, 'gm-portrait sm') : null, h('div', null, h('div', { class: 'tag' }, HPO.cfg.TITLE()), stamp('Doubles · Jakarta'))),
+      h('h2', { class: 'gm-h' }, 'Play doubles with ', h('em', null, 'Annetta')),
+      h('p', { class: 'gm-p' }, 'Make your player, team up, win the Littleworld Jakarta Padel Cup.'),
+      h('div', { class: 'gm-acts' },
+        saved
+          ? [h('button', { class: 'btn primary big', type: 'button', id: 'gm-continue', onclick: () => { G.player = saved; showSetup(); } }, 'Continue as ' + saved.name),
+             h('button', { class: 'btn big', type: 'button', id: 'gm-newplayer', onclick: () => showCreate() }, 'New player')]
+          : h('button', { class: 'btn primary big', type: 'button', id: 'gm-play', onclick: () => showCreate() }, 'Play with Annetta'),
+        h('button', { class: 'btn big', type: 'button', id: 'gm-watch', onclick: startWatch }, 'Just watch')),
+      h('p', { class: 'gm-foot' }, h('a', { href: '#', id: 'gm-studio-link', onclick: e => { e.preventDefault(); setMode('studio'); } }, 'Studio controls'), ' · ',
+        h('a', { href: 'https://annetta.dev/' }, '← annetta.dev')),
+      h('p', { class: 'gm-foot it' }, 'Made in Jakarta with code, curiosity, and no spare towel.')
+    ];
+    openScreen('gm-title', kids, 'title');
+  }
+
+  function previewDef() {
+    const P = mod('players'); if (!P) return null;
+    const ros = P.roster(), id = 'custom-' + cp.seed.toString(16), had = ros.some(r => r.id === id);
+    let d = null;
+    try { d = P.createCustom({ name: cp.name.trim() || 'Your name', gender: cp.gender, seed: cp.seed }); } catch (e) { return null; }
+    if (!had) { const i = ros.indexOf(d); if (i >= 0) ros.splice(i, 1); }
+    return Object.assign({}, d, { name: cp.name.trim() || 'Your name', country: { code: cp.nat, name: NATION_NAME[cp.nat] || cp.nat } });
+  }
+  function showCreate() {
+    closePause(); clearHighlights();
+    if (G.st !== 'create') { cp = { seed: rnd(), name: '', gender: 'F', nat: 'IDN' }; }
+    setSt('create');
+    const name = h('input', { type: 'text', id: 'gm-name', maxlength: '40', placeholder: 'Your name', autocomplete: 'nickname', 'aria-label': 'Your name', value: cp.name });
+    const genderSeg = segBtns([['F', 'Woman'], ['M', 'Man']], () => cp.gender, v => { cp.gender = v; render(); });
+    const nat = h('select', { id: 'gm-nat', 'aria-label': 'Nationality' }, NATIONS.map(n => h('option', { value: n[0] }, n[1])));
+    nat.value = cp.nat;
+    const portraitBox = h('div', { class: 'gm-pbox' });
+    const nameLine = h('div', { class: 'gm-nm' }), archLine = h('div', { class: 'gm-meta' });
+    const bars = h('div', { class: 'gm-bars' });
+    const typeLine = h('p', { class: 'hint', id: 'gm-typeline' });
+    const status = h('p', { class: 'hint gm-err', role: 'status', id: 'gm-cstatus' }, '');
+    const an = pdef(AN);
+    const partner = h('div', { class: 'gm-partner' }, an ? portrait(an, 'gm-portrait xs') : null,
+      h('div', null, h('div', { class: 'tag' }, 'Your partner'), h('div', { class: 'gm-nm sm' }, an ? an.name : 'Annetta Arslan'),
+        h('div', { class: 'gm-meta' }, (an ? API.ARCH[an.archetype] : '') + ' · World #' + (an ? an.ranking : '-') + ' ', an ? flag(an) : null)));
+    function render() {
+      const d = previewDef(); if (!d) return;
+      portraitBox.textContent = ''; portraitBox.appendChild(portrait(d, 'gm-portrait lg'));
+      nameLine.textContent = ''; add(nameLine, [d.name, ' ', flag(d)]);
+      archLine.textContent = (API.ARCH[d.archetype] || d.archetype) + ' · ' + (d.hand === 'L' ? 'left' : 'right') + '-handed';
+      bars.textContent = ''; API.ATTRS.forEach(a => bars.appendChild(API.mbar(a[1], d.attrs[a[0]], '')));
+      typeLine.textContent = cp.gender === 'F' ? "You and Annetta play women's doubles." : 'You and Annetta play mixed doubles.';
+      genderSeg.paint();
+    }
+    name.addEventListener('input', () => { cp.name = name.value; nameLine.firstChild && (nameLine.firstChild.textContent = cp.name.trim() || 'Your name'); });
+    nat.addEventListener('change', () => { cp.nat = nat.value; render(); });
+    const shuffle = h('button', { class: 'btn', type: 'button', id: 'gm-shuffle', onclick: () => { cp.seed = rnd(); render(); } }, 'Shuffle look & stats');
+    const save = h('button', { class: 'btn primary big', type: 'button', id: 'gm-save', onclick: async () => {
+      const nm = name.value.trim();
+      if (!nm) { status.textContent = 'Give your player a name first.'; name.focus(); name.classList.remove('shake'); void name.offsetWidth; name.classList.add('shake'); return; }
+      save.disabled = true;
+      try {
+        const P = mod('players');
+        const def = P.createCustom({ name: nm, gender: cp.gender, seed: cp.seed });
+        def.country = { code: cp.nat, name: NATION_NAME[cp.nat] || cp.nat };
+        const ok = await API.savePlayerDef(def);
+        S.saved = (S.saved || []).filter(x => x.id !== def.id); S.saved.push(def);
+        G.player = def;
+        API.toast(ok ? def.name + ' saved on this device.' : 'Playing as ' + def.name + '. Local saving is unavailable here.', { kind: ok ? 'good' : 'warn' });
+        showSetup();
+      } catch (err) { status.textContent = err && err.message ? err.message : 'Could not create that player.'; save.disabled = false; }
+    } }, 'Save & continue');
+    const card = openScreen('gm-create', [
+      h('div', { class: 'tag' }, '01 / Your player'),
+      h('h2', { class: 'gm-h sm' }, 'Make your player'),
+      h('div', { class: 'gm-prev' }, portraitBox, h('div', { class: 'gm-prevtxt' }, nameLine, archLine, shuffle)),
+      h('div', { class: 'field' }, h('label', { for: 'gm-name', class: 'lbl' }, 'Name'), name),
+      h('div', { class: 'grid2' }, h('div', { class: 'field' }, h('div', { class: 'lbl' }, 'You are'), genderSeg.root), h('div', { class: 'field' }, h('label', { for: 'gm-nat', class: 'lbl' }, 'Nationality'), nat)),
+      typeLine,
+      bars,
+      partner,
+      status,
+      h('div', { class: 'gm-acts row' }, h('button', { class: 'btn big', type: 'button', id: 'gm-cback', onclick: () => showTitle(true) }, 'Back'), save)
+    ], 'create');
+    render();
+    setTimeout(() => { try { name.focus(); } catch (e) { /* ignore */ } }, 60);
+    void card;
+  }
+
+  function randomOpp(type, prev) {
+    const r = players().filter(x => !x.custom && x.id !== AN);
+    const sh = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = a[i]; a[i] = a[j]; a[j] = t; } return a; };
+    const wom = r.filter(x => x.gender === 'F'), men = r.filter(x => x.gender === 'M');
+    for (let tries = 0; tries < 8; tries++) {
+      const pair = type === 'W' ? sh(wom).slice(0, 2).map(x => x.id) : [sh(men)[0].id, sh(wom)[0].id];
+      if (!prev || pair.join() !== prev.join() || tries === 7) return pair;
+    }
+  }
+  function myType() { return G.player && G.player.gender === 'M' ? 'X' : 'W'; }
+  function showSetup() {
+    closePause(); clearHighlights();
+    if (!G.player) return showCreate();
+    setSt('setup');
+    const type = myType();
+    if (!G.opp || G.oppType !== type || G.opp.some(id => id === G.player.id)) { G.opp = randomOpp(type); G.oppType = type; }
+    const C = G.cfg;
+    const fmt = segBtns([['quick', 'Quick'], ['oneSet', 'One set'], ['bo3', 'Best of 3']], () => C.format, v => { C.format = v; });
+    const sco = segBtns([['golden', 'Golden Point'], ['advantage', 'Advantage']], () => C.scoring, v => { C.scoring = v; });
+    const tod = segBtns([['day', 'Day'], ['dusk', 'Dusk'], ['night', 'Night']], () => C.tod, v => { C.tod = v; });
+    const courts = h('div', { class: 'gm-courts' });
+    const cbtns = COURTS.map(c => { const b = h('button', { type: 'button', 'aria-pressed': 'false', 'data-v': c[0], onclick: () => { C.venue = c[0]; paintCourts(); } }, h('span', { class: 'ct ct-' + c[0] }, h('i')), h('b', null, c[1])); courts.appendChild(b); return b; });
+    function paintCourts() { cbtns.forEach(b => b.setAttribute('aria-pressed', b.dataset.v === C.venue ? 'true' : 'false')); tod.btns.forEach(b => { b.disabled = C.venue === 'indoor'; }); todHint.hidden = C.venue !== 'indoor'; }
+    const todHint = h('p', { class: 'hint', hidden: true }, 'Indoor courts always use hall lighting.');
+    const oppBox = h('div', { class: 'gm-opp' });
+    function paintOpp() {
+      oppBox.textContent = '';
+      G.opp.forEach(id => { const d = pdef(id); oppBox.appendChild(h('div', { class: 'gm-oppp' }, flag(d), h('span', null, d ? d.name : id))); });
+    }
+    const me = G.player, an = pdef(AN);
+    const kids = [
+      h('div', { class: 'tag' }, '02 / Quick match'),
+      h('h2', { class: 'gm-h sm' }, 'Set up the match'),
+      h('div', { class: 'gm-team' }, h('span', { class: 'dot' }), h('b', null, me.name), flag(me), ' & ', h('b', null, an ? an.name : 'Annetta'), an ? flag(an) : null,
+        h('span', { class: 'chip' }, type === 'W' ? "Women's doubles" : 'Mixed doubles')),
+      h('div', { class: 'field' }, h('div', { class: 'lbl' }, 'Format'), fmt.root),
+      h('div', { class: 'field' }, h('div', { class: 'lbl' }, 'Scoring'), sco.root),
+      h('div', { class: 'field' }, h('div', { class: 'lbl' }, 'Court'), courts),
+      h('div', { class: 'field' }, h('div', { class: 'lbl' }, 'Time'), tod.root, todHint),
+      h('div', { class: 'field' }, h('div', { class: 'lbl rowline' }, h('span', null, 'Opponents · random pair'), h('button', { class: 'btn small', type: 'button', id: 'gm-oppshuffle', onclick: () => { G.opp = randomOpp(type, G.opp); paintOpp(); } }, 'Shuffle')), oppBox),
+      h('div', { class: 'gm-acts row' }, h('button', { class: 'btn big', type: 'button', id: 'gm-sback', onclick: () => showTitle(true) }, 'Back'),
+        h('button', { class: 'btn primary big', type: 'button', id: 'gm-kick', onclick: kickoff }, 'Kick off'))
+    ];
+    openScreen('gm-setup', kids, 'setup');
+    paintCourts(); paintOpp();
+  }
+
+  function kickoff() {
+    const me = G.player; if (!me) return showCreate();
+    closeScreen(); closePause(); clearTimeout(attractT);
+    const C = G.cfg;
+    S.type = myType(); S.teamA = [me.id, AN]; S.teamB = (G.opp || randomOpp(S.type)).slice();
+    S.format = C.format; S.scoring = C.scoring; S.venue = C.venue; S.tod = C.tod; S.seed = '';
+    S.coachTeam = 'A'; S.coachClaimed = true; S.speed = 1;
+    const Ai = mod('ai');
+    ['A', 'B'].forEach(t => safe(() => { if (Ai && Ai.setOrders) Ai.setOrders(t, { preset: 'balanced', serveDir: 'auto', returnDir: 'auto', middlePriority: undefined, focusOpponent: undefined, aimPoint: undefined }); }, 'orders'));
+    setSt('playing'); hlKey = '';
+    API.newMatch();
+    const M = mod('match'); if (M) M.coachTeam = 'A';
+    G.camPref = 'close'; API.setCam('close');
+    updateHud(true);
+  }
+
+  function btn(id, cls, label, title, fn) { const b = h('button', { class: 'gm-ib ' + cls, type: 'button', id: id, title: title, 'aria-label': title, onclick: fn }, label); return b; }
+  function buildHud() {
+    hud.root = h('div', { id: 'gm-hud' });
+    hud.pause = btn('gm-pause', '', '❚❚', 'Pause (Space)', () => { API.togglePause(); updateHud(true); });
+    hud.speed = btn('gm-speed', 'txt', '1×', 'Speed', () => { const nx = { 1: 2, 2: 4, 4: 1 }[S.speed] || 1; API.setSpeed(nx); updateHud(true); });
+    hud.cam = btn('gm-cam', 'txt sm', 'CAM', 'Camera', () => { const R = mod('render'); let i = CAM_CYCLE.findIndex(c => c[0] === (R && R.cameraMode)); i = (i + 1) % CAM_CYCLE.length; API.setCam(CAM_CYCLE[i][0]); G.camPref = CAM_CYCLE[i][0]; API.toast('Camera: ' + CAM_CYCLE[i][1], { ms: 1400 }); updateHud(true); });
+    hud.sound = btn('gm-sound', 'snd', '♪', 'Sound on / off (S)', () => { API.setSound(!S.soundOn); updateHud(true); });
+    hud.studio = btn('gm-studio', '', '⚙︎', 'Studio controls', () => setMode('studio'));
+    hud.icons = h('div', { class: 'gm-icons' }, hud.pause, hud.speed, hud.cam, hud.sound, hud.studio);
+    hud.chips = PRESETS.map(p => { const b = h('button', { type: 'button', class: 'gm-chip', 'data-k': p[0], 'aria-pressed': 'false', onclick: () => setPreset(p[0], p[1]) }, p[1]); return b; });
+    hud.mid = [h('button', { type: 'button', class: 'gm-chip m', 'data-i': '0', onclick: () => setMid(0), 'aria-pressed': 'false' }, 'You'), h('button', { type: 'button', class: 'gm-chip m', 'data-i': '1', onclick: () => setMid(1), 'aria-pressed': 'false' }, 'Annetta')];
+    hud.tmo = h('button', { type: 'button', class: 'gm-act', id: 'gm-timeout', onclick: () => { API.callTimeout(); updateHud(true); } }, 'Timeout');
+    hud.chal = h('button', { type: 'button', class: 'gm-act', id: 'gm-challenge', onclick: () => { API.doChallenge(); updateHud(true); } }, 'Challenge');
+    hud.coach = h('div', { class: 'gm-coach' },
+      h('div', { class: 'gm-coachrow' },
+        h('span', { class: 'tag gm-ctag' }, 'Coach'),
+        h('div', { class: 'gm-chips' }, hud.chips, h('span', { class: 'gm-sep' }), h('span', { class: 'tag gm-mtag' }, 'Middle'), hud.mid),
+        h('div', { class: 'gm-acts2' }, hud.tmo, hud.chal)));
+    hud.ticker = h('div', { class: 'gm-ticker', hidden: true });
+    hud.skip = h('button', { type: 'button', class: 'btn small gm-skip', id: 'gm-skip', onclick: () => { API.skipCeremony(); } }, 'Skip intro ▸');
+    hud.watchBar = h('div', { class: 'gm-watchbar' }, h('button', { type: 'button', class: 'btn primary', id: 'gm-watch-play', onclick: () => showCreateOrSetup() }, 'Play with Annetta'));
+    hud.labels = h('div', { class: 'gm-labels' });
+    hud.labYou = h('div', { class: 'gm-lab you' }, 'YOU'); hud.labAn = h('div', { class: 'gm-lab an' }, 'ANNETTA');
+    hud.labels.append(hud.labYou, hud.labAn);
+    hud.root.append(hud.labels, hud.icons, hud.skip, hud.ticker, hud.coach, hud.watchBar);
+    EL.stage.appendChild(hud.root);
+    hud.root.hidden = true;
+  }
+  function showCreateOrSetup() { const s = S.saved && S.saved.length; if (s) { G.player = G.player || S.saved[S.saved.length - 1]; showSetup(); } else showCreate(); }
+  function updateVisibility() {
+    if (!hud.root) return;
+    const show = G.mode === 'play' && (G.st === 'playing' || G.st === 'watch') && !G.scr;
+    hud.root.hidden = !show;
+    EL.app.classList.toggle('gm-hud-on', show);
+    hud.coach.hidden = G.st !== 'playing'; hud.watchBar.hidden = G.st !== 'watch';
+    if (show) updateHud(true);
+  }
+  function setPreset(key, label) {
+    const Ai = mod('ai'); if (!Ai || !Ai.setOrders) return;
+    if (Ai.PRESETS && !Ai.PRESETS[key]) return;
+    S.coachTeam = 'A'; API.claimCoach();
+    safe(() => Ai.setOrders('A', { preset: key, focusOpponent: undefined }), 'preset');
+    API.toast('Coach: ' + label, { kind: 'info', ms: 1800 });
+    updateHud(true);
+  }
+  function setMid(i) {
+    const Ai = mod('ai'); if (!Ai || !Ai.setOrders) return;
+    S.coachTeam = 'A'; API.claimCoach();
+    safe(() => Ai.setOrders('A', { middlePriority: i }), 'mid');
+    const P = mod('players'), who = P && P.list ? P.list.filter(p => p.team === 'A').sort((a, b) => a.slot - b.slot)[i] : null;
+    API.toast('Middle balls: ' + (i === 0 ? 'you' : (who ? who.name.split(' ')[0] : 'Annetta')), { kind: 'info', ms: 1800 });
+    updateHud(true);
+  }
+  function updateHud(force) {
+    if (!hud.root || hud.root.hidden) return;
+    const M = mod('match'), Rl = mod('rules'), o = API.orders('A');
+    hud.pause.textContent = M && M.paused ? '▶' : '❚❚';
+    hud.pause.title = M && M.paused ? 'Resume (Space)' : 'Pause (Space)';
+    hud.speed.textContent = (M ? M.speed : S.speed) + '×';
+    const R = mod('render'); const cc = CAM_CYCLE.find(c => c[0] === (R && R.cameraMode));
+    hud.cam.title = 'Camera: ' + (cc ? cc[1] : (R && R.cameraMode) || '-');
+    hud.sound.classList.toggle('off', !S.soundOn || S.muted);
+    hud.sound.title = S.soundOn && !S.muted ? 'Sound on (S)' : 'Sound off (S)';
+    const cur = o.preset || 'balanced';
+    hud.chips.forEach(b => { b.setAttribute('aria-pressed', b.dataset.k === cur ? 'true' : 'false'); });
+    hud.mid.forEach(b => b.setAttribute('aria-pressed', o.middlePriority === +b.dataset.i ? 'true' : 'false'));
+    if (Rl && Rl.state) {
+      const st = Rl.state, tl = st.timeouts ? st.timeouts.A : 0, cl = st.challenges ? st.challenges.A : 0;
+      const canT = tl > 0 && M && M.phase === 'play' && !st.over;
+      hud.tmo.textContent = 'Timeout · ' + tl; hud.tmo.disabled = !canT;
+      const canC = Rl.canChallenge ? Rl.canChallenge('A', 0) : false;
+      hud.chal.textContent = 'Challenge · ' + cl; hud.chal.disabled = !canC; hud.chal.classList.toggle('ready', canC);
+    }
+    hud.skip.hidden = !(G.st === 'playing' && M && PRE[M.phase]);
+    void force;
+  }
+  function clearHighlights() {
+    const A = mod('actors'), P = mod('players');
+    if (A && A.highlight && P && P.list) P.list.forEach(p => safe(() => A.highlight(p.id, false), 'hl'));
+    hlKey = '';
+  }
+
+  function update(dt) {
+    if (!hud.root) return;
+    acc += dt;
+    if (acc > 0.25) { acc = 0; updateHud(); }
+    if (hud.root.hidden || G.st !== 'playing') return;
+    const P = mod('players'), A = mod('actors'), R = mod('render'), rp = mod('replay');
+    if (!P || !P.list || !G.player) return;
+    const me = P.byId[G.player.id], an = P.byId[AN];
+    const key = (mod('match') && mod('match').cfg ? mod('match').cfg.seed : '') + ':' + P.list.map(p => p.id).join();
+    if (key !== hlKey && A && A.highlight && A.rigOf && me && an && A.rigOf(me.id) && A.rigOf(an.id)) { A.highlight(me.id, true); A.highlight(an.id, true); hlKey = key; }
+    const hidden = (rp && rp.active) || !R || !R.project || !R.THREE;
+    hud.labels.hidden = !!hidden;
+    if (hidden) return;
+    place(hud.labYou, me, A, R); place(hud.labAn, an, A, R);
+  }
+  let tmpV = null;
+  function place(el, p, A, R) {
+    if (!p) { el.hidden = true; return; }
+    if (!tmpV) tmpV = new R.THREE.Vector3();
+    const rig = A && A.rigOf ? A.rigOf(p.id) : null;
+    if (rig && rig.root) tmpV.set(rig.root.position.x, 2.35, rig.root.position.z); else tmpV.set(p.pos.x, 2.35, p.pos.z);
+    const s = R.project(tmpV);
+    if (!s || !s.visible) { el.hidden = true; return; }
+    el.hidden = false; el.style.transform = 'translate(' + Math.round(s.x) + 'px,' + Math.round(s.y) + 'px) translate(-50%,-100%)';
+  }
+
+  function onFeed(it, entry) {
+    if (!hud.ticker || entry.src === 'ui' || G.mode !== 'play' || (G.st !== 'playing' && G.st !== 'watch')) return;
+    hud.ticker.textContent = it.text; hud.ticker.hidden = false; hud.ticker.classList.remove('fade'); void hud.ticker.offsetWidth;
+    clearTimeout(tickerT); tickerT = setTimeout(() => { hud.ticker.classList.add('fade'); setTimeout(() => { if (hud.ticker.classList.contains('fade')) hud.ticker.hidden = true; }, 600); }, 5000);
+  }
+  function onFlags(e) {
+    if (G.mode !== 'play' || G.st !== 'playing') return;
+    const pick = e.matchPoint ? ['Match point', e.matchPoint] : e.setPoint ? ['Set point', e.setPoint] : e.breakPoint ? ['Break point', e.breakPoint] : null;
+    if (!pick) return;
+    const txt = pick[0] + (pick[1] === 'A' ? ' for you' : ' for them');
+    if (txt === lastFlagToast) return; lastFlagToast = txt; setTimeout(() => { if (lastFlagToast === txt) lastFlagToast = ''; }, 8000);
+    API.toast(txt + (pick[1] === 'A' ? '!' : '. Hold on.'), { kind: pick[1] === 'A' ? 'good' : 'warn', ms: 2800 });
+  }
+
+  function onEscape() {
+    if (G.mode !== 'play') return;
+    if (pauseEl) { resumeFromPause(); return; }
+    if (G.st === 'create' || G.st === 'setup') { showTitle(true); return; }
+    if (G.st === 'playing' || G.st === 'watch') showPause();
+  }
+  function showPause() {
+    const M = mod('match'); wasPaused = !!(M && M.paused); if (M && !wasPaused) M.pause(true);
+    pauseEl = h('div', { class: 'gm-screen', id: 'gm-pause-menu' }, h('div', { class: 'gm-card small' },
+      h('div', { class: 'tag' }, 'Paused'), h('h2', { class: 'gm-h sm' }, 'Take a breather'),
+      h('div', { class: 'gm-acts' },
+        h('button', { class: 'btn primary big', type: 'button', id: 'gm-resume', onclick: resumeFromPause }, 'Resume'),
+        G.st === 'playing' ? h('button', { class: 'btn big', type: 'button', id: 'gm-restart', onclick: () => { closePause(true); kickoff(); } }, 'Restart') : null,
+        h('button', { class: 'btn big', type: 'button', id: 'gm-totitle', onclick: () => { closePause(true); showTitle(); } }, 'Back to title'),
+        h('button', { class: 'btn big', type: 'button', id: 'gm-tostudio', onclick: () => setMode('studio') }, 'Studio controls'))));
+    EL.stage.appendChild(pauseEl); EL.stage.classList.add('gm-menu');
+  }
+  function resumeFromPause() { closePause(); }
+  function closePause(keepPaused) {
+    if (!pauseEl) return;
+    pauseEl.remove(); pauseEl = null; EL.stage.classList.remove('gm-menu');
+    const M = mod('match'); if (M && !wasPaused && !keepPaused) M.pause(false);
+    updateHud(true);
+  }
+
+  function results() {
+    const Rl = mod('rules'), M = mod('match'), P = mod('players');
+    const st = Rl && Rl.state; if (!st || !P || !G.player) return;
+    closePause();
+    const won = (st.winner || (M && M.result && M.result.winner)) === 'A';
+    let sets = ''; try { sets = Rl.describe(st).setsText; } catch (e) { /* ignore */ }
+    const mine = P.list.filter(p => p.team === 'A'), ms = M && M.stats;
+    const sum = k => API.teamSum('A', k);
+    const dist = mine.reduce((a, p) => a + p.stats.distance, 0) / 1000;
+    const mvp = mine.map(p => ({ p: p, c: API.contribution(p) })).sort((a, b) => b.c - a.c)[0];
+    const row = (l, v) => [h('span', { class: 'l' }, l), h('b', null, String(v))];
+    const opp = P.list.filter(p => p.team === 'B').map(p => lastName(p.def)).join(' & ');
+    setSt('results');
+    openScreen('gm-results', [
+      h('div', { class: 'tag' }, HPO.cfg.TITLE()),
+      won ? stamp('Champions') : stamp('Good fight'),
+      h('h2', { class: 'gm-h' }, won ? ['You & ', h('em', null, 'Annetta'), ' take the cup'] : 'So close. Rematch?'),
+      h('div', { class: 'gm-score' }, sets || '–', h('small', null, ' vs ' + opp)),
+      h('div', { class: 'gm-ks' }, row('Winners', sum('winners')), row('Aces', sum('aces')), row('Longest rally', ms ? (ms.longest || 0) : 0), row('Distance', dist.toFixed(2) + ' km'), row('Points won', ms ? ms.teams.A.pointsWon : '-')),
+      mvp ? h('div', { class: 'mvp' }, h('b', null, 'MVP: '), mvp.p.name, ' · ' + mvp.p.stats.winners + ' winners, ' + mvp.p.stats.unforced + ' unforced') : null,
+      h('div', { class: 'gm-acts' },
+        h('button', { class: 'btn primary big', type: 'button', id: 'gm-again', onclick: kickoff }, 'Play again'),
+        h('button', { class: 'btn big', type: 'button', id: 'gm-chsetup', onclick: () => showSetup() }, 'Change setup'),
+        h('div', { class: 'grid2' },
+          h('button', { class: 'btn', type: 'button', id: 'gm-rnew', onclick: () => showCreate() }, 'New player'),
+          h('button', { class: 'btn', type: 'button', id: 'gm-rtitle', onclick: () => showTitle() }, 'Back to title')))
+    ], 'results');
+  }
 })(HPO);
 
 </script></body></html>

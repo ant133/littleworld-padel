@@ -92,7 +92,7 @@
 
   function serveSkill(id) { const a = P().get(id).attrs; return a.accuracy * 0.5 + a.tactics * 0.3 + a.power * 0.2; }
   function setPhase(ph) { const prev = M.phase; M.phase = ph; BUS.emit('match:phase', { phase: ph, prev: prev }); }
-  const wait = sec => M.cfg && M.cfg.fast ? S.wait(0) : S.wait(sec);
+  const wait = sec => M.cfg && (M.cfg.fast || M.skip) ? S.wait(0) : S.wait(sec);
 
   function newStats() {
     return { rallies: [], longest: 0, pointsPlayed: 0, teams: { A: tm(), B: tm() }, points: [], startedAt: 0 };
@@ -221,6 +221,8 @@
     setPhase('introductions'); yield* phaseHook('introductions', function* () { yield wait(8); });
     setPhase('toss'); yield* phaseHook('toss', function* () { yield wait(5); });
     setPhase('warmup'); yield* phaseHook('warmup', warmup);
+    if (M.skip) { P().place(); P().list.forEach(p => { p.retrieving = false; p.intent = { type: 'idle' }; }); Bl().reset(); A().warmup = false; }
+    M.skip = false;                                                  // 'Skip intro' only skips the pre-match phases
     setPhase('play');
     while (!R().state.over) {
       yield* playPoint();
@@ -247,6 +249,7 @@
       p.retrieving = true;
       p.pos = { x: sx * 12.5, z: 6.5 * (p.slot ? -1 : 1) };
       p.intent = { type: 'move', x: sx * 5, z: (p.slot ? -1 : 1) * 2, cap: 0.4 };
+      if (M.skip) p.pos = { x: p.intent.x, z: p.intent.z };
     });
     yield S.until(() => pl.list.every(p => Math.hypot(p.pos.x - p.intent.x, p.pos.z - p.intent.z) < 0.4), 14);
     pl.list.forEach(p => { p.retrieving = false; });

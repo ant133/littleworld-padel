@@ -2,6 +2,8 @@
 
 Structured digest of the original prompt (tournament renamed; year is runtime `new Date().getFullYear()`). Original priorities: **physics realism > doubles AI > rules correctness > visuals > UI**. Anything below marked MUST is acceptance criteria.
 
+> **Status:** this is the original brief and is kept as written. The build differs in these places (CONTRACT.md §18 has the full list): camera elevation is 40°, not 31°; the side wall has an open entrance at the net instead of doors; the default experience is **Play mode** (create a player, team up with Annetta Arslan, limited coach box) with the full panel as optional Studio mode; the site is hosted as its own GitHub Pages repo (`padel.annetta.dev`), not as a page inside the main site.
+
 ## 0. Product
 - One self-contained HTML page, three.js r128 (cdnjs online; embedded offline). No other external assets, no localStorage/eval/alert. English UI. All names fictional.
 - Real-time 3D pixel-art diorama of a professional doubles padel final on a floating island. For annetta.dev; page chrome matches annetta.dev (light theme, see CONTRACT §13).

@@ -606,7 +606,7 @@
 
     // ================= input =================
     _bindInput() {
-      const cv = R.renderer.domElement, ptrs = new Map(); let pinch = 0, moved = false, tdown = 0, startX = 0, startY = 0, multi = false;
+      const cv = R.renderer.domElement, ptrs = new Map(); let orbited = false, pinch = 0, moved = false, tdown = 0, startX = 0, startY = 0, multi = false;
       cv.addEventListener('contextmenu', function (e) { e.preventDefault(); });
       cv.addEventListener('wheel', function (e) { e.preventDefault(); R.zoom(-Math.sign(e.deltaY) * Math.min(3, Math.abs(e.deltaY) / 100 + 0.5)); }, { passive: false });
       function mpp() { return 2 * R.view.half / (cv.clientHeight || 1); }
@@ -632,11 +632,14 @@
         if (!moved && Math.hypot(e.clientX - startX, e.clientY - startY) < 5) return;
         moved = true;
         if (p.button === 2 || p.shift || e.shiftKey || (e.buttons & 2)) panPx(dx, dy);
-        else { R._toFree(); R.view.yawT -= dx * 0.006; R.view.yaw = R.view.yawT; }
+        else { R._toFree(); R.view.yawT -= dx * 0.006; R.view.yaw = R.view.yawT; orbited = true; }
       });
       function up(e) {
         const had = ptrs.delete(e.pointerId);
         if (ptrs.size < 2) pinch = 0;
+        if (orbited && ptrs.size === 0) { // an orthographic view of the court only looks right at a true isometric yaw: settle on the nearest quarter turn
+          const v = R.view; v.yawK = Math.round((v.yawT - YAW0) / (Math.PI / 2)); v.yawT = YAW0 + v.yawK * Math.PI / 2; R.yawIndex = ((v.yawK % 4) + 4) % 4; orbited = false;
+        }
         if (!had || e.type === 'pointercancel') return;
         if (!moved && !multi && ptrs.size === 0 && performance.now() - tdown < 600) {
           const h = R.pickCourt(e.clientX, e.clientY);

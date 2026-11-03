@@ -1,5 +1,12 @@
 # Publish at padel.annetta.dev
 
+## Current status (3 November 2026)
+
+- Pages is enabled for `ant133/littleworld-padel` with **GitHub Actions** as the source; HTTPS is enforced.
+- No custom domain is configured yet and the `padel` DNS record has not been confirmed. Until then the game is served at https://ant133.github.io/littleworld-padel/.
+- The site shows whatever was last pushed to `main`. As of this date the Play-mode work (`src/21_game.js` and the related edits) is still uncommitted locally, so the live page is the earlier Studio-panel version until it is committed and pushed.
+- Steps 2 and 3 below are the remaining work. Step 2 can also be done from a terminal: `gh api -X PUT repos/ant133/littleworld-padel/pages -f cname=padel.annetta.dev`.
+
 ## 1. Enable GitHub Pages
 
 1. Open https://github.com/ant133/littleworld-padel/settings/pages while signed in as `ant133`.

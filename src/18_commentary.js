@@ -445,9 +445,9 @@
     ctx.labelOf = { A: 'Team A', B: 'Team B' };
     const byTeam = { A: [], B: [] };
     P.list.forEach(function (p) {
-      ctx.names[p.id] = p.name; ctx.short[p.id] = lastWord(p.name); ctx.first[p.id] = firstWord(p.name);
+      ctx.names[p.id] = p.name; ctx.short[p.id] = p.id === 'p5' ? 'Annetta' : lastWord(p.name); ctx.first[p.id] = firstWord(p.name);
       ctx.nick[p.id] = p.def && p.def.nick || ''; ctx.gender[p.id] = p.def && p.def.gender || 'M'; ctx.teamOf[p.id] = p.team;
-      if (byTeam[p.team]) byTeam[p.team].push(lastWord(p.name));
+      if (byTeam[p.team]) byTeam[p.team].push(p.id === 'p5' ? 'Annetta' : lastWord(p.name));
     });
     ctx.pair = { A: byTeam.A.join(' and ') || 'Team A', B: byTeam.B.join(' and ') || 'Team B' };
   }
