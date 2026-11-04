@@ -9,4 +9,4 @@
 - **Files:** `CLAUDE.md`, `.github/workflows/pages.yml`
 - **Decisions:** D-2026-11-04-1500
 - **Follow-ups:** verify padel.annetta.dev serves the game
-- **Links:** none (uncommitted)
+- **Links:** 34de422
