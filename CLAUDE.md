@@ -29,6 +29,7 @@ Web toy for annetta.dev, feature-complete and deployed through GitHub Pages. Wor
 3. UI, camera or world change → `node tools/build.js`, then `features_browser.js` and look at screenshots (desktop and 390×844).
 4. Update the docs the change touches (CONTRACT.md change log, docs/TESTING.md numbers) in the same pass.
 5. Do not commit or push unless asked; a push to `main` publishes the site.
+6. Always use the `task-iteration-log` skill: open an entry in `task-iteration-log/` when a task starts, close it when it ends, and stage it with the task's changes. Skip it for pure Q&A.
 
 ## Site & hosting (current)
 - Hosting: free GitHub Pages from `ant133/littleworld-padel`, built by the Actions workflow. Intended address `https://padel.annetta.dev` (CNAME `padel` → `ant133.github.io`, custom domain set in the repo's Pages settings); default address `https://ant133.github.io/littleworld-padel/`. Steps: docs/GITHUB_PAGES.md.
