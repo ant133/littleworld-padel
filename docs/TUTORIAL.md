@@ -13,9 +13,10 @@ How it works: the sim is paused (`match.pause`) while a step shows. A spotlight 
 | 5 | Plan | any plan |
 | 6 | Shots and Middle balls | Next |
 | 7 | The strategy tag (only where it is visible) | Next |
-| 8 | Aim | Next |
-| 9 | Go for it, Timeout, Challenge | Next |
-| 10 | Practice QTE: the sim resumes with `qte.force = 'attack'` in relaxed mode | the QTE opening and closing (40 s limit, then it moves on) |
-| 11 | Done | Next |
+| 8 | Aim: tap the button | Aim mode switching on |
+| 9 | The opponent's half flashes; tap it (no dimming, so the court is clickable) | Aim being set or cancelled |
+| 10 | Go for it, Timeout, Challenge | Next |
+| 11 | Practice QTE: the sim resumes with `qte.force = 'attack'` in relaxed mode | the QTE opening and closing (40 s limit, then it moves on) |
+| 12 | Done | Next |
 
 The QTE overlay hides the tutorial while it is open. Leaving the playing state (title, pause to title, Studio) stops the tutorial and un-pauses the match if the tutorial had paused it.

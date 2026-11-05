@@ -44,8 +44,9 @@
     DOM.bars2 = mk('position:absolute;left:0;right:0;bottom:0;height:5%;background:#0b1a2a;opacity:.85');
     cont.appendChild(root);
   }
-  function banner(text, sub, ms) {
+  function banner(text, sub, ms, low) { // low: the intro cards sit under the state ribbon, clear of the scoreboard; CHAMPIONS keeps the top
     domInit(); if (!DOM.banner) return;
+    DOM.banner.style.top = low ? '58%' : '14%';
     DOM.banner.innerHTML = ''; const a = document.createElement('div'); a.textContent = text; DOM.banner.appendChild(a);
     if (sub) { const b = document.createElement('div'); b.textContent = sub; b.style.cssText = 'font-size:.45em;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#177dc5;margin-top:4px'; DOM.banner.appendChild(b); }
     DOM.banner.hidden = false; DOM.bt = ms ? ms / 1000 : 0;
@@ -458,7 +459,7 @@
       const c = crowd(); if (c) { c.setMood(1); c.react(1, 'applause'); }
       stagePlayers();
       const r = RN(); camSave(); if (r) tvFollow(r);
-      banner(title(), 'Welcome to the club', 7000);
+      banner(title(), 'Welcome to the club', 7000, true);
       say('Ladies and gentlemen, welcome to the ' + title() + '.');
       try {
         yield* W(2.2); if (r && !skipped()) r.rotate(1);
@@ -498,7 +499,7 @@
           const p = P.list[i], d = p.def, ctry = d.country || {};
           const line = (i === 0 ? 'First, ' : i === 2 ? 'And their opponents. ' : '') + 'From ' + (ctry.name || 'the world') + ', ranked number ' + d.ranking + ' in the world: ' + d.name + (d.nick ? ', "' + d.nick + '"' : '') + '.';
           say(line);
-          banner(d.name, (d.nick ? '"' + d.nick + '" · ' : '') + (ctry.name || '') + ' · World #' + d.ranking, 4200);
+          banner(d.name, (d.nick ? '"' + d.nick + '" · ' : '') + (ctry.name || '') + ' · World #' + d.ranking, 4200, true);
           if (r) { r.followPlayer(p.id); if (r.view) r.view.zoom = 2.6; }
           P.list.forEach(q => { stand(q, q === p ? 'twirl' : 'idle', Math.PI / 2); });
           if (c) c.react(ctry.code === 'IDN' ? 3 : 2, 'cheer');
@@ -527,7 +528,7 @@
         CM.coin = { t0: m ? m.simTime : 0, dur: 1.7, x: 0.35, z: -4.3, y0: 1.5, flip: 7 * TAU, mesh: coin };
         yield* W(1.8);
         coin.rotation.set(0, 0, 0);
-        banner('Team ' + tos.first + ' serves first', 'Coin toss', 3500);
+        banner('Team ' + tos.first + ' serves first', 'Coin toss', 3500, true);
         if (c) c.react(1, 'applause');
         yield* W(2.0);
         CM.coin = null; if (CM.coinMesh && CM.coinMesh.parent) CM.coinMesh.parent.remove(CM.coinMesh); CM.coinMesh = null;

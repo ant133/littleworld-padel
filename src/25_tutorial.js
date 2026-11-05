@@ -19,7 +19,8 @@
       { target: () => hud.plans, text: 'Then pick one plan. Try "Break the net": lobs over players who crowd the net.', wait: () => !!orders().plan },
       { target: () => hud.style, text: 'Shots sets the spin and pace. Middle balls says who takes the ones down the middle: you, me, or whoever is closer.' },
       { show: () => !hud.tag.hidden && getComputedStyle(hud.tag).display !== 'none', target: () => hud.tag, text: 'Your choices are listed here, and your plan calls out when it works.' },
-      { target: () => hud.aim, before: () => setOpen(false), text: 'Aim: tap it, then tap the far half of the court to place your next shot yourself.' },
+      { target: () => hud.aim, before: () => setOpen(false), text: 'Aim lets you place your next shot yourself. Tap it.', wait: () => mod('ui').api.S.aim },
+      { free: true, text: 'The other side of the court is flashing. Tap anywhere on it and your next shot goes there if it can.', wait: () => !mod('ui').api.S.aim },
       { target: () => hud.go, text: 'Go for it: your next winning chance becomes a swipe shot. Timeout and Challenge are what they sound like.' },
       { qte: true, text: 'Winning chances freeze time. Let me find you one. When the ring flashes, swipe from it toward their court. Longer and faster swipes hit harder.' },
       { text: "That's everything. The rest is playing. Good luck!", btn: "Let's play" }
@@ -75,6 +76,7 @@
     ui.text.textContent = s.text;
     ui.next.textContent = s.btn || 'Next';
     ui.next.hidden = !!(s.wait || s.qte); ui.skipStep.hidden = !(s.wait || s.qte);
+    if (s.free) ui.hole.hidden = true;
     if (s.qte) beginQte();
     place();
   }
@@ -103,7 +105,7 @@
     const s = steps[at]; if (!s || !ui) return;
     const st = ui.root.parentNode.getBoundingClientRect(), W = st.width, H = st.height;
     let r = null;
-    if (s.target && !s.qte) { const el = s.target(); if (el && el.getBoundingClientRect) { const b = el.getBoundingClientRect(); if (b.width > 0 && b.height > 0) r = { x: b.left - st.left - 6, y: b.top - st.top - 6, w: b.width + 12, h: b.height + 12 }; } }
+    if (s.target && !s.qte && !s.free) { const el = s.target(); if (el && el.getBoundingClientRect) { const b = el.getBoundingClientRect(); if (b.width > 0 && b.height > 0) r = { x: b.left - st.left - 6, y: b.top - st.top - 6, w: b.width + 12, h: b.height + 12 }; } }
     const B = ui.b, put = (e, x, y, w, hh) => { e.style.cssText = 'left:' + x + 'px;top:' + y + 'px;width:' + Math.max(0, w) + 'px;height:' + Math.max(0, hh) + 'px'; };
     if (r) {
       ui.hole.hidden = false; put(ui.hole, r.x, r.y, r.w, r.h);
@@ -111,10 +113,10 @@
     } else {
       ui.hole.hidden = true; put(B[0], 0, 0, W, H); put(B[1], 0, 0, 0, 0); put(B[2], 0, 0, 0, 0); put(B[3], 0, 0, 0, 0);
     }
-    ui.root.classList.toggle('dim', !s.qte);
+    ui.root.classList.toggle('dim', !(s.qte || s.free));
     // the bubble goes on whichever side of the spotlight has room (top when the target sits low, as the dock does)
     const bh = ui.bubble.offsetHeight || 140;
     const top = !r ? Math.max(12, (H - bh) / 2) : (r.y + r.h / 2 > H * 0.55 ? Math.max(8, r.y - bh - 12) : Math.min(H - bh - 8, r.y + r.h + 12));
-    ui.bubble.style.top = (s.qte ? 12 : top) + 'px';
+    ui.bubble.style.top = (s.qte || s.free ? 12 : top) + 'px';
   }
 })(HPO);

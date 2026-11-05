@@ -499,7 +499,7 @@
   function hideHint() { hs.cur = null; if (hud.hint) hud.hint.hidden = true; if (hud.root) hud.root.classList.remove('hinting'); }
   function hintTick(dt) {
     const P = mod('players'), M = mod('match');
-    if (G.st !== 'playing' || !P || !P.list || !M || M.phase !== 'play') return;
+    if (G.st !== 'playing' || !P || !P.list || !M || M.phase !== 'play' || (mod('tutorial') && mod('tutorial').active)) return;
     const ops = P.list.filter(p => p.team === 'B'); if (ops.length < 2) return;
     hs.clock += dt;
     hs.net.push(ops.every(p => Math.abs(p.pos.x) < 4) ? 1 : 0); hs.deep.push(ops.every(p => Math.abs(p.pos.x) > 6) ? 1 : 0);

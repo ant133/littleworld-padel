@@ -467,12 +467,13 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
 @keyframes hpo-shake2{0%,100%{transform:none}10%{transform:translate(-9px,4px)}22%{transform:translate(8px,-6px)}34%{transform:translate(-7px,-4px)}46%{transform:translate(7px,5px)}58%{transform:translate(-5px,2px)}72%{transform:translate(3px,-2px)}86%{transform:translate(-2px,1px)}}
 
 .hpo-state{position:absolute;left:50%;top:30%;transform:translateX(-50%);display:grid;grid-template-columns:auto 1fr;column-gap:.5em;align-items:center;padding:.3em .85em .32em;background:var(--cream);border:2px solid var(--ink);box-shadow:6px 7px 0 #1264992e;color:var(--ink);white-space:nowrap}
-.hpo-state .dot{grid-row:1/3;width:.75em;height:.75em;border-radius:50%;background:#e5484d;box-shadow:0 0 0 0 #e5484d99;animation:hpo-live 1s ease-out infinite;font-size:clamp(22px,6.4vw,44px)}
+/* a small live dot: it used to be bigger than the text */
+.hpo-state .dot{grid-row:1/3;width:.36em;height:.36em;margin:0 .1em;border-radius:50%;background:#e5484d;box-shadow:0 0 0 0 #e5484d99;animation:hpo-live 1s ease-out infinite;font-size:clamp(22px,6.4vw,44px)}
 .hpo-state b{font:900 clamp(22px,6.4vw,44px)/1.05 var(--head);letter-spacing:-.05em}
 .hpo-state small{font:700 clamp(9px,2.2vw,12px) var(--head);letter-spacing:.2em;text-transform:uppercase;color:var(--tag)}
 .hpo-state.in{animation:hpo-state-in .45s cubic-bezier(.2,.9,.3,1) both}
 @keyframes hpo-state-in{from{opacity:0;transform:translateX(-50%) scale(.7)}}
-@keyframes hpo-live{to{box-shadow:0 0 0 .6em #e5484d00}}
+@keyframes hpo-live{to{box-shadow:0 0 0 .22em #e5484d00}}
 
 .hpo-replay{position:absolute;left:50%;bottom:15%;transform:translateX(-50%) skewX(-8deg);padding:.12em .55em .14em;background:#e5484d;border:3px solid var(--ink);box-shadow:6px 7px 0 #1264992e;color:#fff;font:900 clamp(30px,10.5vw,72px)/1 var(--head);letter-spacing:-.04em;font-style:italic;white-space:nowrap;text-shadow:3px 3px 0 var(--ink);animation:hpo-flash .9s steps(1,end) infinite}
 @keyframes hpo-flash{0%{opacity:1;background:#e5484d;color:#fff}50%{opacity:.18;background:#fff4b3;color:#e5484d}}
@@ -573,3 +574,8 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
 .tut-next:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
 .tut-next[hidden],.tut-skipstep[hidden]{display:none}
 @media (max-width:899px){.qte-title{top:24%}}
+
+/* the opponent's half flashes while aiming */
+.aimzone{position:absolute;inset:0;width:100%;height:100%;z-index:6;pointer-events:none}
+.aimzone polygon{fill:#fff4b3;stroke:#fff4b3;stroke-width:4;stroke-linejoin:round;animation:aimflash .7s ease-in-out infinite alternate}
+@keyframes aimflash{from{fill-opacity:.12;stroke-opacity:.45}to{fill-opacity:.42;stroke-opacity:1}}

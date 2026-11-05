@@ -128,6 +128,8 @@
     EL.banner = h('div', { id: 'banner', hidden: true }); EL.stage.appendChild(EL.banner);
     EL.aimhud = h('div', { class: 'aimhud', hidden: true }, 'Tap the opponent\'s court to aim your next shot (Esc to cancel)'); EL.stage.appendChild(EL.aimhud);
     EL.aimmark = h('div', { id: 'aimmark', hidden: true }); EL.stage.appendChild(EL.aimmark);
+    EL.aimzone = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); EL.aimzone.setAttribute('class', 'aimzone'); EL.aimzone.style.display = 'none';
+    EL.aimzone.appendChild(document.createElementNS('http://www.w3.org/2000/svg', 'polygon')); EL.stage.appendChild(EL.aimzone);
     EL.debug = h('div', { id: 'debug', hidden: true }); EL.stage.appendChild(EL.debug);
     buildScoreboard();
     buildPanel();
@@ -559,8 +561,18 @@
     if (!mod('render') || !mod('render').pickCourt) { toast('Aiming needs the 3D view.', { kind: 'warn' }); return; }
     S.aim = !S.aim; claimCoach(); syncAim();
   }
+  // the opponent's half flashes while you aim, so it is clear where a tap counts
+  let aimRaf = 0;
+  function aimZone() {
+    const R = mod('render'), Rl = mod('rules'), z = EL.aimzone;
+    if (!S.aim || !R || !R.project || !Rl || !Rl.state) { z.style.display = 'none'; aimRaf = 0; return; }   // style, not .hidden: an SVG has no hidden property
+    const ox = Rl.state.sides[other(S.coachTeam)], pts = [[0.1, -4.9], [0.1, 4.9], [9.9, 4.9], [9.9, -4.9]].map(c => { const s = R.project(new R.THREE.Vector3(c[0] * ox, 0.03, c[1])); return s.x.toFixed(1) + ',' + s.y.toFixed(1); }).join(' ');
+    z.firstChild.setAttribute('points', pts); z.style.display = '';
+    aimRaf = requestAnimationFrame(aimZone);
+  }
   function syncAim() {
     EL.stage.classList.toggle('aiming', S.aim); EL.aimhud.hidden = !S.aim;
+    if (S.aim && !aimRaf && EL.aimzone) aimRaf = requestAnimationFrame(aimZone);
     const v = S.aim ? 'true' : 'false';
     EL.btnAim.setAttribute('aria-pressed', v);
     const hb = document.getElementById('gm-aim'); if (hb) hb.setAttribute('aria-pressed', v);
