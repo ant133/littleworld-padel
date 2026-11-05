@@ -4,3 +4,4 @@
 - 15:40 6e11e0f main Coach dock redesign and QTE shots
 - 20:39 7130d47 main Playtest pass: Americano formats, tutorial, strategy feedback, fixes
 - 20:56 d6ee167 main Aim zone flash, tutorial aim steps, intro layout fixes
+- 22:41 0021789 main Add Bahasa Indonesia (?lang=id)
