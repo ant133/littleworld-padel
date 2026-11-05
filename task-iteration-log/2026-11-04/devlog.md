@@ -19,5 +19,5 @@
 - **Files:** `src/05_shots.js`, `src/06_players.js`, `src/07_ai.js`, `CONTRACT.md`, `docs/TESTING.md`
 - **Decisions:** D-2026-11-04-1842
 - **Follow-ups:** aces still 0%, wall returns 8% (target 15-25), volley share 20% (25-35), winners 41% (30); unforced target needs the classifier revisited; rally median 9 vs 11-12
-- **Links:** none (uncommitted)
+- **Links:** f7ef398
 
