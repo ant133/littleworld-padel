@@ -37,5 +37,5 @@
 - **Files:** `src/08_rules.js`, `src/13_world_club.js`, `src/17_audio.js`, `src/19_ui.js`, `src/21_game.js`, `src/24_qte.js`, `src/07_ai.js`, `src/10_render_core.js`, `src/06_players.js`, `src/shell.css`, `tools/americano_tests.js`, docs, CLAUDE.md
 - **Decisions:** none
 - **Follow-ups:** QTE telegraph cue before the freeze (needs an earlier lookahead); more OST; bigger ceremony; Studio/Play switch clarity; real-phone checks
-- **Links:** none (uncommitted)
+- **Links:** 7130d47
 - **Later:** interactive tutorial (`src/25_tutorial.js`, docs/TUTORIAL.md) replaces the first-run card set as the first match; version 2026.11.05.7.
