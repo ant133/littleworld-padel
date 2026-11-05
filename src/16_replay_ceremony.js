@@ -54,10 +54,21 @@
 
   // ---------------------------------------------------------------- camera helpers
   const cam = { saved: null };
-  function camSave() { const r = RN(); if (r && !cam.saved) cam.saved = { mode: r.cameraMode, zoom: r.view && r.view.zoom, followId: r.followId }; }
+  function camSave() {
+    const r = RN(); if (!r || cam.saved) return;
+    const v = r.view; cam.saved = { mode: r.cameraMode, zoom: v && v.zoom, followId: r.followId, followBall: r.followBall, freeBase: v && v.freeBase, t: v && v.tTarget && { x: v.tTarget.x, y: v.tTarget.y, z: v.tTarget.z } };
+  }
   function camRestore() {
     const r = RN(), s = cam.saved; cam.saved = null; if (!r || !s) return;
-    try { if (r.followPlayer) r.followPlayer(null); r.setCameraMode(s.mode || 'club'); if (r.view && s.zoom && s.mode !== 'free') r.view.zoom = s.zoom; } catch (e) { U.logError('cam.restore', e); }
+    try {
+      const v = r.view;
+      if (s.mode === 'free') { // camFocus left the camera free, so setCameraMode would be a no-op: put the free view back by hand
+        if (s.freeBase) v.freeBase = s.freeBase; if (s.t) v.tTarget.set(s.t.x, s.t.y, s.t.z); if (s.zoom) v.zoom = s.zoom;
+      } else {
+        r.followId = s.followId || null; r.followBall = s.followBall !== false;
+        r.setCameraMode(s.mode || 'club'); if (s.zoom) v.zoom = s.zoom;
+      }
+    } catch (e) { U.logError('cam.restore', e); }
   }
   // intro, walk-on and replays always use the TV follow camera (the render core tightens it on phones)
   function tvFollow(r) { if (r.followPlayer) r.followPlayer(null); if (r.setFollowBall) r.setFollowBall(true); r.setCameraMode('follow'); }

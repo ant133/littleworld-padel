@@ -293,7 +293,6 @@
       h('div', { class: 'field' }, h('div', { class: 'lbl' }, 'Scoring'), sco.root),
       h('div', { class: 'field' }, h('div', { class: 'lbl' }, 'Court'), courts),
       h('div', { class: 'field' }, h('div', { class: 'lbl' }, 'Time'), tod.root, todHint),
-      audioBlock(),
       h('div', { class: 'field' }, h('div', { class: 'lbl rowline' }, h('span', null, 'Opponents · random pair'), h('button', { class: 'btn small orange', type: 'button', id: 'gm-oppshuffle', onclick: () => { G.opp = randomOpp(type, G.opp); paintOpp(); } }, ico(SHUF), 'Shuffle')), oppBox),
       h('div', { class: 'gm-acts row' }, h('button', { class: 'btn big', type: 'button', id: 'gm-sback', onclick: () => showTitle(true) }, 'Back'),
         h('button', { class: 'btn primary big', type: 'button', id: 'gm-kick', onclick: kickoff }, 'Kick off'))
@@ -339,11 +338,12 @@
       h('option', { value: '' }, 'Auto'), h('option', { value: '0' }, 'You'), h('option', { value: '1' }, 'Annetta'));
     hud.tmo = h('button', { type: 'button', class: 'gm-act', id: 'gm-timeout', onclick: () => { API.callTimeout(); updateHud(true); } }, 'Timeout');
     hud.chal = h('button', { type: 'button', class: 'gm-act', id: 'gm-challenge', onclick: () => { API.doChallenge(); updateHud(true); } }, 'Challenge');
+    hud.aim = h('button', { type: 'button', class: 'gm-act', id: 'gm-aim', 'aria-pressed': 'false', onclick: () => API.toggleAim() }, 'Aim');
     hud.coach = h('div', { class: 'gm-coach' },
       h('div', { class: 'gm-coachrow' },
         h('label', { class: 'gm-pick', for: 'gm-tactic' }, h('span', null, 'Coach'), hud.tactic),
         h('label', { class: 'gm-pick mid', for: 'gm-middle' }, h('span', null, 'Middle ball'), hud.middle),
-        h('div', { class: 'gm-acts2' }, hud.tmo, hud.chal)));
+        h('div', { class: 'gm-acts2' }, hud.aim, hud.tmo, hud.chal)));
     hud.ticker = h('div', { class: 'gm-ticker', hidden: true });
     hud.skip = h('button', { type: 'button', class: 'btn small gm-skip', id: 'gm-skip', onclick: () => { API.skipCeremony(); } }, 'Skip intro ▸');
     hud.watchBar = h('div', { class: 'gm-watchbar' }, h('button', { type: 'button', class: 'btn primary', id: 'gm-watch-play', onclick: () => showCreateOrSetup() }, 'Play with Annetta'));

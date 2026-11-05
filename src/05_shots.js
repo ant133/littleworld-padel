@@ -19,7 +19,7 @@
     lobDef:     { speed: [11, 15], top: 60,  back: 0,   side: 0,   root: 'high', h: [0.2, 1.8], diff: 0.35, att: 0.0, def: 1.0, anim: 'groundstroke' },
     lobOff:     { speed: [14, 19], top: 80,  back: 0,   side: 0,   root: 'high', h: [0.4, 2.0], diff: 0.50, att: 0.5, def: 0.5, anim: 'groundstroke' },
     bandeja:    { speed: [11, 15], top: 0,   back: 120, side: 40,  root: 'low',  h: [1.9, 2.9], diff: 0.45, att: 0.4, def: 0.4, anim: 'bandeja' },
-    vibora:     { speed: [15, 21], top: 0,   back: 70,  side: 150, root: 'low',  h: [1.9, 2.9], diff: 0.62, att: 0.7, def: 0.1, anim: 'vibora' },
+    vibora:     { speed: [15, 21], top: 0,   back: 70,  side: 150, root: 'low',  h: [1.5, 2.9], diff: 0.62, att: 0.7, def: 0.1, anim: 'vibora' },
     smashFlat:  { speed: [27, 35], top: 30,  back: 0,   side: 0,   root: 'low',  h: [2.1, 3.0], diff: 0.52, att: 1.0, def: 0.0, anim: 'smash' },
     smashKick:  { speed: [24, 32], top: 90,  back: 0,   side: 170, root: 'low',  h: [2.1, 3.0], diff: 0.60, att: 0.9, def: 0.0, anim: 'kickSmash' },
     dejada:     { speed: [5, 8],   top: 0,   back: 150, side: 0,   root: 'low',  h: [0.5, 1.8], diff: 0.60, att: 0.5, def: 0.1, anim: 'volleyFH' },

@@ -6,7 +6,7 @@
   const rgn = () => HPO.streams.ai;
 
   // tunable weights (cfg.TUNE.ai can override)
-  const T = CFG.TUNE.ai = Object.assign({ sharp: 0.6, smashDepthMax: 9.8, lobBase: 0.3, aimNoise: 1.0, riskMargin: 1.0, volleyWilling: 1.0, duelCalm: 1.1, smashWilling: 0.32, dropBack: 1, smashAim: 0.6, netSafe: 2.0, resetCalm: 1.2, depthSafe: 1.0, lobTire: 0.45, lobNet: 0.7, smashNearBoost: 1.65, bandejaNear: 0.3, bandejaDeep: 1.2, gamble: 0.6, retreatCost: 0.03 }, CFG.TUNE.ai || {});
+  const T = CFG.TUNE.ai = Object.assign({ sharp: 0.6, smashDepthMax: 9.8, lobBase: 0.0, aimNoise: 1.0, riskMargin: 1.0, volleyWilling: 1.0, duelCalm: 1.1, smashWilling: 0.32, dropBack: 1, smashAim: 0.6, netSafe: 2.0, resetCalm: 1.2, depthSafe: 1.0, lobTire: 0.45, lobNet: 1.5, smashNearBoost: 1.65, bandejaNear: 0.3, bandejaDeep: 1.2, gamble: 0.6, retreatCost: 0.03, viboraNear: 1.9 }, CFG.TUNE.ai || {});
 
   const PRESETS = {
     balanced: {}, aggressive: { smash: 1.4, vibora: 1.4, flat: 1.25, lob: 0.7, risk: 0.7 }, safe: { smash: 0.6, vibora: 0.6, lob: 1.3, slice: 1.3, risk: 1.5, flat: 0.8 },
@@ -144,9 +144,10 @@
         w.volleyFH = w.volleyBH = 3.0 * m.volley * Math.max(0.25, 1 - 0.55 * duel * (1 - 0.5 * lvl(p.attrs.net)));
         w.chiquita = (h < 1.15 ? 1.1 : 0.4) * m.chiquita * (1 + 1.6 * duel);
         w.dejada = 0.5 * (ops.every(q => Math.abs(q.pos.x) > 5.5) ? 2 : 0.3) * (1 + 1.2 * duel);
-        w.lobOff = 0.35 * m.lob * (oppNet >= 1 ? 1.4 : 0.6) * (1 + 3.0 * duel);
+        w.lobOff = 0.35 * m.lob * (oppNet >= 2 ? 2.0 : oppNet === 1 ? 1.4 : 0.6) * (1 + 3.0 * duel);
+        if (h >= 1.5) w.vibora = T.viboraNear * m.vibora; // a chest-high ball at the net: the vibora, not just a volley
       } else if (near && low) {
-        w.chiquita = 2.6 * m.chiquita; w.volleyFH = w.volleyBH = 1.4 * m.volley; w.lobDef = 1.0 * m.lob;
+        w.chiquita = 2.6 * m.chiquita; w.volleyFH = w.volleyBH = 1.4 * m.volley; w.lobDef = (0.6 + 0.5 * oppNet) * m.lob;
       } else {
         w.flatGround = 1.0 * m.flat; w.topGround = 1.7; w.slice = 1.3 * m.slice;
         w.lobDef = (T.lobBase + T.lobNet * oppNet + 1.3 * press) * m.lob;
@@ -278,7 +279,7 @@
     effort = U.clamp(effort + 0.25 * (lvl(p.attrs.power) - 0.5), 0.15, 0.95); // power buys pace
 
     if (LOB[kind] || kind === 'wallDef') {
-      const d = 10 - marginD - (kind === 'lobOff' ? 1.2 : 1.7);
+      const d = 10 - marginD - (kind === 'lobOff' ? (oppNet ? 0.9 : 1.2) : (oppNet ? 1.3 : 1.7)); // with the other pair at the net the ball goes to the back glass to send them running
       [-3, -1.2, 1.2, 3].forEach(z => addAim(d, z + rr.range(-0.4, 0.4), 'lob'));
       effort = kind === 'lobOff' ? 0.5 : 0.35;
     } else if (SMASH[kind]) {

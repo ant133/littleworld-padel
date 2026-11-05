@@ -126,7 +126,7 @@
       h('button', { class: 'btn primary small', type: 'button', id: 'fab-new', title: 'New match (N)', onclick: () => newMatch() }, 'New Match'));
     EL.stage.appendChild(EL.fab);
     EL.banner = h('div', { id: 'banner', hidden: true }); EL.stage.appendChild(EL.banner);
-    EL.aimhud = h('div', { class: 'aimhud', hidden: true }, 'Click the court to aim your next shot (Esc to cancel)'); EL.stage.appendChild(EL.aimhud);
+    EL.aimhud = h('div', { class: 'aimhud', hidden: true }, 'Tap the opponent\'s court to aim your next shot (Esc to cancel)'); EL.stage.appendChild(EL.aimhud);
     EL.aimmark = h('div', { id: 'aimmark', hidden: true }); EL.stage.appendChild(EL.aimmark);
     EL.debug = h('div', { id: 'debug', hidden: true }); EL.stage.appendChild(EL.debug);
     buildScoreboard();
@@ -148,7 +148,7 @@
     sync();
     ui.api = { S: S, EL: EL, h: h, add: add, safe: safe, toast: toast, feed: feed, drawPortrait: drawPortrait, flagEl: flagEl, mbar: mbar, teamName: teamName, teamIds: teamIds, rdef: rdef, roster: roster,
       contribution: contribution, teamSum: teamSum, newMatch: newMatch, applyVenueVisuals: applyVenueVisuals, applyTod: applyTod, applyDefaults: applyDefaults, refillPickers: refillPickers,
-      renderTab: renderTab, setSpeed: setSpeed, togglePause: togglePause, setMusic: setMusic, setVolume: setVolume, setCallouts: setCallouts, skipCeremony: skipCeremony, doChallenge: doChallenge, callTimeout: callTimeout, setCam: setCam, setSound: setSound, orders: orders,
+      renderTab: renderTab, setSpeed: setSpeed, togglePause: togglePause, setMusic: setMusic, setVolume: setVolume, setCallouts: setCallouts, skipCeremony: skipCeremony, doChallenge: doChallenge, callTimeout: callTimeout, setCam: setCam, setSound: setSound, toggleAim: toggleAim, orders: orders,
       claimCoach: claimCoach, closeModal: closeModal, fmtClock: fmtClock, M_clock: M_clock, savePlayerDef: savePlayerDef, openStudioPanel: null, ARCH: ARCH, ATTRS: ATTRS, FORMAT_NAMES: FORMAT_NAMES,
       PHASE_NAMES: PHASE_NAMES, VENUES: VENUES, CAMS: CAMS, showKeys: showKeys, setScore: setScore, shortName: shortName, other: other, hex: hex,
       isBusy: () => !!tmo, resultsReset: () => { resultsShown = false; } };
@@ -561,14 +561,19 @@
   }
   function toggleAim() {
     if (!mod('render') || !mod('render').pickCourt) { toast('Aiming needs the 3D view.', { kind: 'warn' }); return; }
-    S.aim = !S.aim; claimCoach();
+    S.aim = !S.aim; claimCoach(); syncAim();
+  }
+  function syncAim() {
     EL.stage.classList.toggle('aiming', S.aim); EL.aimhud.hidden = !S.aim;
-    EL.btnAim.setAttribute('aria-pressed', S.aim ? 'true' : 'false');
+    const v = S.aim ? 'true' : 'false';
+    EL.btnAim.setAttribute('aria-pressed', v);
+    const hb = document.getElementById('gm-aim'); if (hb) hb.setAttribute('aria-pressed', v);
   }
   function setAimAt(x, z) {
-    S.aim = false; EL.stage.classList.remove('aiming'); EL.aimhud.hidden = true;
-    const A = mod('ai');
-    if (!A || !A.setAim) return;
+    const A = mod('ai'), Rl = mod('rules'), sd = Rl && Rl.state && Rl.state.sides;
+    if (!A || !A.setAim) { S.aim = false; syncAim(); return; }
+    if (sd && x * sd[other(S.coachTeam)] <= 0) { toast("Tap the opponent's side of the court.", { kind: 'warn' }); return; }
+    S.aim = false; syncAim();
     if (Math.abs(x) > 10 || Math.abs(z) > 5) { toast('Aim inside the court lines.', { kind: 'warn' }); return; }
     claimCoach();
     A.setAim(S.coachTeam, x, z);

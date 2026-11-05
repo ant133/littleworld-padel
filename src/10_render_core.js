@@ -306,7 +306,7 @@
       enabled: true,
       add(obj, o) {
         o = o || {};
-        const role = o.role || 'prop', D = { stand: 0.22, building: 0.25, wall: 0.2, tree: 0.3, prop: 0.55, light: 0.05, roof: 0.15 };
+        const role = o.role || 'prop', D = { stand: 0.22, building: 0.25, wall: 0.2, tree: 0.3, prop: 0.55, light: 0, roof: 0.15 }; // a floodlight in the way is hidden outright (see _updateCutaway), not left as a ghost
         for (let i = 0; i < R._cutEntries.length; i++) if (R._cutEntries[i].obj === obj) { R._cutEntries[i].role = role; return; }
         const e = { obj: obj, role: role, fadeTo: o.fadeTo === undefined ? (D[role] === undefined ? 0.4 : D[role]) : o.fadeTo, lift: o.lift === undefined ? (role === 'roof' ? 9 : 0) : o.lift,
           fade: 1, liftCur: 0, baseY: obj.position.y, box: new R.THREE.Box3(), boxAge: 1e9, meshes: [], swapped: false, skip: false, nChildren: -1 };
@@ -319,6 +319,7 @@
           R._cutSwap(e, false); e.obj.position.y = e.baseY; R._cutEntries.splice(i, 1);
         }
       },
+      link(obj, other) { R._cutEntries.forEach(function (e) { if (e.obj === obj) (e.also = e.also || []).push(other); }); }, // `other` is hidden together with `obj`
       refresh(obj) { R._cutEntries.forEach(function (e) { if (!obj || e.obj === obj) { e.boxAge = 1e9; e.nChildren = -1; } }); },
       setEnabled(b) { R.cutaway.enabled = !!b; },
       list() { return R._cutEntries.map(function (e) { return { role: e.role, name: e.obj.name, fade: e.fade, lift: e.liftCur, skipped: e.skip }; }); }
@@ -392,7 +393,7 @@
         e.boxAge++;
         if (e.boxAge > 300) { R._cutBox(e); }
         let need = 0;
-        if (enabled && !e.skip && e.obj.visible) {
+        if (enabled && !e.skip && (e.obj.visible || e.hid)) {
           const b = e.box; let hits = 0, liveHit = false;
           for (let s = 0; s < np; s++) {
             const px = P[s * 3], py = P[s * 3 + 1], pz = P[s * 3 + 2];
@@ -407,6 +408,10 @@
         const fT = 1 - need * (1 - e.fadeTo), lT = need * e.lift;
         e.fade += (fT - e.fade) * kf; if (e.fade > 0.995) e.fade = 1;
         e.liftCur += (lT - e.liftCur) * kf; if (e.liftCur < 0.01) e.liftCur = 0;
+        if (e.role === 'light') { // fully hidden once faded out; e.hid keeps the occlusion test running while the group is invisible
+          const hide = e.fade < 0.02;
+          if (hide !== !!e.hid && (hide ? e.obj.visible : true)) { e.hid = hide; e.obj.visible = !hide; if (e.also) e.also.forEach(function (o) { o.visible = !hide; }); }
+        }
         const active = e.fade < 0.999;
         if (active !== e.swapped) R._cutSwap(e, active);
         if (active) for (let m = 0; m < e.meshes.length; m++) {
@@ -627,7 +632,7 @@
       }
       cv.addEventListener('pointerdown', function (e) {
         try { cv.setPointerCapture(e.pointerId); } catch (x) { /* ignore */ }
-        ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY, button: e.button, shift: e.shiftKey });
+        ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY, button: e.button, shift: e.shiftKey, touch: e.pointerType === 'touch' });
         if (ptrs.size === 1) { moved = false; multi = false; tdown = performance.now(); startX = e.clientX; startY = e.clientY; } else { multi = true; const a = Array.from(ptrs.values()); pinch = Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y); }
       });
       cv.addEventListener('pointermove', function (e) {
@@ -636,11 +641,13 @@
         if (ptrs.size >= 2) {
           const a = Array.from(ptrs.values()), d = Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y);
           if (pinch > 0 && d > 0) { R.zoom(Math.log(d / pinch) / Math.log(1.12)); } pinch = d; moved = true;
-          panPx(dx * 0.5, dy * 0.5); return;
+          R._toFree(); R.view.yawT -= dx * 0.5 * 0.012; R.view.yaw = R.view.yawT; orbited = true; return; // two fingers: pinch zooms, dragging together rotates
         }
         if (!moved && Math.hypot(e.clientX - startX, e.clientY - startY) < 5) return;
+        if (p.touch && multi) return; // the finger left over after a two-finger gesture does nothing until all are up
         moved = true;
-        if (p.button === 2 || p.shift || e.shiftKey || (e.buttons & 2)) panPx(dx, dy);
+        if (p.touch) panPx(dx, dy); // one finger pans
+        else if (p.button === 2 || p.shift || e.shiftKey || (e.buttons & 2)) panPx(dx, dy);
         else { R._toFree(); R.view.yawT -= dx * 0.006; R.view.yaw = R.view.yawT; orbited = true; }
       });
       function up(e) {
