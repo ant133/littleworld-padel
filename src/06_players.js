@@ -3,6 +3,11 @@
   'use strict';
   const U = HPO.util, BUS = HPO.BUS, CFG = HPO.cfg;
   const lvl = a => U.clamp((a - 30) / 65, 0.02, 1);
+  // a smash struck close to the net leaves the defenders less to read than one struck from the back of the court
+  function smashDepthRead(hitter) {
+    const T = HPO.cfg.TUNE, near = T.smashNear === undefined ? 1.8 : T.smashNear, far = T.smashFar === undefined ? 0.55 : T.smashFar;
+    return near + (far - near) * U.clamp((Math.abs(hitter.pos.x) - 3) / 4, 0, 1);
+  }
 
   // Original, fictional players. attrs 40..95.
   const ROSTER = [
@@ -73,6 +78,16 @@
           };
           P.list.push(p); P.byId[p.id] = p;
         });
+        // home lane (+1 = the team's right, -1 = left) is fixed for the match: drive plays right, reves left; ties and 'either' keep slot order
+        const pair2 = P.list.filter(q => q.team === pair[0]);
+        pair2.forEach(q => { q.homeLane = q.def.side === 'drive' ? 1 : q.def.side === 'reves' ? -1 : 0; });
+        if (pair2.length === 2) {
+          const a = pair2[0], b = pair2[1];
+          if (a.homeLane === 0 && b.homeLane === 0) { a.homeLane = 1; b.homeLane = -1; }
+          else if (a.homeLane === 0) a.homeLane = -b.homeLane;
+          else if (b.homeLane === 0) b.homeLane = -a.homeLane;
+          else if (a.homeLane === b.homeLane) b.homeLane = -a.homeLane;
+        }
       });
       P.place();
     },
@@ -94,11 +109,11 @@
     reactDelay(p) { return 0.26 - 0.14 * lvl(p.attrs.reflexes); },
     // extra time to read a shot: pace, a short distance from the hitter and the overhead swing all leave less to see before the ball arrives
     readDelay(q, e, hitter) {
-      const T = HPO.cfg.TUNE.readScale === undefined ? 2.3 : HPO.cfg.TUNE.readScale;
+      const T = HPO.cfg.TUNE.readScale === undefined ? 1.265 : HPO.cfg.TUNE.readScale;
       const sp = Math.hypot(e.v.x, e.v.y, e.v.z), gap = Math.abs(hitter.pos.x - q.pos.x);
       const fast = U.clamp((sp - 12) / 16, 0, 1), close = U.clamp(1 - gap / 9, 0, 1);
       const smash = e.shot === 'smashFlat' || e.shot === 'smashKick' ? 1 : 0;
-      const sr = HPO.cfg.TUNE.smashRead === undefined ? 0.2 : HPO.cfg.TUNE.smashRead;
+      const sr = (HPO.cfg.TUNE.smashRead === undefined ? 0.2 : HPO.cfg.TUNE.smashRead) * smashDepthRead(hitter);
       return T * (0.12 * fast + 0.12 * close + sr * smash) * (1.35 - 0.7 * lvl(q.attrs.reflexes));
     },
     // only the quickest players try to save a ball that has flown out of the court (see candidates)

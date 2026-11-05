@@ -4,7 +4,7 @@
   'use strict';
   const U = HPO.util, G = HPO.cfg.BALL.G, R = HPO.cfg.BALL.R;
   const D2R = Math.PI / 180;
-  HPO.cfg.TUNE.errPhi = HPO.cfg.TUNE.errPhi || 1.95; HPO.cfg.TUNE.errTh = HPO.cfg.TUNE.errTh || 1.9;
+  HPO.cfg.TUNE.errPhi = HPO.cfg.TUNE.errPhi || 1.755; HPO.cfg.TUNE.errTh = HPO.cfg.TUNE.errTh || 1.71;
   HPO.cfg.TUNE.speed = HPO.cfg.TUNE.speed || 0.85; HPO.cfg.TUNE.react = HPO.cfg.TUNE.react || 1.5;
 
   // spin rates in rad/s (top>0 topspin, back>0 backspin, side>0 curves left of travel direction)

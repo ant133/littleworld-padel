@@ -6,7 +6,7 @@
   const rgn = () => HPO.streams.ai;
 
   // tunable weights (cfg.TUNE.ai can override)
-  const T = CFG.TUNE.ai = Object.assign({ sharp: 0.6, smashDepthMax: 9.8, lobBase: 0.3, aimNoise: 1.0, riskMargin: 1.0, volleyWilling: 1.0, duelCalm: 2.2, smashWilling: 0.4, dropBack: 1, smashAim: 0.6, netSafe: 2.0, resetCalm: 2.4, depthSafe: 1.0, lobTire: 0.45, lobNet: 0.7 }, CFG.TUNE.ai || {});
+  const T = CFG.TUNE.ai = Object.assign({ sharp: 0.6, smashDepthMax: 9.8, lobBase: 0.3, aimNoise: 1.0, riskMargin: 1.0, volleyWilling: 1.0, duelCalm: 1.1, smashWilling: 0.32, dropBack: 1, smashAim: 0.6, netSafe: 2.0, resetCalm: 1.2, depthSafe: 1.0, lobTire: 0.45, lobNet: 0.7, smashNearBoost: 1.65, bandejaNear: 0.3, bandejaDeep: 1.2, gamble: 0.6, retreatCost: 0.03 }, CFG.TUNE.ai || {});
 
   const PRESETS = {
     balanced: {}, aggressive: { smash: 1.4, vibora: 1.4, flat: 1.25, lob: 0.7, risk: 0.7 }, safe: { smash: 0.6, vibora: 0.6, lob: 1.3, slice: 1.3, risk: 1.5, flat: 0.8 },
@@ -45,7 +45,7 @@
     },
     orders(team) { return teams[team].orders; },
     setAim(team, x, z, ttl) { teams[team].orders.aimPoint = { x: x, z: z, expires: now + (ttl || 12) }; },
-    reset() { volleyRun = lobRun = 0; now = 0; assignAt.A = assignAt.B = -9; ['A', 'B'].forEach(t => { teams[t].formation = 'neutral'; teams[t].since = 0; teams[t].claim = null; teams[t].aim = null; }); lastShot = null; },
+    reset() { volleyRun = lobRun = 0; now = 0; assignAt.A = assignAt.B = -9; ['A', 'B'].forEach(t => { teams[t].formation = 'neutral'; teams[t].since = 0; teams[t].claim = null; teams[t].aim = null; teams[t].betKey = -1; }); lastShot = null; },
 
     formation(team) { return teams[team].formation; },
 
@@ -62,10 +62,8 @@
       const rec = opp(servingTeam);
       const sx = HPO.court.sides[servingTeam], rx = HPO.court.sides[rec];
       const rs = HPO.court.rightSign(servingTeam);
-      const sgn = side === 'ad' ? -1 : 1;
       const server = P.byId[serverId], partner = P.other(server);
-      const lane = rs * sgn;
-      out[partner.id] = { x: sx * 2.6, z: -lane * 2.1 };
+      out[partner.id] = { x: sx * 2.6, z: rs * partner.homeLane * 2.1 };   // the partner keeps their own side; the server runs back to theirs after serving
       const box = HPO.court.serviceBox(servingTeam, side);
       const bz = (box.z[0] + box.z[1]) / 2;
       const rcv = (receiverId && P.byId[receiverId]) || chooseReceiver(rec, bz);
@@ -133,8 +131,10 @@
       if (high) {
         // a smash from the back of the court is a long, flat, low-percentage ball: the bandeja and the vibora take over
         const okSmash = (depth <= T.smashDepthMax && h >= 2.05) ? (depth <= 4.8 ? 1 : depth <= 6.5 ? 0.6 : 0.22) : 0.03;
-        w.smashFlat = 3.6 * okSmash * m.smash * T.smashWilling; w.smashKick = 2.8 * okSmash * m.smash * T.smashWilling;
-        w.bandeja = 2.6 * m.bandeja * (deep ? 1.1 : 1); w.vibora = 1.5 * m.vibora * (near ? 1.2 : 0.7);
+        // close to the net an overhead is a smash; the bandeja is the ball from the back
+        const nearBoost = near ? T.smashNearBoost : 1;
+        w.smashFlat = 3.6 * okSmash * m.smash * T.smashWilling * nearBoost; w.smashKick = 2.8 * okSmash * m.smash * T.smashWilling * nearBoost;
+        w.bandeja = 2.6 * m.bandeja * (near ? T.bandejaNear : deep ? T.bandejaDeep : 1); w.vibora = 1.5 * m.vibora * (near ? 1.2 : 0.7);
         w.lobOff = deep ? 1.0 * m.lob : 0.35 * m.lob;
         if (info.afterWall && deep) w.bajada = 1.2;
       } else if (near && !low) {
@@ -451,7 +451,7 @@
   }
 
   // ---- formations ----
-  const BASE = { attack: [2.2, 2.2], neutral: [2.8, 5.6], defend: [7.4, 7.8] };
+  const BASE = { attack: [2.2, 2.2], neutral: [2.8, 5.6], defend: [7.4, 7.8], press: [3.0, 4.2] };   // press: stepping up to counter the rebound of an expected smash
   const SERVE_BACK = 7.6; // metres from the net: just behind the 6.95 m service line
 
   // Our ball is on its way to the opponents and will reach them above 1.9 m (a lob, a floater): they get an overhead.
@@ -473,6 +473,19 @@
     c.k = key; c.v = v; return v;
   }
 
+  // Once per overhead: bet on a weak smash and step up for the rebound, or drop back to the glass. A smash from close to the net is likelier, so the bet is too.
+  function pressOrDrop(team) {
+    const tm = teams[team], B = HPO.mod.ball.state, key = B.hitsSinceServe;
+    if (tm.betKey === key) return tm.bet;
+    const P = HPO.mod.players, ops = P.team(opp(team)), m = mods(team);
+    const nearest = Math.min.apply(null, ops.map(q => Math.abs(q.pos.x)));
+    const smashLikely = U.clamp((6.5 - nearest) / 3, 0, 1);
+    const tact = P.team(team).reduce((a, q) => a + lvl(q.attrs.tactics), 0) / 2;
+    const prob = U.clamp(T.gamble * (0.4 + 0.6 * smashLikely) * (0.8 + 0.4 * tact) * (1 + 0.25 * m.netBias), 0, 0.9);
+    tm.betKey = key; tm.bet = rgn().chance(prob);
+    return tm.bet;
+  }
+
   function updateFormation(team) {
     const tm = teams[team], B = HPO.mod.ball.state, m = mods(team);
     if (B.state !== 'live') return;
@@ -483,8 +496,9 @@
       if (ls.team !== team) {
         // reacting to the opponent's shot
         if (LOB[ls.kind] && ls.quality > 0.35) want = 'defend';
-        else if (SMASH[ls.kind] || ls.kind === 'vibora') want = 'defend';
-        else if (ls.kind === 'bandeja') want = 'neutral';
+        else if (SMASH[ls.kind]) want = tm.formation === 'press' ? 'press' : 'defend';   // committed to the net: whether the rebound can be reached is up to the smash
+        else if (ls.kind === 'vibora') want = 'defend';
+        else if (ls.kind === 'bandeja') want = tm.formation === 'press' ? 'defend' : 'neutral';   // a bandeja sits deep: whoever stepped up has to run back
         else if (ls.quality < 0.45 && Math.abs(B.p.x) < 6) want = 'attack'; // weak reply: step up
         else if (SOFT[ls.kind]) want = 'neutral';
         else want = ls.fast ? 'neutral' : tm.formation === 'defend' ? 'neutral' : tm.formation;
@@ -497,11 +511,12 @@
       }
     }
     // the other pair is about to get a ball above the shoulder: nobody stays up to be smashed at, wait for it off the glass
-    if (overheadComing(team)) want = 'defend';
+    if (overheadComing(team)) want = pressOrDrop(team) ? 'press' : 'defend';
     if (m.netBias > 0 && want === 'neutral') want = 'attack';
     if (m.netBias < 0 && want === 'attack') want = 'neutral';
-    const urgent = want === 'defend' && tm.formation !== 'defend';
+    const urgent = (want === 'defend' || want === 'press') && tm.formation !== want;
     if (want !== tm.formation && (urgent || now - tm.since > 1.2)) {
+      if (want === 'defend' && tm.formation === 'press') HPO.mod.players.team(team).forEach(q => { q.fatigue = Math.min(1, q.fatigue + T.retreatCost * (1.2 - 0.7 * lvl(q.attrs.stamina))); });
       tm.formation = want; tm.since = now; BUS.emit('ai:formation', { team: team, formation: want });
     }
   }
@@ -515,14 +530,14 @@
     const ordered = ps.slice().sort((a, b) => Math.abs(a.pos.x) - Math.abs(b.pos.x));
     // lanes: each player keeps a side (right-side player stays right) unless one is dragged away by the interceptor
     const laneOf = {};
-    const ps2 = ps.slice().sort((a, b) => a.pos.z * rs - b.pos.z * rs); // left to right by their own right
-    laneOf[ps2[0].id] = -1; laneOf[ps2[1].id] = 1;
+    if (ps[0].homeLane && ps[0].homeLane === -ps[1].homeLane) ps.forEach(q => { laneOf[q.id] = q.homeLane; });
+    else { const ps2 = ps.slice().sort((a, b) => a.pos.z * rs - b.pos.z * rs); laneOf[ps2[0].id] = -1; laneOf[ps2[1].id] = 1; }
     let ballZ = B.state === 'live' ? U.clamp(B.p.z, -4, 4) : 0;
     const shift = U.clamp(ballZ * 0.3, -1.1, 1.1);
     ordered.forEach(function (p, i) {
       const lane = laneOf[p.id];
       let depth = base[i];
-      let z = rs * lane * (tm.formation === 'defend' ? 1.9 : tm.formation === 'attack' ? 1.7 : 1.6) + shift;
+      let z = rs * lane * (tm.formation === 'defend' ? 1.9 : tm.formation === 'attack' || tm.formation === 'press' ? 1.7 : 1.6) + shift;
       // cover the lane vacated by a partner who is chasing wide
       if (roles && roles.interceptor !== p) {
         const it = roles.interceptor, itLane = laneOf[it.id];
@@ -541,5 +556,5 @@
     volleyRun = e.shot === 'volleyFH' || e.shot === 'volleyBH' ? volleyRun + 1 : 0;
     lobRun = LOB[e.shot] ? lobRun + 1 : 0;
   });
-  BUS.on('point:start', function () { lastShot = null; volleyRun = lobRun = 0; ['A', 'B'].forEach(t => { teams[t].formation = 'neutral'; teams[t].since = now; teams[t].claim = null; }); });
+  BUS.on('point:start', function () { lastShot = null; volleyRun = lobRun = 0; ['A', 'B'].forEach(t => { teams[t].formation = 'neutral'; teams[t].since = now; teams[t].claim = null; teams[t].betKey = -1; }); });
 })(HPO);
