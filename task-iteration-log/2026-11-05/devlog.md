@@ -9,7 +9,7 @@
 - **Files:** `src/23_versions.js`, `src/shell.css`, `CLAUDE.md`, `CONTRACT.md`
 - **Decisions:** D-2026-11-05-1238
 - **Follow-ups:** none
-- **Links:** none (uncommitted)
+- **Links:** e814679
 
 ## 15:10 · Touch camera, Aim button, Eagle Eye camera restore, floodlight hide, lob and vibora tuning · claude · padel@main
 - **Status:** done
@@ -18,4 +18,4 @@
 - **Files:** `src/10_render_core.js`, `src/16_replay_ceremony.js`, `src/13_world_club.js`, `src/19_ui.js`, `src/21_game.js`, `src/07_ai.js`, `src/05_shots.js`, `src/23_versions.js`, `src/shell.css`, `tools/browser.js`, `CONTRACT.md`, `docs/TESTING.md`, `docs/VISUAL_CONTRACT.md`
 - **Decisions:** none
 - **Follow-ups:** re-run the 40-match balance stats; check touch and the Aim button on a real phone; trim lob share if 14% is wanted
-- **Links:** see changes.md
+- **Links:** e814679
