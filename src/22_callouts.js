@@ -2,7 +2,7 @@
 // Presentation only: listens to rules/player events, never emits. Styles live in shell.css (.hpo-co*, .hpo-state).
 (function (HPO) {
   'use strict';
-  const BUS = HPO.BUS;
+  const BUS = HPO.BUS, _ = HPO.t;
   const mod = n => HPO.mod[n];
 
   const SHOT = { smashFlat: 'smash', smashKick: 'smash', lobDef: 'lob', lobOff: 'lob', bandeja: 'bandeja', bajada: 'bajada', chiquita: 'chiquita', dejada: 'dropshot' };
@@ -138,7 +138,7 @@
   function setState(s) {
     const r = C.ribbon; if (!r) return;
     if (!s) { r.hidden = true; return; }
-    r.querySelector('b').textContent = s[0]; r.querySelector('small').textContent = s[1];
+    r.querySelector('b').textContent = _(s[0]); r.querySelector('small').textContent = _(s[1]);
     if (r.hidden) { r.hidden = false; r.classList.remove('in'); void r.offsetWidth; r.classList.add('in'); }
   }
 })(HPO);

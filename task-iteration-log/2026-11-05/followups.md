@@ -12,3 +12,8 @@
 - [ ] QTE: defence dive (extra reach) not built; real-phone feel of the swipe and the 2.8 s window; audio sting is a simple synth tone
 - [ ] QTE telegraph cue before the freeze; more OST tracks; bigger trophy ceremony; clearer Play/Studio switch (playtest feedback)
 - [ ] Full regression suites and features_browser before release (skipped by request); check Americano on a real phone
+- [ ] i18n: fix the text-parsing couplings (commentary `/timeout/i`, LED banner compares, replay IN/OUT, `toneKind`) then wire `HPO.t` into the call sites; order in docs/I18N.md
+- [ ] i18n: `AGENTS.md` still says "UI language: English"; update when Indonesian ships
+- [ ] i18n: check speech with a real id-ID voice, and a phone pass of `?lang=id` (longer text in the dock, callouts and buttons at 390 px)
+- [ ] i18n: language switch in the pause menu and Studio panel (sets `?lang=` and reloads); `AGENTS.md` still says "UI language: English"
+- [ ] i18n: `scoreCall` for Blitz/Americano now says "{n} all" or the plain point count; the umpire's `Deuce` at 3-3 in point formats is still tennis wording

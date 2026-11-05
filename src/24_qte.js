@@ -2,7 +2,7 @@
 // behind the player, a ring flashes on the racket and a swipe picks the shot. players.commitSwing asks qte.offer(); ai.decideShot reads the result with qte.take().
 (function (HPO) {
   'use strict';
-  const BUS = HPO.BUS, U = HPO.util;
+  const BUS = HPO.BUS, U = HPO.util, _ = HPO.t;
   const mod = n => HPO.mod[n];
   const DUR = { attack: 4.2, defence: 3.6 };            // real seconds
   const SIN_EL = Math.sin(62 * Math.PI / 180);          // render core's QTE camera elevation
@@ -37,7 +37,7 @@
     if (Q.pending !== null) {
       const t = Q.pending; Q.pending = null;
       const api = mod('ui') && mod('ui').api;
-      if (api && e && e.winner === 'A') api.toast(t === 'defence' ? 'Saved, and you won the point!' : 'Clean winner!', { kind: 'good', ms: 2200 });
+      if (api && e && e.winner === 'A') api.toast(t === 'defence' ? _('Saved, and you won the point!') : _('Clean winner!'), { kind: 'good', ms: 2200 });
     }
   });
   BUS.on('game:end', function () { Q.gameUsed = 0; });
@@ -74,7 +74,7 @@
       root: h('div', { id: 'qte', class: 'qte', hidden: true }),
       title: h('div', { class: 'qte-title' }), help: h('div', { class: 'qte-help' }), ring: h('div', { class: 'qte-ring' }, ringSvg),
       mark: h('div', { class: 'qte-mark', hidden: true }, h('span', null)), lines: lines,
-      skip: h('button', { type: 'button', class: 'qte-skip' }, 'Let it play'), ln: ln, arc: ringSvg.querySelector('.qte-arc')
+      skip: h('button', { type: 'button', class: 'qte-skip' }, _('Let it play')), ln: ln, arc: ringSvg.querySelector('.qte-arc')
     };
     ui.root.append(h('div', { class: 'qte-vig' }), lines, ui.ring, ui.mark, ui.title, ui.help, ui.skip);
     ui.skip.addEventListener('pointerdown', e => e.stopPropagation()); ui.skip.addEventListener('pointerup', e => e.stopPropagation());
@@ -93,10 +93,9 @@
     M.pause(true);
     R.qteYaw = cur.side * Math.PI / 2; R.setCameraMode('qte');
     ui.root.className = 'qte ' + kind; ui.root.hidden = false; ui.mark.hidden = true; ui.ln.setAttribute('x2', '0'); ui.ln.setAttribute('y2', '0');
-    ui.title.textContent = kind === 'defence' ? 'SAVE IT!' : (info.height >= 1.85 ? 'SMASH IT!' : 'FINISH IT!');
-    const nt = timed() ? '' : ' (no timer)';
-    ui.help.textContent = kind === 'defence' ? 'Swipe from the ring: up slow = lob, up fast = drive, up-left/right = block, sideways = glass, down = scramble' + nt
-      : 'Swipe from the ring to aim. Longer and faster means harder and deeper' + nt;
+    ui.title.textContent = kind === 'defence' ? _('SAVE IT!') : (info.height >= 1.85 ? _('SMASH IT!') : _('FINISH IT!'));
+    const nt = timed() ? '' : _(' (no timer)');
+    ui.help.textContent = (kind === 'defence' ? _('Swipe from the ring: up slow = lob, up fast = drive, up-left/right = block, sideways = glass, down = scramble') : _('Swipe from the ring to aim. Longer and faster means harder and deeper')) + nt;
     api.EL.app.classList.add('qte-on');
     try { if (mod('audio') && mod('audio').sting) mod('audio').sting(); if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) navigator.vibrate([40, 30, 40]); } catch (e) { /* optional */ }
     t0 = performance.now(); placeRing(); raf = requestAnimationFrame(loop);
@@ -111,7 +110,7 @@
     if (api) api.EL.app.classList.remove('qte-on');
     if (R && cur) R.camRestore(cur.cam);
     if (M) M.pause(false);
-    if (!aborted && api) { if (Q.order.skip) { /* nothing to say */ } else if (Q.order.mishit) api.toast('Too slow: mishit!', { kind: 'warn', ms: 1800 }); else if (Q.order.label) api.toast(Q.order.label, { kind: 'info', ms: 1200 }); }
+    if (!aborted && api) { if (Q.order.skip) { /* nothing to say */ } else if (Q.order.mishit) api.toast(_('Too slow: mishit!'), { kind: 'warn', ms: 1800 }); else if (Q.order.label) api.toast(_(Q.order.label), { kind: 'info', ms: 1200 }); }
     drag = null; cur = null;
   }
 
@@ -151,7 +150,7 @@
     const dx = drag.x - drag.x0, dy = drag.y - drag.y0, len = Math.hypot(dx, dy); if (len < 10) { ui.mark.hidden = true; return; }
     const o = orderFor(dx, dy, len / Math.max(30, performance.now() - drag.t), len, 1), R = mod('render');
     const s = R.project(new R.THREE.Vector3(o.target.x, 0.05, o.target.z));
-    ui.mark.hidden = false; ui.mark.style.transform = 'translate(' + s.x.toFixed(1) + 'px,' + s.y.toFixed(1) + 'px)'; ui.mark.firstChild.textContent = o.label || '';
+    ui.mark.hidden = false; ui.mark.style.transform = 'translate(' + s.x.toFixed(1) + 'px,' + s.y.toFixed(1) + 'px)'; ui.mark.firstChild.textContent = o.label ? _(o.label) : '';
     ui.ln.setAttribute('x1', drag.cx.toFixed(1)); ui.ln.setAttribute('y1', drag.cy.toFixed(1)); ui.ln.setAttribute('x2', s.x.toFixed(1)); ui.ln.setAttribute('y2', s.y.toFixed(1));
   }
 

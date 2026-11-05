@@ -2,7 +2,7 @@
 // Registers HPO.mod.replay and HPO.mod.ceremony. Presentation only: never writes sim state except scripted player intents/anim during ceremony phases.
 (function (HPO) {
   'use strict';
-  const U = HPO.util, BUS = HPO.BUS, S = HPO.sched, TAU = Math.PI * 2;
+  const U = HPO.util, BUS = HPO.BUS, S = HPO.sched, TAU = Math.PI * 2, _ = HPO.t;
   const clamp = U.clamp;
   let T3 = null;
   const RN = () => HPO.mod.render, MT = () => HPO.mod.match, PL = () => HPO.mod.players;
@@ -23,8 +23,8 @@
     const t = new T3.CanvasTexture(c); t.magFilter = T3.NearestFilter; t.minFilter = T3.NearestFilter; t.generateMipmaps = false; return t;
   }
   const mat = (hex, o) => { const r = RN(); return r && r.mat ? r.mat(hex, o) : new T3.MeshLambertMaterial({ color: hex }); };
-  function say(text, voice) {
-    BUS.emit('speak', { text: text, voice: voice || 'umpire', priority: 2 });
+  function say(text, voice, tone) {
+    BUS.emit('speak', { text: text, voice: voice || 'umpire', priority: 2, tone: tone });
     const ui = HPO.mod.ui; if (ui && ui.feed) { try { ui.feed({ text: text, icon: voice === 'commentator' ? 'mic' : 'whistle', key: true, kind: 'umpire' }); } catch (e) { /* optional */ } }
   }
 
@@ -459,8 +459,8 @@
       const c = crowd(); if (c) { c.setMood(1); c.react(1, 'applause'); }
       stagePlayers();
       const r = RN(); camSave(); if (r) tvFollow(r);
-      banner(title(), 'Welcome to the club', 7000, true);
-      say('Ladies and gentlemen, welcome to the ' + title() + '.');
+      banner(title(), _('Welcome to the club'), 7000, true);
+      say(_('Ladies and gentlemen, welcome to the {title}.', { title: title() }));
       try {
         yield* W(2.2); if (r && !skipped()) r.rotate(1);
         yield* W(2.4); if (r && !skipped()) r.rotate(-1);
@@ -497,15 +497,15 @@
       try {
         for (let i = 0; i < P.list.length && !skipped(); i++) {
           const p = P.list[i], d = p.def, ctry = d.country || {};
-          const line = (i === 0 ? 'First, ' : i === 2 ? 'And their opponents. ' : '') + 'From ' + (ctry.name || 'the world') + ', ranked number ' + d.ranking + ' in the world: ' + d.name + (d.nick ? ', "' + d.nick + '"' : '') + '.';
+          const line = (i === 0 ? _('First,') + ' ' : i === 2 ? _('And their opponents.') + ' ' : '') + _('From {country}, ranked number {rank} in the world: {name}{nick}.', { country: ctry.name ? _(ctry.name) : _('the world'), rank: d.ranking, name: d.name, nick: d.nick ? ', "' + d.nick + '"' : '' });
           say(line);
-          banner(d.name, (d.nick ? '"' + d.nick + '" · ' : '') + (ctry.name || '') + ' · World #' + d.ranking, 4200, true);
+          banner(d.name, (d.nick ? '"' + d.nick + '" · ' : '') + (ctry.name ? _(ctry.name) : '') + ' · ' + _('World #{rank}', { rank: d.ranking }), 4200, true);
           if (r) { r.followPlayer(p.id); if (r.view) r.view.zoom = 2.6; }
           P.list.forEach(q => { stand(q, q === p ? 'twirl' : 'idle', Math.PI / 2); });
           if (c) c.react(ctry.code === 'IDN' ? 3 : 2, 'cheer');
           yield* W(3.6);
         }
-        say('Please welcome both teams.');
+        say(_('Please welcome both teams.'));
         if (c) c.react(2, 'applause');
         yield* W(1.0);
       } finally { hideBanner(); if (r && r.followPlayer) r.followPlayer(null); camRestore(); ensureInside(); }
@@ -521,14 +521,14 @@
           const ls = lineupSpot(p); return () => walkPath(p, [{ x: ls.x, z: ls.z }], 0.4, Math.PI / 2);
         }), 8);
         const umpire = 'Umpire';
-        say('Team ' + tos.first + ' has won the toss and chooses to serve.');
+        say(_('Team {team} has won the toss and chooses to serve.', { team: tos.first }));
         // coin
         const coin = new T3_.Mesh(new T3_.CylinderGeometry(0.14, 0.14, 0.035, 14), mat(0xf5c518, { emissive: 0x4a3600 }));
         const g = grp('fx'); if (g) g.add(coin); CM.coinMesh = coin;
         CM.coin = { t0: m ? m.simTime : 0, dur: 1.7, x: 0.35, z: -4.3, y0: 1.5, flip: 7 * TAU, mesh: coin };
         yield* W(1.8);
         coin.rotation.set(0, 0, 0);
-        banner('Team ' + tos.first + ' serves first', 'Coin toss', 3500, true);
+        banner(_('Team {team} serves first', { team: tos.first }), _('Coin toss'), 3500, true);
         if (c) c.react(1, 'applause');
         yield* W(2.0);
         CM.coin = null; if (CM.coinMesh && CM.coinMesh.parent) CM.coinMesh.parent.remove(CM.coinMesh); CM.coinMesh = null;
@@ -594,7 +594,7 @@
         yield* par([A[0], A[1], B[0], B[1]].filter(Boolean).map((p, i) => () => walkPath(p, [{ x: xs[i], z: -3.2 }, { x: xs[i], z: -4.5 }], 0.5, -Math.PI / 2)), 9);
         for (let i = 0; i < P.list.length && !skipped(); i++) { const p = [A[0], A[1], B[0], B[1]][i]; if (!p) continue; p.anim = { clip: 'handshake', t: 0, rate: 1 }; yield* W(0.9); }
         let sets = ''; try { sets = HPO.mod.rules.describe(st, names()).setsText; } catch (e) { /* optional */ }
-        say('Game, set and match. ' + teamName(wt) + ' win ' + sets + '.');
+        say(_('Game, set and match. {team} win {sets}.', { team: teamName(wt), sets: sets }), 'umpire', 'set');
         if (c) c.react(3, 'applause');
         yield* W(2.2);
       } finally { ensureInside(); camRestore(); CM.active = false; }
@@ -608,8 +608,8 @@
       try {
         buildPodium();
         camFocus(4.0, 0, 5.8, 1.2);
-        banner('CHAMPIONS', teamName(wt), 9000);
-        say('Ladies and gentlemen, your ' + title() + ' champions: ' + teamName(wt) + '.');
+        banner(_('CHAMPIONS'), teamName(wt), 9000);
+        say(_('Ladies and gentlemen, your {title} champions: {team}.', { title: title(), team: teamName(wt) }));
         const spots = [{ p: W_[0], x: 3.9, h: 0.7 }, { p: W_[1], x: 5.1, h: 0.7 }, { p: L_[0], x: 1.5, h: 0.45 }, { p: L_[1], x: 2.5, h: 0.45 }];
         yield* par(spots.filter(s => s.p).map(function (s) { return () => walkPath(s.p, [{ x: s.x, z: 2.6 }, { x: s.x, z: 0.5 }], 0.5, Math.PI / 2); }), 12);
         if (skipped()) return;
@@ -621,7 +621,7 @@
         if (cap && cap.holdTrophy && rg && rg.makeTrophy) { if (CM.trophy && CM.trophy.parent) CM.trophy.parent.remove(CM.trophy); CM.trophy = null; const tr = rg.makeTrophy(1.0); cap.holdTrophy(tr); }
         if (c) { c.react(3, 'celebration'); c.wave(); }
         if (f) { f.confetti(260, { x: 4.5, y: 1.8, z: 0.5, up: 9 }); f.confetti(220, { x: 0, y: 9, z: 0, rain: true, spread: 9 }); f.fireworks(5, { duration: 6 }); f.cameraFlash(10); }
-        say('Congratulations to the champions!', 'commentator');
+        say(_('Congratulations to the champions!'), 'commentator');
         yield* W(4.5);
         if (f) { f.confetti(240, { x: 3.0, y: 2.0, z: 0.5, up: 10 }); f.fireworks(6, { duration: 5 }); f.cameraFlash(12); }
         if (c) c.wave();

@@ -1,7 +1,7 @@
 // Rules: pure scoring engine (rules.score) + live point FSM driven by BUS events. No THREE, no DOM.
 (function (HPO) {
   'use strict';
-  const M = HPO.mod.rules = {};
+  const M = HPO.mod.rules = {}, _ = HPO.t;
   // pts = points format (Americano): total points played, run = serves in a row per player, flip = points between changes of ends (CONTRACT 8.1)
   const FORMATS = { quick: { G: 4, sets: 1 }, oneSet: { G: 6, sets: 1 }, bo3: { G: 6, sets: 2 }, blitz: { pts: 9, run: 2, flip: 4 }, americano: { pts: 21, run: 5, flip: 6 } };
   const SL = 6.95, HALF_W = 5, HALF_L = 10;
@@ -269,9 +269,10 @@
   // one plain-English line on how a format is scored (tutorial and How to play)
   M.describeFormat = function (format, scoring) {
     const F = FORMATS[format]; if (!F) return '';
-    if (F.pts) return F.pts + ' points. Every point counts 1, and ' + (Math.floor(F.pts / 2) + 1) + ' clinches the match.';
-    const pts = 'Points go 15, 30, 40, then the game. ' + (scoring === 'advantage' ? 'At 40-40 you need two points in a row.' : 'At 40-40 one golden point decides the game.');
-    return (format === 'quick' ? 'First to 4 games, with a tie-break at 4-4. ' : format === 'oneSet' ? 'First to 6 games, with a tie-break at 6-6. ' : 'Win two sets; a set is first to 6 games. ') + pts;
+    if (F.pts) return _('{pts} points. Every point counts 1, and {win} clinches the match.', { pts: F.pts, win: Math.floor(F.pts / 2) + 1 });
+    // whole sentences joined, so the Indonesian 'Points go...' sentence can carry the 'salim' (15-15) joke
+    return [format === 'quick' ? _('First to 4 games, with a tie-break at 4-4.') : format === 'oneSet' ? _('First to 6 games, with a tie-break at 6-6.') : _('Win two sets; a set is first to 6 games.'),
+      _('Points go 15, 30, 40, then the game.'), scoring === 'advantage' ? _('At 40-40 you need two points in a row.') : _('At 40-40 one golden point decides the game.')].join(' ');
   };
   M.score = { createMatch, pointWon, flags, describe, checkState, assertState, rebuild, serverFor, setGoldenSide, consumeChallenge, useTimeout, step, formats: FORMATS };
   M.createMatch = createMatch; M.pointWon = pointWon; M.flags = flags; M.describe = describe;

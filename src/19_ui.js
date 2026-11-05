@@ -4,6 +4,7 @@
   'use strict';
   const BUS = HPO.BUS, U = HPO.util;
   const mod = n => HPO.mod[n];
+  const _ = HPO.t;
   const $ = (s, r) => (r || document).querySelector(s);
 
   // ---------- small DOM helpers ----------
@@ -109,6 +110,8 @@
     ui.stage = EL.stage; ui.panel = EL.panel; ui.root = EL.panel.parentNode;
     document.title = HPO.cfg.TITLE();
     const t = document.getElementById('title'); if (t) t.textContent = HPO.cfg.TITLE();
+    const lg = $('.logo'); if (lg) lg.title = _('Back to annetta.dev');
+    const ft = $('#foot p'); if (ft) ft.textContent = _('Made in Jakarta with code, curiosity, and no spare towel.');
     loadFonts();
     const R = mod('render');
     S.px = (R && R.pixelSize) || 2;
@@ -122,11 +125,11 @@
     EL.sb = h('div', { id: 'sb', 'aria-live': 'off' }); EL.stage.appendChild(EL.sb);
     EL.toasts = h('div', { id: 'toasts', 'aria-live': 'polite' }); EL.stage.appendChild(EL.toasts);
     EL.fab = h('div', { id: 'fab' },
-      h('button', { class: 'btn small', type: 'button', id: 'fab-pause', title: 'Pause / resume (Space)', onclick: togglePause }, 'Pause'),
-      h('button', { class: 'btn primary small', type: 'button', id: 'fab-new', title: 'New match (N)', onclick: () => newMatch() }, 'New Match'));
+      h('button', { class: 'btn small', type: 'button', id: 'fab-pause', title: _('Pause / resume (Space)'), onclick: togglePause }, _('Pause')),
+      h('button', { class: 'btn primary small', type: 'button', id: 'fab-new', title: _('New match (N)'), onclick: () => newMatch() }, _('New Match')));
     EL.stage.appendChild(EL.fab);
     EL.banner = h('div', { id: 'banner', hidden: true }); EL.stage.appendChild(EL.banner);
-    EL.aimhud = h('div', { class: 'aimhud', hidden: true }, 'Tap the opponent\'s court to aim your next shot (Esc to cancel)'); EL.stage.appendChild(EL.aimhud);
+    EL.aimhud = h('div', { class: 'aimhud', hidden: true }, _('Tap the opponent\'s court to aim your next shot (Esc to cancel)')); EL.stage.appendChild(EL.aimhud);
     EL.aimmark = h('div', { id: 'aimmark', hidden: true }); EL.stage.appendChild(EL.aimmark);
     EL.aimzone = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); EL.aimzone.setAttribute('class', 'aimzone'); EL.aimzone.style.display = 'none';
     EL.aimzone.appendChild(document.createElementNS('http://www.w3.org/2000/svg', 'polygon')); EL.stage.appendChild(EL.aimzone);
@@ -134,7 +137,7 @@
     buildScoreboard();
     buildPanel();
     loadSavedPlayers();
-    const help = document.getElementById('btn-help'); if (help) help.addEventListener('click', showKeys);
+    const help = document.getElementById('btn-help'); if (help) { help.addEventListener('click', showKeys); help.title = _('Keyboard shortcuts (?)'); help.setAttribute('aria-label', _('Keyboard shortcuts')); }
     // events
     bindBus();
     document.addEventListener('keydown', onKey);
@@ -175,14 +178,14 @@
   // ---------- scoreboard ----------
   let lastScoreState = null, sbPrev = {};
   function buildScoreboard() {
-    EL.sbTop = h('div', { class: 'sb-top' }, h('span', { id: 'sb-fmt' }, 'Quick'), h('span', { class: 'ph', id: 'sb-ph' }, ''));
+    EL.sbTop = h('div', { class: 'sb-top' }, h('span', { id: 'sb-fmt' }, _('Quick')), h('span', { class: 'ph', id: 'sb-ph' }, ''));
     EL.sbRows = { A: h('div', { class: 'sb-row a' }), B: h('div', { class: 'sb-row b' }) };
     EL.sbInfo = h('div', { class: 'sb-info' });
     EL.sbCard = h('div', { class: 'sb-card' }, EL.sbTop, EL.sbRows.A, EL.sbRows.B, EL.sbInfo);
     EL.sb.appendChild(EL.sbCard);
-    EL.chipClock = h('span', { class: 'chip', title: 'Match clock' }, '00:00');
-    EL.chipRally = h('span', { class: 'chip', title: 'Rally strokes', hidden: true }, '');
-    EL.chipSpeed = h('span', { class: 'chip', title: 'Sim speed' }, '1×');
+    EL.chipClock = h('span', { class: 'chip', title: _('Match clock') }, '00:00');
+    EL.chipRally = h('span', { class: 'chip', title: _('Rally strokes'), hidden: true }, '');
+    EL.chipSpeed = h('span', { class: 'chip', title: _('Sim speed') }, '1×');
     EL.chipTb = h('span', { class: 'chip', hidden: true }, 'TIE-BREAK');
     EL.stkGolden = h('span', { class: 'sticker gp', hidden: true }, 'GOLDEN POINT');
     EL.sbInfo.append(EL.chipClock, EL.chipRally, EL.chipSpeed, EL.chipTb, EL.stkGolden);
@@ -237,7 +240,7 @@
     const f = st.config && st.config.format ? st.config.format : (mod('match') && mod('match').cfg && mod('match').cfg.format) || 'quick';
     const sc = (st.config && st.config.scoring) || S.scoring;
     const pm = st._r && st._r.pts;
-    $('#sb-fmt', EL.sbCard).textContent = (FORMAT_NAMES[f] || f) + (pm ? ' · ' + (Math.floor(pm / 2) + 1) + ' of ' + pm + ' clinches' : sc === 'golden' ? ' · Golden Point' : ' · Advantage');
+    $('#sb-fmt', EL.sbCard).textContent = _(FORMAT_NAMES[f] || f) + (pm ? ' · ' + _('{n} of {total} clinches', { n: Math.floor(pm / 2) + 1, total: pm }) : sc === 'golden' ? ' · Golden Point' : ' · Advantage');
     EL.chipTb.hidden = !st.inTiebreak;
     updateStickers(st);
     updatePhaseLabel();
@@ -262,7 +265,7 @@
   function updatePhaseLabel() {
     const M = mod('match'), ph = M ? M.phase : 'idle', el = $('#sb-ph', EL.sbCard);
     if (!el) return;
-    el.textContent = PHASE_NAMES[ph] || '';
+    el.textContent = PHASE_NAMES[ph] ? _(PHASE_NAMES[ph]) : '';
   }
 
   // ---------- toasts, banner ----------
@@ -297,28 +300,28 @@
   }
   function feedNode(it) { return h('div', { class: 'it' + (it.key ? ' key' : '') }, h('span', { class: 'ic' }, it.icon), h('span', null, it.text), h('span', { class: 'tm' }, it.t)); }
   function M_clock() { const M = mod('match'); return M ? fmtClock((M.simTime || 0) - playStartSim) : '00:00'; }
-  function feedReset() { feedItems = []; if (EL.feedList) { EL.feedList.textContent = ''; EL.feedList.appendChild(h('div', { class: 'empty' }, 'Quiet so far. The first point will show up here.')); } }
+  function feedReset() { feedItems = []; if (EL.feedList) { EL.feedList.textContent = ''; EL.feedList.appendChild(h('div', { class: 'empty' }, _('Quiet so far. The first point will show up here.'))); } }
 
   // ---------- panel building ----------
   function section(num, tag, title, open, body, id) {
     const d = h('details', { class: 'sec', id: id });
     if (open) d.open = true;
-    d.append(h('summary', null, h('span', { class: 'tag' }, num + ' / ' + tag), h('h2', null, title)), h('div', { class: 'body' }, body));
+    d.append(h('summary', null, h('span', { class: 'tag' }, num + ' / ' + _(tag)), h('h2', null, _(title))), h('div', { class: 'body' }, body));
     return d;
   }
   function seg(opts, get, set, cls) {
     const root = h('div', { class: 'seg ' + (cls || '') });
     const btns = opts.map(o => {
-      const b = h('button', { type: 'button', 'aria-pressed': 'false', title: o[2] || '', onclick: () => set(o[0]) }, o[1]); b.dataset.v = String(o[0]); root.appendChild(b); return b;
+      const b = h('button', { type: 'button', 'aria-pressed': 'false', title: o[2] || '', onclick: () => set(o[0]) }, typeof o[1] === 'string' && !/^[\d.]+×$/.test(o[1]) ? _(o[1]) : o[1]); b.dataset.v = String(o[0]); root.appendChild(b); return b;
     });
     const f = () => { const v = String(get()); btns.forEach(b => b.setAttribute('aria-pressed', b.dataset.v === v ? 'true' : 'false')); };
     syncs.push(f); f();
     return { root: root, btns: btns, sync: f };
   }
-  function field(label, ctl, hint) { return h('div', { class: 'field' }, h('div', { class: 'lbl' }, label), ctl, hint ? h('p', { class: 'hint' }, hint) : null); }
+  function field(label, ctl, hint) { return h('div', { class: 'field' }, h('div', { class: 'lbl' }, _(label)), ctl, hint ? h('p', { class: 'hint' }, _(hint)) : null); }
   function sw(label, get, set, id) {
     const inp = h('input', { type: 'checkbox', id: id }); inp.addEventListener('change', () => set(inp.checked));
-    const l = h('label', { class: 'switch' }, inp, h('span', { class: 'box' }), h('span', null, label));
+    const l = h('label', { class: 'switch' }, inp, h('span', { class: 'box' }), h('span', null, _(label)));
     syncs.push(() => { inp.checked = !!get(); });
     return { root: l, input: inp };
   }
@@ -340,20 +343,20 @@
   }
 
   function buildHead() {
-    EL.btnNew = h('button', { class: 'btn primary', type: 'button', id: 'btn-new', title: 'Start a new match (N)', onclick: () => newMatch() }, 'New Match');
-    EL.btnPause = h('button', { class: 'btn', type: 'button', id: 'btn-pause', title: 'Pause / resume (Space)', onclick: togglePause }, 'Pause');
+    EL.btnNew = h('button', { class: 'btn primary', type: 'button', id: 'btn-new', title: _('Start a new match (N)'), onclick: () => newMatch() }, _('New Match'));
+    EL.btnPause = h('button', { class: 'btn', type: 'button', id: 'btn-pause', title: _('Pause / resume (Space)'), onclick: togglePause }, _('Pause'));
     const speeds = [[0.5, '0.5×'], [1, '1×'], [2, '2×'], [4, '4×'], [8, '8×'], [16, '16×']];
     EL.speed = seg(speeds, () => S.speed, setSpeed, 'speed');
     // 8x / 16x only when fast-forward enabled; long-press on 4x also enables it
     EL.speed.btns.forEach(b => { if (+b.dataset.v > 4) b.classList.add('ffbtn'); });
     const four = EL.speed.btns[3]; let lp = 0;
-    four.addEventListener('pointerdown', () => { lp = setTimeout(() => { S.ff = true; sync(); toast('Fast-forward unlocked: 8× and 16×.'); lp = -1; }, 650); });
+    four.addEventListener('pointerdown', () => { lp = setTimeout(() => { S.ff = true; sync(); toast(_('Fast-forward unlocked: 8× and 16×.')); lp = -1; }, 650); });
     ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => four.addEventListener(ev, () => { if (lp > 0) clearTimeout(lp); }));
     four.addEventListener('click', e => { if (lp === -1) { e.stopImmediatePropagation(); lp = 0; } }, true);
     syncs.push(() => EL.speed.btns.forEach(b => { b.hidden = b.classList.contains('ffbtn') && !S.ff; }));
     syncs.push(() => {
       const M = mod('match'); const p = !!(M && M.paused);
-      EL.btnPause.textContent = p ? 'Resume' : 'Pause'; const fp = $('#fab-pause'); if (fp) fp.textContent = p ? 'Resume' : 'Pause';
+      EL.btnPause.textContent = p ? _('Resume') : _('Pause'); const fp = $('#fab-pause'); if (fp) fp.textContent = p ? _('Resume') : _('Pause');
     });
     return h('div', { class: 'panel-head' },
       h('div', { class: 'row' }, EL.btnNew, EL.btnPause),
@@ -362,30 +365,30 @@
 
   function buildMatchSec() {
     const b = [];
-    b.push(field('Format', seg([['quick', 'Quick', 'First to 4 games, tie-break at 4-4'], ['oneSet', 'One Set', 'First to 6 games'], ['bo3', 'Best of 3', 'Two sets to win'], ['blitz', 'Blitz', '9 points, 2 serves each, first to 5 clinches'], ['americano', 'Americano', '21 points, 5 serves each, first to 11 clinches']], () => S.format, v => { S.format = v; sync(); }).root));
+    b.push(field('Format', seg([['quick', 'Quick', _('First to 4 games, tie-break at 4-4')], ['oneSet', 'One Set', _('First to 6 games')], ['bo3', 'Best of 3', _('Two sets to win')], ['blitz', 'Blitz', _('9 points, 2 serves each, first to 5 clinches')], ['americano', 'Americano', _('21 points, 5 serves each, first to 11 clinches')]], () => S.format, v => { S.format = v; sync(); }).root));
     b.push(field('Match type', seg([['M', "Men's"], ['W', "Women's"], ['X', 'Mixed']], () => S.type, v => { S.type = v; applyDefaults(v); refillPickers(); sync(); }).root));
-    b.push(field('Scoring', seg([['advantage', 'Advantage'], ['golden', 'Golden Point', 'One deciding point at 40-40']], () => S.scoring, v => { S.scoring = v; sync(); }).root));
+    b.push(field('Scoring', seg([['advantage', 'Advantage'], ['golden', 'Golden Point', _('One deciding point at 40-40')]], () => S.scoring, v => { S.scoring = v; sync(); }).root));
     EL.pick = {};
     const pk = h('div', { class: 'pickers' });
     [['A', 'Team A'], ['B', 'Team B']].forEach(function (t) {
       pk.appendChild(h('div', { class: 'team-tag' }, h('i', { class: 'dot' + (t[0] === 'B' ? ' b' : '') }), h('span', { class: 'tag' }, t[1])));
       for (let i = 0; i < 2; i++) {
-        const sel = h('select', { 'aria-label': t[1] + ' player ' + (i + 1), id: 'pk-' + t[0] + i });
+        const sel = h('select', { 'aria-label': _('{team} player {n}', { team: t[1], n: i + 1 }), id: 'pk-' + t[0] + i });
         sel.addEventListener('change', () => { (t[0] === 'A' ? S.teamA : S.teamB)[i] = sel.value; refillPickers(); });
         EL.pick[t[0] + i] = sel; pk.appendChild(sel);
       }
     });
-    b.push(h('div', { class: 'field' }, h('div', { class: 'lbl' }, 'Players'), pk));
+    b.push(h('div', { class: 'field' }, h('div', { class: 'lbl' }, _('Players')), pk));
     refillPickers();
     b.push(buildCreatePlayer());
-    const seedIn = h('input', { type: 'text', inputmode: 'numeric', placeholder: 'random', id: 'in-seed', 'aria-label': 'Seed' });
+    const seedIn = h('input', { type: 'text', inputmode: 'numeric', placeholder: _('random'), id: 'in-seed', 'aria-label': _('Seed') });
     seedIn.addEventListener('input', () => { S.seed = seedIn.value.replace(/[^0-9]/g, ''); });
     syncs.push(() => { if (document.activeElement !== seedIn) seedIn.value = S.seed; });
     const ff = sw('Fast-forward (adds 8× and 16×)', () => S.ff, v => { S.ff = v; if (!v && S.speed > 4) setSpeed(4); sync(); }, 'sw-ff');
     b.push(h('div', { class: 'grid2', style: 'margin-top:8px' },
-      h('button', { class: 'btn', type: 'button', id: 'btn-skip', title: 'Skip walk-on, toss and ceremony', onclick: skipCeremony }, 'Skip ceremony'),
+      h('button', { class: 'btn', type: 'button', id: 'btn-skip', title: _('Skip walk-on, toss and ceremony'), onclick: skipCeremony }, _('Skip ceremony')),
       sw('Auto-next match', () => S.autoNext, v => { S.autoNext = v; if (!v) { nextAt = 0; } }, 'sw-auto').root));
-    b.push(h('details', { class: 'adv' }, h('summary', null, 'Advanced'), field('Seed (same seed = same match)', seedIn), ff.root));
+    b.push(h('details', { class: 'adv' }, h('summary', null, _('Advanced')), field('Seed (same seed = same match)', seedIn), ff.root));
     return section('01', 'Match', 'Match setup', true, b, 'sec-match');
   }
 
@@ -433,8 +436,8 @@
     } catch (err) { return false; }
   }
   function buildCreatePlayer() {
-    EL.playerStatus = h('p', { class: 'hint', role: 'status', id: 'create-status' }, 'Random stats and look. Saved on this device and browser.');
-    const btn = h('button', { class: 'btn primary block', type: 'button', id: 'btn-create-player', onclick: () => { const G = mod('game'); if (G && G.showCreate) G.showCreate(); } }, 'Create player · play with Annetta');
+    EL.playerStatus = h('p', { class: 'hint', role: 'status', id: 'create-status' }, _('Random stats and look. Saved on this device and browser.'));
+    const btn = h('button', { class: 'btn primary block', type: 'button', id: 'btn-create-player', onclick: () => { const G = mod('game'); if (G && G.showCreate) G.showCreate(); } }, _('Create player · play with Annetta'));
     return h('div', { class: 'field', id: 'create-player-section' }, btn, EL.playerStatus);
   }
 
@@ -483,7 +486,7 @@
     const M = mod('match'), C = mod('court');
     applyVenueVisuals(v);
     const live = M && M.phase === 'play';
-    if (live) { pendingVenue = v; toast('Court change applies from the next point.', { kind: 'warn' }); }
+    if (live) { pendingVenue = v; toast(_('Court change applies from the next point.'), { kind: 'warn' }); }
     else { if (C && C.setVenue) safe(() => C.setVenue(v), 'court.setVenue'); if (M && M.cfg) M.cfg.venue = v; pendingVenue = null; }
     applyTod(); sync();
   }
@@ -521,12 +524,12 @@
     const grid = h('div', { class: 'preset-grid' });
     PRESET_LABELS.forEach(function (p) {
       if (keys && !keys[p[0]]) return;
-      const btn = h('button', { type: 'button', 'aria-pressed': 'false', onclick: () => setOrder(p[0] === 'focusOne' ? { preset: 'focusOne', focusOpponent: orders(S.coachTeam).focusOpponent !== undefined ? orders(S.coachTeam).focusOpponent : 0 } : { preset: p[0], focusOpponent: undefined }) }, p[1]);
+      const btn = h('button', { type: 'button', 'aria-pressed': 'false', onclick: () => setOrder(p[0] === 'focusOne' ? { preset: 'focusOne', focusOpponent: orders(S.coachTeam).focusOpponent !== undefined ? orders(S.coachTeam).focusOpponent : 0 } : { preset: p[0], focusOpponent: undefined }) }, _(p[1]));
       syncs.push(() => btn.setAttribute('aria-pressed', (orders(S.coachTeam).preset || 'balanced') === p[0] ? 'true' : 'false'));
       grid.appendChild(btn);
     });
-    b.push(h('div', { class: 'sub' }, 'Tactic'), grid);
-    EL.focusSel = h('select', { 'aria-label': 'Focus opponent', id: 'sel-focus' });
+    b.push(h('div', { class: 'sub' }, _('Tactic')), grid);
+    EL.focusSel = h('select', { 'aria-label': _('Focus opponent'), id: 'sel-focus' });
     EL.focusSel.addEventListener('change', () => setOrder({ preset: 'focusOne', focusOpponent: +EL.focusSel.value }));
     EL.focusField = field('Focus on', EL.focusSel);
     b.push(EL.focusField);
@@ -536,29 +539,29 @@
       opp.forEach((id, i) => EL.focusSel.appendChild(h('option', { value: i }, (rdef(id) || {}).name || id)));
       const fo = orders(S.coachTeam).focusOpponent; EL.focusSel.value = fo !== undefined ? fo : 0;
     });
-    b.push(h('div', { class: 'sub' }, 'Serve and return'));
+    b.push(h('div', { class: 'sub' }, _('Serve and return')));
     b.push(field('Serve direction', seg([['auto', 'Auto'], ['wide', 'Wide'], ['T', 'T'], ['body', 'Body']], () => orders(S.coachTeam).serveDir || 'auto', v => setOrder({ serveDir: v })).root));
     b.push(field('Return direction', seg([['auto', 'Auto'], ['crosscourt', 'Cross'], ['line', 'Line'], ['lob', 'Lob'], ['middle', 'Middle']], () => orders(S.coachTeam).returnDir || 'auto', v => setOrder({ returnDir: v })).root));
-    EL.midSel = h('select', { 'aria-label': 'Middle ball priority', id: 'sel-mid' });
+    EL.midSel = h('select', { 'aria-label': _('Middle ball priority'), id: 'sel-mid' });
     EL.midSel.addEventListener('change', () => setOrder({ middlePriority: EL.midSel.value === '' ? undefined : +EL.midSel.value }));
     b.push(field('Middle-ball priority', EL.midSel));
     syncs.push(() => {
       const ids = teamIds(S.coachTeam); EL.midSel.textContent = '';
-      EL.midSel.appendChild(h('option', { value: '' }, 'Auto'));
+      EL.midSel.appendChild(h('option', { value: '' }, _('Auto')));
       ids.forEach((id, i) => EL.midSel.appendChild(h('option', { value: i }, (rdef(id) || {}).name || id)));
       const mp = orders(S.coachTeam).middlePriority; EL.midSel.value = mp === undefined ? '' : String(mp);
     });
-    b.push(h('div', { class: 'sub' }, 'In the moment'));
-    EL.btnAim = h('button', { class: 'btn', type: 'button', id: 'btn-aim', onclick: toggleAim, title: 'Aim next shot (A)' }, h('span', null, 'Aim next shot '), h('span', { class: 'keycap' }, 'A'));
-    EL.btnTmo = h('button', { class: 'btn', type: 'button', id: 'btn-timeout', onclick: callTimeout }, 'Call timeout');
-    EL.btnChal = h('button', { class: 'btn', type: 'button', id: 'btn-challenge', onclick: doChallenge, title: 'Challenge the last line call (C)' }, h('span', null, 'Challenge '), h('span', { class: 'keycap' }, 'C'));
+    b.push(h('div', { class: 'sub' }, _('In the moment')));
+    EL.btnAim = h('button', { class: 'btn', type: 'button', id: 'btn-aim', onclick: toggleAim, title: _('Aim next shot (A)') }, h('span', null, _('Aim next shot') + ' '), h('span', { class: 'keycap' }, 'A'));
+    EL.btnTmo = h('button', { class: 'btn', type: 'button', id: 'btn-timeout', onclick: callTimeout }, _('Call timeout'));
+    EL.btnChal = h('button', { class: 'btn', type: 'button', id: 'btn-challenge', onclick: doChallenge, title: _('Challenge the last line call (C)') }, h('span', null, 'Challenge '), h('span', { class: 'keycap' }, 'C'));
     b.push(h('div', { class: 'grid3' }, EL.btnAim, EL.btnTmo, EL.btnChal));
     EL.coachInfo = h('p', { class: 'hint' }, '');
     b.push(EL.coachInfo);
     return section('03', 'Coach', 'Coach box', window.innerWidth >= 900, b, 'sec-coach');
   }
   function toggleAim() {
-    if (!mod('render') || !mod('render').pickCourt) { toast('Aiming needs the 3D view.', { kind: 'warn' }); return; }
+    if (!mod('render') || !mod('render').pickCourt) { toast(_('Aiming needs the 3D view.'), { kind: 'warn' }); return; }
     S.aim = !S.aim; claimCoach(); syncAim();
   }
   // the opponent's half flashes while you aim, so it is clear where a tap counts
@@ -580,13 +583,13 @@
   function setAimAt(x, z) {
     const A = mod('ai'), Rl = mod('rules'), sd = Rl && Rl.state && Rl.state.sides;
     if (!A || !A.setAim) { S.aim = false; syncAim(); return; }
-    if (sd && x * sd[other(S.coachTeam)] <= 0) { toast("Tap the opponent's side of the court.", { kind: 'warn' }); return; }
+    if (sd && x * sd[other(S.coachTeam)] <= 0) { toast(_("Tap the opponent's side of the court."), { kind: 'warn' }); return; }
     S.aim = false; syncAim();
-    if (Math.abs(x) > 10 || Math.abs(z) > 5) { toast('Aim inside the court lines.', { kind: 'warn' }); return; }
+    if (Math.abs(x) > 10 || Math.abs(z) > 5) { toast(_('Aim inside the court lines.'), { kind: 'warn' }); return; }
     claimCoach();
     A.setAim(S.coachTeam, x, z);
     aimSetAt = performance.now(); aimTeam = S.coachTeam; aimXZ = { x: x, z: z };
-    toast('Aim set. Your next shot goes there if it is on.', { kind: 'good' });
+    toast(_('Aim set. Your next shot goes there if it is on.'), { kind: 'good' });
   }
   let aimXZ = null;
   function onStageClick(e) {
@@ -594,35 +597,35 @@
     const R = mod('render'); if (!R || !R.pickCourt) return;
     const p = R.pickCourt(e.clientX, e.clientY);
     e.stopPropagation(); e.preventDefault();
-    if (p) setAimAt(p.x, p.z); else toast('Click on the court.', { kind: 'warn' });
+    if (p) setAimAt(p.x, p.z); else toast(_('Click on the court.'), { kind: 'warn' });
   }
   function callTimeout() {
     const Rl = mod('rules'), M = mod('match');
     if (!Rl || !Rl.state) return;
     claimCoach();
     const t = S.coachTeam;
-    if (Rl.state.over) { toast('The match is over.', { kind: 'warn' }); return; }
-    if (!(Rl.state.timeouts && Rl.state.timeouts[t] > 0)) { toast('No timeouts left.', { kind: 'warn' }); return; }
-    if (M && M.phase !== 'play') { toast('Timeouts are for live play.', { kind: 'warn' }); return; }
+    if (Rl.state.over) { toast(_('The match is over.'), { kind: 'warn' }); return; }
+    if (!(Rl.state.timeouts && Rl.state.timeouts[t] > 0)) { toast(_('No timeouts left.'), { kind: 'warn' }); return; }
+    if (M && M.phase !== 'play') { toast(_('Timeouts are for live play.'), { kind: 'warn' }); return; }
     pendingTimeout = t;
-    if (!tryTimeout()) toast('Timeout requested. Taken after this point.', { kind: 'info' });
+    if (!tryTimeout()) toast(_('Timeout requested. Taken after this point.'), { kind: 'info' });
   }
   function tryTimeout() {
     const Rl = mod('rules'), M = mod('match'); const t = pendingTimeout;
     if (!t || !Rl) return false;
     if (Rl.phase && Rl.phase() !== 'ended') return false;
     pendingTimeout = null;
-    if (M && M.requestTimeout) { if (!M.requestTimeout(t)) toast('Timeout not available now.', { kind: 'warn' }); return true; }
+    if (M && M.requestTimeout) { if (!M.requestTimeout(t)) toast(_('Timeout not available now.'), { kind: 'warn' }); return true; }
     // fallback: own 20 s rest
-    if (!Rl.useTimeout || !Rl.useTimeout(t)) { toast('No timeouts left.', { kind: 'warn' }); return true; }
+    if (!Rl.useTimeout || !Rl.useTimeout(t)) { toast(_('No timeouts left.'), { kind: 'warn' }); return true; }
     const P = mod('players'); if (P && P.rest) P.rest(0.04);
-    startRest('Timeout, Team ' + t, 20);
+    startRest(_('Timeout, Team {team}', { team: t }), 20);
     return true;
   }
   function startRest(label, secs) {
     const M = mod('match'); tmo = { label: label, left: secs, resumeMatch: !(M && M.paused) };
     if (M) M.pause(true);
-    feed({ src: 'ui', icon: '⏸', text: label + ' (' + secs + ' s). Coaching time.', key: true });
+    feed({ src: 'ui', icon: '⏸', text: _('{label} ({secs} s). Coaching time.', { label: label, secs: secs }), key: true });
     sync();
   }
   function endRest() { const M = mod('match'); if (tmo && tmo.resumeMatch && M) M.pause(false); tmo = null; banner(null); sync(); }
@@ -633,35 +636,35 @@
     BUS.emit('challenge:request', { team: t });
     if (!Rl.canChallenge(t, 0)) {
       const left = Rl.state && Rl.state.challenges ? Rl.state.challenges[t] : 0;
-      toast(left > 0 ? 'No close call to challenge right now.' : 'No challenges left this set.', { kind: 'warn' }); return;
+      toast(left > 0 ? _('No close call to challenge right now.') : _('No challenges left this set.'), { kind: 'warn' }); return;
     }
     const res = Rl.challenge(t, 0);
-    if (!res) toast('Too late to challenge that one.', { kind: 'warn' });
+    if (!res) toast(_('Too late to challenge that one.'), { kind: 'warn' });
   }
 
   // ----- Camera -----
   function buildCameraSec() {
     const b = [];
-    EL.camSeg = seg(CAMS.map((c, i) => [c[0], c[1], 'Key ' + (i + 1)]), () => { const R = mod('render'); return (R && R.cameraMode) || S.cam; }, v => setCam(v));
-    b.push(h('div', { class: 'field' }, h('div', { class: 'lbl' }, 'Camera'), EL.camSeg.root));
+    EL.camSeg = seg(CAMS.map((c, i) => [c[0], c[1], _('Key {n}', { n: i + 1 })]), () => { const R = mod('render'); return (R && R.cameraMode) || S.cam; }, v => setCam(v));
+    b.push(h('div', { class: 'field' }, h('div', { class: 'lbl' }, _('Camera')), EL.camSeg.root));
     b.push(sw('Callouts (OUT!, SMASH! ...)', () => S.callouts, v => setCallouts(v), 'sw-callouts').root);
     b.push(sw('Follow ball', () => S.followBall, v => { S.followBall = v; const R = mod('render'); if (R && R.setFollowBall) safe(() => R.setFollowBall(v), 'followBall'); }, 'sw-fball').root);
-    EL.fpSel = h('select', { id: 'sel-fp', 'aria-label': 'Follow player' });
+    EL.fpSel = h('select', { id: 'sel-fp', 'aria-label': _('Follow player') });
     EL.fpSel.addEventListener('change', () => { S.followPlayer = EL.fpSel.value; const R = mod('render'); if (R && R.followPlayer) safe(() => R.followPlayer(S.followPlayer || null), 'followPlayer'); });
     b.push(field('Follow player', EL.fpSel));
     b.push(h('div', { class: 'grid2', style: 'margin-top:6px' },
-      h('button', { class: 'btn', type: 'button', id: 'btn-rotl', title: 'Rotate (Q)', onclick: () => rot(-1) }, '⟲ Rotate'),
-      h('button', { class: 'btn', type: 'button', id: 'btn-rotr', title: 'Rotate (E)', onclick: () => rot(1) }, 'Rotate ⟳')));
+      h('button', { class: 'btn', type: 'button', id: 'btn-rotl', title: _('Rotate (Q)'), onclick: () => rot(-1) }, '⟲ ' + _('Rotate')),
+      h('button', { class: 'btn', type: 'button', id: 'btn-rotr', title: _('Rotate (E)'), onclick: () => rot(1) }, _('Rotate') + ' ⟳')));
     b.push(h('div', { class: 'grid3', style: 'margin-top:6px' },
-      h('button', { class: 'btn', type: 'button', id: 'btn-zout', title: 'Zoom out (-)', onclick: () => zoomBy(-1) }, '−'),
-      h('button', { class: 'btn', type: 'button', id: 'btn-zin', title: 'Zoom in (+)', onclick: () => zoomBy(1) }, '+'),
-      h('button', { class: 'btn', type: 'button', id: 'btn-reset', title: 'Reset view (R)', onclick: resetView }, 'Reset view')));
-    b.push(h('p', { class: 'hint' }, 'In Free mode: drag to orbit, wheel to zoom.'));
+      h('button', { class: 'btn', type: 'button', id: 'btn-zout', title: _('Zoom out (-)'), onclick: () => zoomBy(-1) }, '−'),
+      h('button', { class: 'btn', type: 'button', id: 'btn-zin', title: _('Zoom in (+)'), onclick: () => zoomBy(1) }, '+'),
+      h('button', { class: 'btn', type: 'button', id: 'btn-reset', title: _('Reset view (R)'), onclick: resetView }, _('Reset view'))));
+    b.push(h('p', { class: 'hint' }, _('In Free mode: drag to orbit, wheel to zoom.')));
     return section('04', 'Camera', 'Camera', false, b, 'sec-camera');
   }
   function refillFollow() {
     const P = mod('players'); if (!EL.fpSel) return;
-    EL.fpSel.textContent = ''; EL.fpSel.appendChild(h('option', { value: '' }, 'None'));
+    EL.fpSel.textContent = ''; EL.fpSel.appendChild(h('option', { value: '' }, _('None')));
     if (P && P.list) P.list.forEach(p => EL.fpSel.appendChild(h('option', { value: p.id }, p.name)));
     EL.fpSel.value = S.followPlayer = '';
   }
@@ -679,7 +682,7 @@
   function setSound(on) {
     S.soundOn = on; if (on) { S.muted = false; const A = mod('audio'); if (A && A.unlock) safe(() => A.unlock(), 'unlock'); }
     applyAudio(); sync();
-    if (on && !mod('audio')) toast('Audio is not available in this build.', { kind: 'warn' });
+    if (on && !mod('audio')) toast(_('Audio is not available in this build.'), { kind: 'warn' });
   }
   // one volume setter for every slider (Play-mode menus, HUD popover, Studio panel)
   function setVolume(bus, v) {
@@ -692,22 +695,22 @@
     S.musicOn = !!on; const A = mod('audio');
     if (on && A && A.unlock) safe(() => A.unlock(), 'unlock');
     BUS.emit('ui:setting', { key: 'music', value: S.musicOn }); sync();
-    if (on && A && A.hasMusic && !A.hasMusic()) toast('No music track is bundled in this build.', { kind: 'warn' });
+    if (on && A && A.hasMusic && !A.hasMusic()) toast(_('No music track is bundled in this build.'), { kind: 'warn' });
   }
   function buildAudioSec() {
     const b = [];
-    EL.soundBtn = h('button', { class: 'btn block', type: 'button', id: 'btn-sound', onclick: () => setSound(!S.soundOn), 'aria-pressed': 'false' }, 'Sound off');
-    syncs.push(() => { EL.soundBtn.textContent = S.soundOn ? (S.muted ? 'Sound on (muted)' : 'Sound on') : 'Sound off'; EL.soundBtn.setAttribute('aria-pressed', S.soundOn ? 'true' : 'false'); EL.soundBtn.classList.toggle('primary', S.soundOn); });
+    EL.soundBtn = h('button', { class: 'btn block', type: 'button', id: 'btn-sound', onclick: () => setSound(!S.soundOn), 'aria-pressed': 'false' }, _('Sound off'));
+    syncs.push(() => { EL.soundBtn.textContent = S.soundOn ? (S.muted ? _('Sound on (muted)') : _('Sound on')) : _('Sound off'); EL.soundBtn.setAttribute('aria-pressed', S.soundOn ? 'true' : 'false'); EL.soundBtn.classList.toggle('primary', S.soundOn); });
     b.push(EL.soundBtn);
     b.push(field('Sound volume', slider(0, 1, 0.05, () => S.vol.master, v => setVolume('master', v), 'rg-vol-master')));
     b.push(sw('Music', () => S.musicOn, v => setMusic(v), 'sw-music').root);
     b.push(field('Music volume', slider(0, 1, 0.05, () => S.vol.music, v => setVolume('music', v), 'rg-vol-music')));
-    b.push(h('div', { class: 'lbl' }, 'Mix'));
+    b.push(h('div', { class: 'lbl' }, _('Mix')));
     [['fx', 'Effects'], ['crowd', 'Crowd'], ['commentary', 'Commentary'], ['ambience', 'Ambience']].forEach(function (bus) {
       b.push(field(bus[1], slider(0, 1, 0.05, () => S.vol[bus[0]], v => { S.vol[bus[0]] = v; const A = mod('audio'); if (A && A.setVolume) safe(() => A.setVolume(bus[0], v), 'vol'); BUS.emit('ui:setting', { key: 'volume:' + bus[0], value: v }); }, 'rg-vol-' + bus[0])));
     });
     b.push(sw('Speech commentary', () => S.speech, v => { S.speech = v; const A = mod('audio'); if (A && A.setSpeech) safe(() => A.setSpeech(v), 'speech'); BUS.emit('ui:setting', { key: 'speech', value: v }); if (v && !S.soundOn) setSound(true); }, 'sw-speech').root);
-    b.push(h('p', { class: 'hint' }, 'Sound and music start off. Press S to switch sound on, M to mute.'));
+    b.push(h('p', { class: 'hint' }, _('Sound and music start off. Press S to switch sound on, M to mute.')));
     return section('05', 'Audio', 'Sound', false, b, 'sec-audio');
   }
 
@@ -715,12 +718,12 @@
   function buildCentreSec() {
     const tabs = [['score', 'Score'], ['stats', 'Stats'], ['players', 'Players'], ['feed', 'Feed']];
     EL.tabs = h('div', { class: 'tabs', role: 'tablist' }, tabs.map(t => {
-      const bt = h('button', { type: 'button', role: 'tab', 'data-tab': t[0], 'aria-selected': t[0] === S.tab ? 'true' : 'false', onclick: () => setTab(t[0]) }, t[1]); return bt;
+      const bt = h('button', { type: 'button', role: 'tab', 'data-tab': t[0], 'aria-selected': t[0] === S.tab ? 'true' : 'false', onclick: () => setTab(t[0]) }, _(t[1])); return bt;
     }));
     EL.paneScore = h('div', { class: 'tabpane', id: 'pane-score' }, h('div', { class: 'score-card', id: 'score-card' }));
     EL.paneStats = h('div', { class: 'tabpane', id: 'pane-stats' });
     EL.panePlayers = h('div', { class: 'tabpane', id: 'pane-players' }, h('div', { class: 'pcards', id: 'pcards' }));
-    EL.feedList = h('div', { class: 'feed', id: 'feed' }, h('div', { class: 'empty' }, 'Quiet so far. The first point will show up here.'));
+    EL.feedList = h('div', { class: 'feed', id: 'feed' }, h('div', { class: 'empty' }, _('Quiet so far. The first point will show up here.')));
     const fb = h('div', { class: 'feedbar' }, seg([[false, 'All'], [true, 'Key moments']], () => S.feedKey, v => { S.feedKey = v; EL.feedList.classList.toggle('keyonly', v); sync(); }).root);
     EL.paneFeed = h('div', { class: 'tabpane', id: 'pane-feed' }, fb, EL.feedList);
     setTab(S.tab, true);
@@ -740,7 +743,7 @@
   function renderScoreTab() {
     const el = EL.paneScore && EL.paneScore.firstChild; if (!el || S.tab !== 'score') return;
     const st = lastScoreState, Rl = mod('rules'), M = mod('match');
-    if (!st) { el.textContent = 'Waiting for the first serve.'; return; }
+    if (!st) { el.textContent = _('Waiting for the first serve.'); return; }
     const names = {}; (mod('players').list || []).forEach(p => { names[p.id] = p.name; });
     let d = null; try { d = Rl.describe(st, names); } catch (e) { return; }
     const cfg = (M && M.cfg) || {};
@@ -749,12 +752,12 @@
     el.append(
       line('Team A', teamName('A')), line('Team B', teamName('B')),
       line('Sets', (d.setsText || '-') + '  (' + d.setsWonText + ')'),
-      line('Games', d.gamesText), line('Points', d.pointsText.A + ' - ' + d.pointsText.B),
-      line('Serving', d.serverName + (d.serveSide ? ' · ' + d.serveSide : '')),
-      line('Challenges left', 'A ' + st.challenges.A + ' · B ' + st.challenges.B),
-      line('Timeouts left', 'A ' + st.timeouts.A + ' · B ' + st.timeouts.B),
-      line('Court', (VENUES.find(v => v[0] === cfg.venue) || [0, cfg.venue || '-'])[1]),
-      line('Seed', String(cfg.seed != null ? cfg.seed : '-')));
+      line('Games', d.gamesText), line(_('Points'), d.pointsText.A + ' - ' + d.pointsText.B),
+      line(_('Serving'), d.serverName + (d.serveSide ? ' · ' + d.serveSide : '')),
+      line(_('Challenges left'), 'A ' + st.challenges.A + ' · B ' + st.challenges.B),
+      line(_('Timeouts left'), 'A ' + st.timeouts.A + ' · B ' + st.timeouts.B),
+      line(_('Court'), _((VENUES.find(v => v[0] === cfg.venue) || [0, cfg.venue || '-'])[1])),
+      line(_('Seed'), String(cfg.seed != null ? cfg.seed : '-')));
   }
 
   // stats ------------------------------------------------
@@ -769,32 +772,32 @@
   function renderStats() {
     const pane = EL.paneStats; if (!pane || S.tab !== 'stats') return;
     const P = mod('players'), M = mod('match');
-    if (!P || !P.list || !P.list.length || !M || !M.stats) { pane.textContent = 'Stats appear once the match is on.'; return; }
+    if (!P || !P.list || !P.list.length || !M || !M.stats) { pane.textContent = _('Stats appear once the match is on.'); return; }
     const ms = M.stats, tm = ms.teams;
     const rl = ms.rallies || [], avg = rl.length ? (rl.reduce((a, b) => a + b, 0) / rl.length) : 0;
     const rows = [];
     const row = (label, a, b, opt) => rows.push({ label: label, a: a, b: b, opt: opt || {} });
     const sec = t => rows.push({ sec: t });
     sec('Serve');
-    row('First serve in', pct(tm.A.firstIn, tm.A.firstTotal), pct(tm.B.firstIn, tm.B.firstTotal), { na: tm.A.firstTotal ? tm.A.firstIn / tm.A.firstTotal : -1, nb: tm.B.firstTotal ? tm.B.firstIn / tm.B.firstTotal : -1 });
-    row('2nd-serve points won', teamSum('A', 'secondPtsWon') + '/' + teamSum('A', 'secondPtsPlayed'), teamSum('B', 'secondPtsWon') + '/' + teamSum('B', 'secondPtsPlayed'), { na: teamSum('A', 'secondPtsWon'), nb: teamSum('B', 'secondPtsWon') });
+    row(_('First serve in'), pct(tm.A.firstIn, tm.A.firstTotal), pct(tm.B.firstIn, tm.B.firstTotal), { na: tm.A.firstTotal ? tm.A.firstIn / tm.A.firstTotal : -1, nb: tm.B.firstTotal ? tm.B.firstIn / tm.B.firstTotal : -1 });
+    row(_('2nd-serve points won'), teamSum('A', 'secondPtsWon') + '/' + teamSum('A', 'secondPtsPlayed'), teamSum('B', 'secondPtsWon') + '/' + teamSum('B', 'secondPtsPlayed'), { na: teamSum('A', 'secondPtsWon'), nb: teamSum('B', 'secondPtsWon') });
     row('Aces', teamSum('A', 'aces'), teamSum('B', 'aces'), { na: teamSum('A', 'aces'), nb: teamSum('B', 'aces') });
     row('Double faults', teamSum('A', 'doubleFaults'), teamSum('B', 'doubleFaults'), { na: teamSum('A', 'doubleFaults'), nb: teamSum('B', 'doubleFaults'), low: true });
-    sec('Shots');
+    sec(_('Shots'));
     [['Winners', 'winners'], ['Unforced errors', 'unforced', 1], ['Forced errors', 'forced', 1], ['Volley winners', 'volleyWinners'], ['Smash winners', 'smashWinners']].forEach(r => {
       const a = teamSum('A', r[1]), b = teamSum('B', r[1]); row(r[0], a, b, { na: a, nb: b, low: !!r[2] });
     });
-    row('Successful lobs', teamSum('A', 'lobsSuccess') + '/' + teamSum('A', 'lobs'), teamSum('B', 'lobsSuccess') + '/' + teamSum('B', 'lobs'), { na: teamSum('A', 'lobsSuccess'), nb: teamSum('B', 'lobsSuccess') });
-    row('Wall recoveries', teamSum('A', 'wallRecoveries'), teamSum('B', 'wallRecoveries'), { na: teamSum('A', 'wallRecoveries'), nb: teamSum('B', 'wallRecoveries') });
-    sec('Pressure');
+    row(_('Successful lobs'), teamSum('A', 'lobsSuccess') + '/' + teamSum('A', 'lobs'), teamSum('B', 'lobsSuccess') + '/' + teamSum('B', 'lobs'), { na: teamSum('A', 'lobsSuccess'), nb: teamSum('B', 'lobsSuccess') });
+    row(_('Wall recoveries'), teamSum('A', 'wallRecoveries'), teamSum('B', 'wallRecoveries'), { na: teamSum('A', 'wallRecoveries'), nb: teamSum('B', 'wallRecoveries') });
+    sec(_('Pressure'));
     row('Break points won', tm.A.bpWon + '/' + tm.A.bpFaced, tm.B.bpWon + '/' + tm.B.bpFaced, { na: tm.A.bpWon, nb: tm.B.bpWon });
-    row('Net points won', teamSum('A', 'netPointsWon') + '/' + teamSum('A', 'netPointsPlayed'), teamSum('B', 'netPointsWon') + '/' + teamSum('B', 'netPointsPlayed'), { na: teamSum('A', 'netPointsWon'), nb: teamSum('B', 'netPointsWon') });
-    row('Points won', tm.A.pointsWon, tm.B.pointsWon, { na: tm.A.pointsWon, nb: tm.B.pointsWon });
+    row(_('Net points won'), teamSum('A', 'netPointsWon') + '/' + teamSum('A', 'netPointsPlayed'), teamSum('B', 'netPointsWon') + '/' + teamSum('B', 'netPointsPlayed'), { na: teamSum('A', 'netPointsWon'), nb: teamSum('B', 'netPointsWon') });
+    row(_('Points won'), tm.A.pointsWon, tm.B.pointsWon, { na: tm.A.pointsWon, nb: tm.B.pointsWon });
     sec('Match');
-    row('Longest rally', ms.longest || 0, ms.longest || 0, {});
-    row('Average rally', avg.toFixed(1), avg.toFixed(1), {});
-    row('Duration', M_clock(), M_clock(), {});
-    sec('Distance covered');
+    row(_('Longest rally'), ms.longest || 0, ms.longest || 0, {});
+    row(_('Average rally'), avg.toFixed(1), avg.toFixed(1), {});
+    row(_('Duration'), M_clock(), M_clock(), {});
+    sec(_('Distance covered'));
     const t = h('table', { class: 'stats' }, h('tr', null, h('th', null, 'Team A'), h('th', null, ''), h('th', null, 'Team B')));
     t.firstChild.remove();
     t.appendChild(h('thead', null, h('tr', null, h('th', null, shortTeam('A')), h('th', null, ''), h('th', null, shortTeam('B')))));
@@ -823,7 +826,7 @@
         h('b', null, x.c.toFixed(1)));
     }));
     pane.textContent = '';
-    pane.append(t, h('div', { class: 'sub' }, 'Contribution'), chart);
+    pane.append(t, h('div', { class: 'sub' }, _('Contribution')), chart);
   }
   function shortTeam(t) { return teamName(t); }
 
@@ -861,13 +864,13 @@
     ((P && P.list) || []).slice().sort((a, b) => a.team === b.team ? a.slot - b.slot : (a.team < b.team ? -1 : 1)).forEach(function (p) {
       const d = p.def, cv = h('canvas', { width: 24, height: 24 });
       drawPortrait(cv, d);
-      const bars = h('div', { class: 'bars' }, ATTRS.map(a => mbar(a[1], d.attrs[a[0]], '')));
-      const live = h('div', { class: 'bars' }, h('div', { class: 'mbar live', 'data-k': 'conf' }, h('span', null, 'CONF'), h('div', { class: 't' }, h('i')), h('b', null, '')), h('div', { class: 'mbar fat', 'data-k': 'fat' }, h('span', null, 'FATIG'), h('div', { class: 't' }, h('i')), h('b', null, '')));
+      const bars = h('div', { class: 'bars' }, ATTRS.map(a => mbar(_(a[1]), d.attrs[a[0]], '')));
+      const live = h('div', { class: 'bars' }, h('div', { class: 'mbar live', 'data-k': 'conf' }, h('span', null, _('CONF')), h('div', { class: 't' }, h('i')), h('b', null, '')), h('div', { class: 'mbar fat', 'data-k': 'fat' }, h('span', null, _('FATIG')), h('div', { class: 't' }, h('i')), h('b', null, '')));
       const mini = h('div', { class: 'mini' });
       const card = h('div', { class: 'pcard ' + (p.team === 'A' ? 'a' : 'b'), 'data-id': p.id },
         cv,
-        h('div', null, h('div', { class: 'nm' }, d.name), h('div', { class: 'meta' }, '“' + d.nick + '” · ' + (d.country ? d.country.name : '') + ' ', flagEl(d.country && d.country.code)),
-          h('div', { class: 'meta' }, 'World #' + d.ranking + ' · ' + (ARCH[d.archetype] || d.archetype) + ' · ' + (d.hand === 'L' ? 'left' : 'right') + '-handed · Team ' + p.team)),
+        h('div', null, h('div', { class: 'nm' }, d.name), h('div', { class: 'meta' }, '“' + d.nick + '” · ' + (d.country ? _(d.country.name) : '') + ' ', flagEl(d.country && d.country.code)),
+          h('div', { class: 'meta' }, _('World #{rank} · {arch} · {hand} · Team {team}', { rank: d.ranking, arch: _(ARCH[d.archetype] || d.archetype), hand: d.hand === 'L' ? _('left-handed') : _('right-handed'), team: p.team }))),
         bars, live, mini);
       card._live = live; card._mini = mini; card._pid = p.id;
       box.appendChild(card);
@@ -898,13 +901,13 @@
   function updateBannerPause() {
     const M = mod('match');
     if (tmo) return;
-    if (M && M.paused) banner(h('span', null, 'Paused', h('small', null, 'Space to resume'))); else if (!resultsShown || true) { if (!nextAt) banner(null); }
+    if (M && M.paused) banner(h('span', null, _('Paused'), h('small', null, _('Space to resume')))); else if (!resultsShown || true) { if (!nextAt) banner(null); }
   }
   function skipCeremony() {
     const M = mod('match'), C = mod('ceremony');
     if (!M) return;
     M.skipCeremony(); if (C && C.skip) safe(() => C.skip(), 'ceremony.skip');
-    toast('Skipping the show. On to the game!', { kind: 'info' });
+    toast(_('Skipping the show. On to the game!'), { kind: 'info' });
   }
   function gatherCfg() {
     return { format: S.format, scoring: S.scoring, type: S.type, venue: S.venue, seed: S.seed ? +S.seed : (1 + Math.floor(Math.random() * 99998)), teamA: S.teamA.slice(), teamB: S.teamB.slice() };
@@ -940,34 +943,34 @@
     kr('Aces', teamSum('A', 'aces'), teamSum('B', 'aces'));
     kr('Winners', teamSum('A', 'winners'), teamSum('B', 'winners'));
     kr('Unforced errors', teamSum('A', 'unforced'), teamSum('B', 'unforced'));
-    if (tm) kr('Points won', tm.A.pointsWon, tm.B.pointsWon);
-    const card = h('div', { class: 'card', role: 'dialog', 'aria-label': 'Match result' },
+    if (tm) kr(_('Points won'), tm.A.pointsWon, tm.B.pointsWon);
+    const card = h('div', { class: 'card', role: 'dialog', 'aria-label': _('Match result') },
       h('div', { class: 'tag' }, HPO.cfg.TITLE()),
-      h('h2', null, 'Champions'),
-      h('div', { class: 'champ' }, names.join(' & '), h('em', null, ' take the cup.')),
+      h('h2', null, _('Champions')),
+      h('div', { class: 'champ' }, names.join(' & '), h('em', null, ' ' + _('take the cup.'))),
       h('div', { class: 'setscore' }, sets || '–'),
       h('div', { class: 'keystats' }, h('b', { class: 'tag' }, 'Team A'), h('span'), h('b', { class: 'tag' }, 'Team B'), kv),
       mvp ? h('div', { class: 'mvp' }, h('b', null, 'MVP: '), mvp.p.name, ' · ', mvp.p.stats.winners + ' winners, ' + mvp.p.stats.unforced + ' unforced, ' + (mvp.p.stats.distance / 1000).toFixed(2) + ' km') : null,
-      ms ? h('p', { class: 'hint' }, 'Longest rally ' + (ms.longest || 0) + ' strokes · average ' + (rl.length ? (rl.reduce((a, b) => a + b, 0) / rl.length).toFixed(1) : '0') + ' · ' + M_clock()) : null,
+      ms ? h('p', { class: 'hint' }, _('Longest rally {n} strokes · average {avg} · {time}', { n: ms.longest || 0, avg: rl.length ? (rl.reduce((a, b) => a + b, 0) / rl.length).toFixed(1) : '0', time: M_clock() })) : null,
       EL.nextLine = h('p', { class: 'hint', id: 'next-line', hidden: !S.autoNext }, ''),
       h('div', { class: 'acts' },
-        h('button', { class: 'btn primary', type: 'button', id: 'res-new', onclick: () => newMatch({ draw: true }) }, 'New Match'),
-        h('button', { class: 'btn', type: 'button', id: 'res-rematch', onclick: () => newMatch({ rematch: true }) }, 'Rematch'),
-        mod('replay') && mod('replay').play ? h('button', { class: 'btn', type: 'button', id: 'res-replay', onclick: () => { closeModal(); safe(() => mod('replay').play({ kind: 'highlight' }), 'replay'); } }, 'Watch highlights') : null,
-        h('button', { class: 'btn', type: 'button', id: 'res-keep', onclick: () => { closeModal(); } }, 'Keep watching')));
+        h('button', { class: 'btn primary', type: 'button', id: 'res-new', onclick: () => newMatch({ draw: true }) }, _('New Match')),
+        h('button', { class: 'btn', type: 'button', id: 'res-rematch', onclick: () => newMatch({ rematch: true }) }, _('Rematch')),
+        mod('replay') && mod('replay').play ? h('button', { class: 'btn', type: 'button', id: 'res-replay', onclick: () => { closeModal(); safe(() => mod('replay').play({ kind: 'highlight' }), 'replay'); } }, _('Watch highlights')) : null,
+        h('button', { class: 'btn', type: 'button', id: 'res-keep', onclick: () => { closeModal(); } }, _('Keep watching'))));
     EL.modal = h('div', { class: 'modal', id: 'results' }, card);
     EL.stage.appendChild(EL.modal);
     if (S.autoNext) nextAt = performance.now() + 15000;
-    feed({ src: 'ui', icon: '★', text: 'Final: ' + names.join(' & ') + ' win ' + (sets || ''), key: true });
+    feed({ src: 'ui', icon: '★', text: _('Final: {names} win {sets}', { names: names.join(' & '), sets: sets || '' }), key: true });
   }
   function closeModal() { if (EL.modal) { EL.modal.remove(); EL.modal = null; } }
 
   // ---------- keys sheet ----------
   function showKeys() {
     if (EL.sheet) { EL.sheet.remove(); EL.sheet = null; return; }
-    const dl = h('dl', null, KEYS.map(k => [h('dt', null, h('span', { class: 'keycap' }, k[0])), h('dd', { style: 'margin:0' }, k[1])]));
+    const dl = h('dl', null, KEYS.map(k => [h('dt', null, h('span', { class: 'keycap' }, k[0] === 'Space' ? _('Space') : k[0])), h('dd', { style: 'margin:0' }, _(k[1]))]));
     EL.sheet = h('div', { class: 'modal', onclick: e => { if (e.target === EL.sheet) showKeys(); } },
-      h('div', { class: 'card sheet' }, h('div', { class: 'tag' }, 'Keyboard'), h('h2', null, 'Shortcuts'), dl, h('div', { class: 'acts' }, h('button', { class: 'btn', type: 'button', onclick: showKeys }, 'Got it'))));
+      h('div', { class: 'card sheet' }, h('div', { class: 'tag' }, _('Keyboard')), h('h2', null, _('Shortcuts')), dl, h('div', { class: 'acts' }, h('button', { class: 'btn', type: 'button', onclick: showKeys }, _('Got it')))));
     EL.stage.appendChild(EL.sheet);
   }
 
@@ -995,7 +998,7 @@
       case 'a': toggleAim(); break;
       case 'n': newMatch(); break;
       case 's': setSound(!S.soundOn); break;
-      case 'm': S.muted = !S.muted; if (S.muted === false && !S.soundOn) { /* stays off */ } applyAudio(); sync(); toast(S.muted ? 'Muted' : (S.soundOn ? 'Sound on' : 'Sound is off (press S)'), { ms: 1500 }); break;
+      case 'm': S.muted = !S.muted; if (S.muted === false && !S.soundOn) { /* stays off */ } applyAudio(); sync(); toast(S.muted ? _('Muted') : (S.soundOn ? _('Sound on') : _('Sound is off (press S)')), { ms: 1500 }); break;
       case '`': toggleDebug(); break;
       case '?': showKeys(); break;
       default: used = false;
@@ -1068,14 +1071,14 @@
       if (e.phase === 'play' && lastPhase !== 'play' && lastPhase !== 'changeover') playStartSim = M ? M.simTime : 0;
       lastPhase = e.phase; updatePhaseLabel();
       if (e.phase === 'results') buildResults();
-      if (e.phase === 'setBreak') feed({ src: 'ui', icon: '☕', text: 'Set break. Towels out.', key: false });
+      if (e.phase === 'setBreak') feed({ src: 'ui', icon: '☕', text: _('Set break. Towels out.'), key: false });
     });
     BUS.on('match:finished', function () { if (!EL.modal && !resultsShown) buildResults(); });
     BUS.on('score:change', function (e) { setScore(e && e.state); });
     BUS.on('flag:update', function (e) {
       flags = { matchPoint: e.matchPoint || null, setPoint: e.setPoint || null, breakPoint: e.breakPoint || null, golden: !!e.golden };
       updateStickers(lastScoreState);
-      const key = e.matchPoint ? 'Match point, Team ' + e.matchPoint : e.setPoint ? 'Set point, Team ' + e.setPoint : e.breakPoint ? 'Break point, Team ' + e.breakPoint : e.golden ? 'Golden point' : null;
+      const key = e.matchPoint ? _('Match point, Team {team}', { team: e.matchPoint }) : e.setPoint ? _('Set point, Team {team}', { team: e.setPoint }) : e.breakPoint ? _('Break point, Team {team}', { team: e.breakPoint }) : e.golden ? 'Golden point' : null;
       if (key) feed({ src: 'ui', icon: '▲', text: key + '.', key: true });
     });
     BUS.on('point:start', function (e) {
@@ -1084,49 +1087,49 @@
         const C = mod('court'), M = mod('match');
         if (C && C.setVenue) safe(() => C.setVenue(pendingVenue), 'court.setVenue');
         if (M && M.cfg) M.cfg.venue = pendingVenue;
-        toast('Court switched: ' + (VENUES.find(v => v[0] === pendingVenue) || [0, pendingVenue])[1], { kind: 'good' });
+        toast(_('Court switched: {court}', { court: _((VENUES.find(v => v[0] === pendingVenue) || [0, pendingVenue])[1]) }), { kind: 'good' });
         pendingVenue = null;
       }
     });
     BUS.on('rally:stroke', function (e) { rallyN = e.n; EL.chipRally.hidden = rallyN < 2; EL.chipRally.textContent = 'Rally ' + rallyN; });
     BUS.on('point:end', function (e) {
       const who = teamName(e.winner);
-      feed({ src: 'ui', icon: '●', text: who + ' · ' + (KIND_TXT[e.kind] || e.kind) + (e.rallyLen > 1 ? ' (' + e.rallyLen + ' strokes)' : ''), key: e.kind === 'ace' || e.rallyLen >= 14 });
-      if (e.rallyLen >= 14) toast('Rally of ' + e.rallyLen + ' strokes!', { kind: 'good', ms: 2400 });
+      feed({ src: 'ui', icon: '●', text: who + ' · ' + (KIND_TXT[e.kind] || e.kind) + (e.rallyLen > 1 ? ' (' + _('{n} strokes', { n: e.rallyLen }) + ')' : ''), key: e.kind === 'ace' || e.rallyLen >= 14 });
+      if (e.rallyLen >= 14) toast(_('Rally of {n} strokes!', { n: e.rallyLen }), { kind: 'good', ms: 2400 });
       if (S.tab === 'stats') renderStats();
     });
-    BUS.on('game:end', function (e) { feed({ src: 'ui', icon: '◆', text: 'Game ' + teamName(e.winner) + (e.score ? ' (' + e.score.A + '-' + e.score.B + ')' : ''), key: true }); });
-    BUS.on('set:end', function (e) { feed({ src: 'ui', icon: '★', text: 'Set ' + teamName(e.winner) + (e.score ? ' (' + e.score.A + '-' + e.score.B + ')' : ''), key: true }); toast('Set to ' + teamName(e.winner), { kind: 'good' }); });
-    BUS.on('match:end', function (e) { feed({ src: 'ui', icon: '★', text: 'Match to ' + teamName(e.winner) + '.', key: true }); });
+    BUS.on('game:end', function (e) { feed({ src: 'ui', icon: '◆', text: _('Game {team}', { team: teamName(e.winner) }) + (e.score ? ' (' + e.score.A + '-' + e.score.B + ')' : ''), key: true }); });
+    BUS.on('set:end', function (e) { feed({ src: 'ui', icon: '★', text: _('Set {team}', { team: teamName(e.winner) }) + (e.score ? ' (' + e.score.A + '-' + e.score.B + ')' : ''), key: true }); toast(_('Set to {team}', { team: teamName(e.winner) }), { kind: 'good' }); });
+    BUS.on('match:end', function (e) { feed({ src: 'ui', icon: '★', text: _('Match to {team}.', { team: teamName(e.winner) }), key: true }); });
     BUS.on('coach:change', function (e) {
       const prev = lastOrders[e.team] || {}, o = e.orders || {}; const bits = [];
-      if (o.preset !== prev.preset) bits.push((PRESET_LABELS.find(p => p[0] === o.preset) || [0, o.preset])[1]);
-      if (o.serveDir !== prev.serveDir && o.serveDir) bits.push('serve ' + o.serveDir);
-      if (o.returnDir !== prev.returnDir && o.returnDir) bits.push('return ' + o.returnDir);
-      if (o.middlePriority !== prev.middlePriority) bits.push(o.middlePriority === undefined ? 'middle: auto' : 'middle: player ' + (o.middlePriority + 1));
-      if (o.focusOpponent !== prev.focusOpponent && o.focusOpponent !== undefined) bits.push('focus opponent ' + (o.focusOpponent + 1));
-      if (o.aimPoint && o.aimPoint !== prev.aimPoint) bits.push('aim set');
+      if (o.preset !== prev.preset) bits.push(_((PRESET_LABELS.find(p => p[0] === o.preset) || [0, o.preset])[1]));
+      if (o.serveDir !== prev.serveDir && o.serveDir) bits.push(_('serve {dir}', { dir: o.serveDir }));
+      if (o.returnDir !== prev.returnDir && o.returnDir) bits.push(_('return {dir}', { dir: o.returnDir }));
+      if (o.middlePriority !== prev.middlePriority) bits.push(o.middlePriority === undefined ? _('middle: auto') : _('middle: player {n}', { n: o.middlePriority + 1 }));
+      if (o.focusOpponent !== prev.focusOpponent && o.focusOpponent !== undefined) bits.push(_('focus opponent {n}', { n: o.focusOpponent + 1 }));
+      if (o.aimPoint && o.aimPoint !== prev.aimPoint) bits.push(_('aim set'));
       lastOrders[e.team] = Object.assign({}, o);
-      if (bits.length) feed({ src: 'ui', icon: '✎', text: 'Coach ' + e.team + ': ' + bits.join(', '), key: false });
+      if (bits.length) feed({ src: 'ui', icon: '✎', text: _('Coach {team}: {bits}', { team: e.team, bits: bits.join(', ') }), key: false });
       sync();
     });
     let fmTs = {};
     BUS.on('ai:formation', function (e) {
       const k = e.team + e.formation, now = performance.now(); if (fmTs[k] && now - fmTs[k] < 4000) return; fmTs[k] = now;
-      feed({ src: 'ui', icon: '⇄', text: 'Team ' + e.team + ' shifts to ' + e.formation + '.', key: false });
+      feed({ src: 'ui', icon: '⇄', text: _('Team {team} shifts to {formation}.', { team: e.team, formation: e.formation === 'attack' || e.formation === 'defend' ? _(e.formation) : e.formation }), key: false });
     });
     BUS.on('changeover:start', function (e) {
-      if (e.kind === 'timeout') { banner(h('span', null, 'Timeout, Team ' + e.team, h('small', null, 'Adjust the tactics in the coach box'))); }
-      else toast('Changeover. A good moment for new orders.', { kind: 'info' });
+      if (e.kind === 'timeout') { banner(h('span', null, _('Timeout, Team {team}', { team: e.team }), h('small', null, _('Adjust the tactics in the coach box')))); }
+      else toast(_('Changeover. A good moment for new orders.'), { kind: 'info' });
       const c = $('#sec-coach'); if (c) { c.classList.remove('pulse'); void c.offsetWidth; c.classList.add('pulse'); setTimeout(() => c.classList.remove('pulse'), 4000); }
-      feed({ src: 'ui', icon: '⇅', text: (e.kind === 'timeout' ? 'Timeout, Team ' + e.team : e.kind === 'set' ? 'Set changeover' : 'Changeover') + '.', key: e.kind === 'timeout' });
+      feed({ src: 'ui', icon: '⇅', text: (e.kind === 'timeout' ? _('Timeout, Team {team}', { team: e.team }) : e.kind === 'set' ? _('Set changeover') : 'Changeover') + '.', key: e.kind === 'timeout' });
     });
     BUS.on('changeover:end', function (e) { if (e.kind === 'timeout') banner(null); });
     BUS.on('challenge:result', function (e) {
       const fin = e.overturned ? (e.call === 'in' ? 'OUT' : 'IN') : (e.call || '').toUpperCase();
-      const txt = 'Eagle Eye: ' + fin + ' — ' + (e.overturned ? 'call overturned' : 'call stands');
-      toast(txt + ' (Team ' + e.team + ')', { kind: e.overturned ? 'good' : 'warn', ms: 4500 });
-      feed({ src: 'ui', icon: '◎', text: txt + ', challenge by Team ' + e.team + '.', key: true });
+      const txt = e.overturned ? _('Eagle Eye: {call} — call overturned', { call: fin }) : _('Eagle Eye: {call} — call stands', { call: fin });
+      toast(_('{text} (Team {team})', { text: txt, team: e.team }), { kind: e.overturned ? 'good' : 'warn', ms: 4500 });
+      feed({ src: 'ui', icon: '◎', text: _('{text}, challenge by Team {team}.', { text: txt, team: e.team }), key: true });
       const rp = mod('replay'); const M = mod('match');
       // the match flow plays the replay for AI challenges; a coach challenge plays it here
       if (rp && rp.play && !rp.active && S.coachClaimed && e.team === S.coachTeam && !(M && M.cfg && M.cfg.fast)) safe(() => rp.play({ kind: 'challenge' }), 'replay');
@@ -1163,7 +1166,7 @@
     feedReset();
     buildPlayerCards(); refillFollow();
     const Rl = mod('rules'); if (Rl && Rl.state) setScore(Rl.state);
-    feed({ src: 'ui', icon: '✦', text: 'New match: ' + teamName('A') + ' vs ' + teamName('B') + ' · ' + (FORMAT_NAMES[S.format] || S.format) + ' · ' + (S.type === 'M' ? "men's" : S.type === 'W' ? "women's" : 'mixed') + '.', key: true });
+    feed({ src: 'ui', icon: '✦', text: _('New match: {a} vs {b} · {format} · {type}.', { a: teamName('A'), b: teamName('B'), format: _(FORMAT_NAMES[S.format] || S.format), type: S.type === 'M' ? _("men's") : S.type === 'W' ? _("women's") : _('mixed') }), key: true });
     sync(); renderTab();
   }
 
@@ -1184,22 +1187,22 @@
             const p = R.project(new R.THREE.Vector3(aimXZ.x, 0.02, aimXZ.z));
             if (p && p.visible) { EL.aimmark.style.left = p.x + 'px'; EL.aimmark.style.top = p.y + 'px'; show = true; }
           }
-        } else if (aimXZ) { if (!o.aimPoint && performance.now() - aimSetAt > 800) { toast('Aim used or expired.', { ms: 1500 }); } aimXZ = null; }
+        } else if (aimXZ) { if (!o.aimPoint && performance.now() - aimSetAt > 800) { toast(_('Aim used or expired.'), { ms: 1500 }); } aimXZ = null; }
       }
       EL.aimmark.hidden = !show;
     }
     // timeout rest countdown
     if (tmo) {
       tmo.left -= dt;
-      banner(h('span', null, tmo.label, h('small', null, Math.ceil(tmo.left) + ' s · adjust tactics, then resume')), h('button', { class: 'btn small', type: 'button', onclick: endRest }, 'Resume now'));
+      banner(h('span', null, tmo.label, h('small', null, _('{n} s · adjust tactics, then resume', { n: Math.ceil(tmo.left) }))), h('button', { class: 'btn small', type: 'button', onclick: endRest }, _('Resume now')));
       if (tmo.left <= 0) endRest();
     }
     if (pendingTimeout) tryTimeout();
     // auto-next
     if (nextAt) {
       const left = Math.ceil((nextAt - performance.now()) / 1000);
-      if (EL.nextLine && EL.modal) { EL.nextLine.hidden = false; EL.nextLine.textContent = 'Next match in ' + Math.max(0, left) + ' s (switch Auto-next off to stay)'; }
-      else EL.chipSpeed.title = 'Next in ' + left;
+      if (EL.nextLine && EL.modal) { EL.nextLine.hidden = false; EL.nextLine.textContent = _('Next match in {n} s (switch Auto-next off to stay)', { n: Math.max(0, left) }); }
+      else EL.chipSpeed.title = _('Next in {n}', { n: left });
       if (!S.autoNext) { nextAt = 0; }
       else if (left <= 0) { nextAt = 0; newMatch({ draw: true }); }
     }
@@ -1209,7 +1212,7 @@
         EL.chipClock.textContent = fmtClock((M.simTime || 0) - playStartSim);
         EL.chipSpeed.textContent = M.speed + '×' + (M.paused ? ' ⏸' : '');
         if (M.speed !== S.speed && !M.paused && M.phase !== 'idle') { S.speed = M.speed; }
-        const fp = $('#fab-pause'); const pl = M.paused ? 'Resume' : 'Pause';
+        const fp = $('#fab-pause'); const pl = M.paused ? _('Resume') : _('Pause');
         if (EL.btnPause.textContent !== pl) { EL.btnPause.textContent = pl; if (fp) fp.textContent = pl; EL.speed && EL.speed.sync(); updateBannerPause(); }
         EL.speed.sync();
       }
@@ -1222,7 +1225,7 @@
         EL.btnChal.classList.toggle('primary', can);
         EL.btnTmo.setAttribute('aria-disabled', st.timeouts && st.timeouts[t] > 0 ? 'false' : 'true');
         EL.btnChal.setAttribute('aria-disabled', can ? 'false' : 'true');
-        EL.coachInfo.textContent = 'Coaching Team ' + t + ' (' + teamName(t) + '). ' + (can ? 'Eagle Eye available: press C.' : '');
+        EL.coachInfo.textContent = _('Coaching Team {team} ({name}).', { team: t, name: teamName(t) }) + ' ' + (can ? _('Eagle Eye available: press C.') : '');
       }
       if (S.tab === 'players') updatePlayerCards();
       if (S.tab === 'score') renderScoreTab();

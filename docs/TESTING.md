@@ -9,6 +9,7 @@ Run everything from the repo root with Node 22+. The headless suites need no bro
 | `node tools/scoring_tests.js [--quick]` | 119 cases: 6 format×scoring combos × 10,000 random matches vs an independent reference scorer; serve rotation; tie-breaks; live point FSM; outside-contact scoring |
 | `node tools/player_ai_tests.js` | custom-player validation and restoration, gender eligibility, duplicate prevention, kick smashes on both ends, overhead preference, full women's and mixed matches with Annetta |
 | `node tools/commentary_tests.js` | commentary generator over simulated events |
+| `node tools/i18n_tests.js` | dictionary module: lookup, fallback, tokens, parity of every registered language |
 | `node tools/matrix.js [--part k/3]` | 18 full matches: 3 formats × 2 scorings × M/W/X, venues rotated |
 | `node tools/sim_cli.js --n N [--seed S] [--tune '{json}']` | aggregate match statistics |
 | `node tools/reflex_stats.js [--n N] [--seed S] [--tune '{json}']` | what happens to smashes (winner, error, touched, rally continues) and how often the net players trade 3+ volleys in a row |

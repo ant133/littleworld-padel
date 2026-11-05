@@ -3,14 +3,19 @@
 // No DOM / THREE / window access at load time. Cosmetic randomness uses a private seeded rng (never the sim streams).
 (function (HPO) {
   'use strict';
-  const BUS = HPO.BUS;
+  const BUS = HPO.BUS, _ = HPO.t;
+  const L = () => HPO.mod.i18n;
 
   // ---------------------------------------------------------------- word helpers
   const NUM = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen',
     'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty'];
   const ORD = ['zeroth', 'first', 'second', 'third', 'fourth', 'fifth'];
   const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
-  const nw = n => (n >= 0 && n < NUM.length ? NUM[n] : String(n));
+  // number and ordinal words go through the dictionary under num.* / ord.* and fall back to the English word
+  const word = (ns, w) => { const k = ns + '.' + w, r = _(k); return r === k ? w : r; };
+  const nw = n => (n >= 0 && n < NUM.length ? word('num', NUM[n]) : String(n));
+  const ord = n => (ORD[n] ? word('ord', ORD[n]) : n + 'th');
+  const pairOf = a => (a.length > 1 ? _('{a} and {b}', { a: a[0], b: a[1] }) : a[0] || '');
   const lastWord = s => String(s || '').trim().split(/\s+/).pop();
   const firstWord = s => String(s || '').trim().split(/\s+/)[0];
   const other = t => (t === 'A' ? 'B' : 'A');
@@ -84,6 +89,10 @@
       '{T} win the golden point!', 'The golden point goes to {T}!', 'And {T} take the game on the golden point!', 'Golden point decided, {T} come through.'] },
     retrieval: { pri: 1, cd: 25, lines: [
       '{P} chases it outside the court and plays it back!', 'The ball is out of the enclosure, and {P} goes after it!', '{P} fetches that from outside and returns it, amazing effort.', 'Out through the door goes {P}, and the point is still alive!'] },
+    // only spoken when the language has its own 'commentary.salim' lines (Bahasa Indonesia: 15-15 is "salim"); the English lines are never emitted
+    salim: { pri: 1, cd: 90, lines: [
+      'Fifteen all, which they call salim in Jakarta: sama lima.', 'Salim! That is Jakarta for fifteen all.', 'Fifteen all. Salim, short for sama lima, as they say here.',
+      'Salim time: fifteen all, and everything still to play for.'] },
     timeout: { pri: 1, cd: 30, lines: [
       'A tactical timeout is called, time for a chat.', 'Timeout! The coach has a few words.', 'They stop the clock for a timeout and regroup.', 'A timeout, a chance to reset the plan.'] },
     // ---- serve
@@ -190,7 +199,7 @@
 
       // pick a template index, avoiding the previous 2 for this key and any exact text recently said
       pick(key, vars) {
-        const pool = POOL[key].lines, n = pool.length, hist = E.lastIdx[key] || [];
+        const pool = L().list('commentary.' + key, POOL[key].lines), n = pool.length, hist = E.lastIdx[key] || [];
         const avoid = hist.slice(-Math.min(2, n - 2 > 0 ? 2 : 1));
         let idx = -1, text = '';
         for (let tries = 0; tries < 12; tries++) {
@@ -227,7 +236,7 @@
         let text = pk.text;
         const ex = Math.min(3, (s.excite !== undefined ? s.excite : pri) + (s.rallyN >= 20 ? 1 : 0) + (imp >= 1 ? 1 : 0));
         if (ex >= 2 && !NO_INTER[key] && rng.chance(ex >= 3 ? 0.55 : 0.3)) {
-          const ip = INTER[ex >= 3 ? 3 : 2];
+          const ip = L().list('commentary.inter' + (ex >= 3 ? 3 : 2), INTER[ex >= 3 ? 3 : 2]);
           const w = ip[rng.int(0, ip.length - 1)];
           if (E.recent.indexOf(w) < 0) { text = w + ' ' + text; E.recent.push(w); }
         }
@@ -248,7 +257,7 @@
         const last = E.cdKey['u:' + key];
         if (last !== undefined && t - last < 0.05 && E.cdKey['u:text:' + key] === text) return null;
         E.cdKey['u:' + key] = t; E.cdKey['u:text:' + key] = text;
-        const out = { text: text, key: key, priority: pri, voice: 'umpire', t: t, excite: 0, tpl: 0, why: s.why || null };
+        const out = { text: text, key: key, priority: pri, voice: 'umpire', t: t, excite: 0, tpl: 0, why: s.why || null, tone: s.tone || null };
         E.log.push(out); if (E.log.length > 400) E.log.shift();
         E.stats.emitted++;
         return out;
@@ -278,25 +287,26 @@
   function scoreCall(st, teamName) {
     const sv = st.server ? st.server.team : 'A', rv = other(sv);
     const a = st.points[sv], b = st.points[rv];
+    if (st._r && st._r.pts) return a === b ? _('{n} all', { n: cap(nw(a)) }) : cap(nw(a)) + '–' + nw(b);   // Blitz and Americano count plain points
     if (st.inTiebreak) {
-      if (a === b) return a === 0 ? 'Tie-break, zero all' : cap(nw(a)) + ' all';
+      if (a === b) return a === 0 ? _('Tie-break, zero all') : _('{n} all', { n: cap(nw(a)) });
       return cap(nw(a)) + '–' + nw(b);
     }
-    if (st.goldenPoint) return 'Golden point, receivers choose the side';
+    if (st.goldenPoint) return _('Golden point, receivers choose the side');
     if (a >= 3 && b >= 3) {
       if (a === b) return 'Deuce';
-      return 'Advantage ' + teamName(a > b ? sv : rv);
+      return _('Advantage {team}', { team: teamName(a > b ? sv : rv) });
     }
-    if (a === b) return a === 0 ? 'Love all' : cap(pointWord(a)) + ' all';
+    if (a === b) return a === 1 && !(st._r && st._r.pts) ? _('Fifteen all') : _('{word} all', { word: cap(pointWord(a)) });
     return cap(pointWord(a)) + '–' + pointWord(b);
   }
   function gamesPhrase(sc) {
     const hi = Math.max(sc.A, sc.B), lo = Math.min(sc.A, sc.B);
-    return hi === lo ? 'Games ' + nw(hi) + ' all' : 'Games ' + nw(hi) + '–' + nw(lo);
+    return hi === lo ? _('Games {n} all', { n: nw(hi) }) : _('Games {hi}–{lo}', { hi: nw(hi), lo: nw(lo) });
   }
   function setScoreWords(e) {
     const s = nw(e.A) + '–' + nw(e.B);
-    return e.tb ? s + ', tie-break ' + nw(Math.min(e.tb.A, e.tb.B)) : s;
+    return e.tb ? _('{score}, tie-break {n}', { score: s, n: nw(Math.min(e.tb.A, e.tb.B)) }) : s;
   }
 
   // ---------------------------------------------------------------- dispatch of summaries (pure)
@@ -319,7 +329,7 @@
       case 'tiebreak': return E.say('tiebreak', varsOf(s), withWhy(s, {}));
       case 'fatigue': return E.say('fatigue', varsOf(s), withWhy(s, { fatigue: s.fatigue }));
       case 'formation': return E.say(s.formation === 'attack' ? 'formationAttack' : s.formation === 'defend' ? 'formationDefend' : null, varsOf(s), withWhy(s, { formation: s.formation }));
-      case 'coach': return COACH_LABEL[s.preset] ? E.say('coach', varsOf(Object.assign({}, s, { PL: COACH_LABEL[s.preset] })), withWhy(s, { preset: s.preset })) : null;
+      case 'coach': return COACH_LABEL[s.preset] ? E.say('coach', varsOf(Object.assign({}, s, { PL: _(COACH_LABEL[s.preset]) })), withWhy(s, { preset: s.preset })) : null;
       case 'changeover': return E.say(s.kind === 'set' ? 'changeoverSet' : 'changeoverGame', varsOf(s), withWhy(s, { kind: s.kind }));
       case 'challenge': return s.overturned
         ? E.say('challengeOver', varsOf(Object.assign({}, s, { S: s.call === 'in' ? 'out' : 'in' })), withWhy(s, { overturned: true }))
@@ -327,7 +337,8 @@
       case 'retrieval': return E.say('retrieval', varsOf(s), withWhy(s, { retrieval: true }));
       case 'timeout': return E.say('timeout', varsOf(s), withWhy(s, { timeout: true }));
       case 'phase': return phaseLine(E, s);
-      case 'score': return E.call('score', s.text, s.priority === undefined ? 1 : s.priority, { t: s.t });
+      case 'score': return E.call('score', s.text, s.priority === undefined ? 1 : s.priority, { t: s.t, tone: s.tone });
+      case 'salim': return L().list('commentary.salim', null) ? E.say('salim', varsOf(s), withWhy(s, { salim: true })) : null;
       default: return null;
     }
   }
@@ -340,7 +351,7 @@
   }
 
   function faultLine(E, s) {
-    const umpire = E.call('fault', s.kind === 'foot' ? FAULT_TEXT.foot : (FAULT_TEXT[s.kind] || 'Fault'), 2, { t: s.t, why: { kind: s.kind } });
+    const umpire = E.call('fault', s.kind === 'foot' ? FAULT_TEXT.foot : (FAULT_TEXT[s.kind] || 'Fault'), 2, { t: s.t, why: { kind: s.kind }, tone: 'fault' });
     return umpire;
   }
 
@@ -434,7 +445,7 @@
 
   function newCtx() {
     return {
-      names: {}, short: {}, first: {}, nick: {}, gender: {}, teamOf: {}, labelOf: { A: 'Team A', B: 'Team B' },
+      names: {}, short: {}, first: {}, nick: {}, gender: {}, teamOf: {}, labelOf: { A: _('Team {team}', { team: 'A' }), B: _('Team {team}', { team: 'B' }) },
       pt: null, bundle: {}, wallsRun: 0, glassRun: 0, pending: false,
       streak: { team: null, n: 0 }, gameStreak: { team: null, n: 0 }, flags: {}, tbAnnounced: false, fatiguePlayers: {}, lastFault: null, lastPointStart: null,
       lastNameUse: null, lastPointServer: null, lastCoach: null, letAt: -9
@@ -442,17 +453,17 @@
   }
   function refreshNames() {
     const P = mod().players; if (!P || !P.list) return;
-    ctx.labelOf = { A: 'Team A', B: 'Team B' };
+    ctx.labelOf = { A: _('Team {team}', { team: 'A' }), B: _('Team {team}', { team: 'B' }) };
     const byTeam = { A: [], B: [] };
     P.list.forEach(function (p) {
       ctx.names[p.id] = p.name; ctx.short[p.id] = p.id === 'p5' ? 'Annetta' : lastWord(p.name); ctx.first[p.id] = firstWord(p.name);
       ctx.nick[p.id] = p.def && p.def.nick || ''; ctx.gender[p.id] = p.def && p.def.gender || 'M'; ctx.teamOf[p.id] = p.team;
       if (byTeam[p.team]) byTeam[p.team].push(p.id === 'p5' ? 'Annetta' : lastWord(p.name));
     });
-    ctx.pair = { A: byTeam.A.join(' and ') || 'Team A', B: byTeam.B.join(' and ') || 'Team B' };
+    ctx.pair = { A: pairOf(byTeam.A) || _('Team {team}', { team: 'A' }), B: pairOf(byTeam.B) || _('Team {team}', { team: 'B' }) };
   }
   function pName(id) {
-    if (!id) return 'the player';
+    if (!id) return _('the player');
     if (!ctx.short[id]) return id;
     const r = engine.rng.next(); let n = ctx.short[id];
     if (r > 0.88 && ctx.nick[id] && ctx.lastNameUse !== id) n = ctx.nick[id];
@@ -460,12 +471,12 @@
     ctx.lastNameUse = id;
     return n;
   }
-  const teamLbl = t => (ctx.pair && ctx.pair[t]) || 'Team ' + t;      // commentator: surnames
-  const umpTeam = t => (teamNames && teamNames[t]) || 'Team ' + t;    // umpire: scoreboard label
+  const teamLbl = t => (ctx.pair && ctx.pair[t]) || _('Team {team}', { team: t });      // commentator: surnames
+  const umpTeam = t => (teamNames && teamNames[t]) || _('Team {team}', { team: t });    // umpire: scoreboard label
 
   function emitLine(ln, feedKind, icon) {
     if (!ln) return ln;
-    const ev = { text: ln.text, voice: ln.voice, priority: ln.priority, key: ln.key, ts: Date.now(), t: ln.t };
+    const ev = { text: ln.text, voice: ln.voice, priority: ln.priority, key: ln.key, tone: ln.tone || undefined, ts: Date.now(), t: ln.t };
     BUS.emit('speak', ev);
     const ui = mod().ui;
     if (ui && typeof ui.feed === 'function' && (ln.voice === 'commentator' || ln.priority >= 2)) {
@@ -535,14 +546,14 @@
   function onFault(e) {
     if (!ctx || !e) return;
     ctx.lastFault = e;
-    if (e.kind === 'let') { if (T() - ctx.letAt > 0.02) { ctx.letAt = T(); send({ type: 'score', text: 'Let', priority: 2 }); send({ type: 'let' }); } return; }
+    if (e.kind === 'let') { if (T() - ctx.letAt > 0.02) { ctx.letAt = T(); send({ type: 'score', text: 'Let', priority: 2, tone: 'let' }); send({ type: 'let' }); } return; }
     send({ type: 'fault', kind: e.kind });
     if (e.kind === 'mesh') { const ln = engine.say('faultMesh', {}, { t: T(), why: { kind: 'mesh' } }); emitLine(ln); }
     else if (e.kind === 'net') { const ln = engine.say('faultNet', {}, { t: T(), why: { kind: 'net' } }); emitLine(ln); }
   }
   function onLet() {
     if (!ctx) return;
-    if (T() - ctx.letAt > 0.02) { ctx.letAt = T(); send({ type: 'score', text: 'Let', priority: 2 }); send({ type: 'let' }); }
+    if (T() - ctx.letAt > 0.02) { ctx.letAt = T(); send({ type: 'score', text: 'Let', priority: 2, tone: 'let' }); send({ type: 'let' }); }
   }
 
   function onPointEnd(e) {
@@ -575,8 +586,8 @@
       const hitterTeam = e.hitter ? ctx.teamOf[e.hitter] : null;
       const imp = b.match ? 2 : b.set ? 2 : b.game ? 1 : (flagsPrev.matchPoint || flagsPrev.setPoint || flagsPrev.golden) ? 1 : 0;
       // umpire: out / double fault
-      if (e.kind === 'doubleFault') send({ type: 'score', text: 'Double fault', priority: 2, t: t });
-      else if (OUT_REASONS[e.reason] && e.kind !== 'ace' && e.kind !== 'doubleFault') send({ type: 'score', text: 'Out', priority: 2, t: t });
+      if (e.kind === 'doubleFault') send({ type: 'score', text: 'Double fault', priority: 2, t: t, tone: 'out' });
+      else if (OUT_REASONS[e.reason] && e.kind !== 'ace' && e.kind !== 'doubleFault') send({ type: 'score', text: 'Out', priority: 2, t: t, tone: 'out' });
       // who saved what: the team holding the flag did not win the point
       let saved = null;
       if (flagsPrev.matchPoint && flagsPrev.matchPoint !== e.winner) saved = 'match';
@@ -601,17 +612,19 @@
     const names = ctx.names;
     if (b.match) {
       const sets = b.match.sets || (st && st.sets) || [];
-      send({ type: 'score', text: 'Game, set and match, ' + umpTeam(b.match.winner) + '. ' + cap(sets.map(setScoreWords).join(', ')) + '.', priority: 3 }, 'trophy');
+      send({ type: 'score', text: _('Game, set and match, {team}. {sets}.', { team: umpTeam(b.match.winner), sets: cap(sets.map(setScoreWords).join(', ')) }), priority: 3, tone: 'set' }, 'trophy');
     } else if (b.set) {
       const n = b.set.setNo || (st ? st.sets.length : 1);
-      send({ type: 'score', text: 'Game and ' + (ORD[n] || n + 'th') + ' set, ' + umpTeam(b.set.winner) + ', ' + nw(Math.max(b.set.score.A, b.set.score.B)) + ' games to ' + nw(Math.min(b.set.score.A, b.set.score.B)) + (b.set.score.tb ? ' (tie-break)' : '') + '.', priority: 3 }, 'flag');
+      const score = _('{hi} games to {lo}', { hi: nw(Math.max(b.set.score.A, b.set.score.B)), lo: nw(Math.min(b.set.score.A, b.set.score.B)) }) + (b.set.score.tb ? ' (tie-break)' : '');
+      send({ type: 'score', text: _('Game and {ord} set, {team}, {score}.', { ord: ord(n), team: umpTeam(b.set.winner), score: score }), priority: 3, tone: 'set' }, 'flag');
     } else if (b.game) {
       const sc = b.game.score, w = b.game.winner, lead = sc.A === sc.B ? null : sc.A > sc.B ? 'A' : 'B';
-      let txt = 'Game, ' + umpTeam(w) + '. ' + gamesPhrase(sc) + (lead && lead !== w ? ' to ' + umpTeam(lead) : '') + '.';
-      if (b.game.tb) txt = 'Game, ' + umpTeam(w) + '. ' + gamesPhrase(sc) + '.';
-      send({ type: 'score', text: txt, priority: 2 }, 'flag');
+      const games = gamesPhrase(sc) + (lead && lead !== w && !b.game.tb ? ' ' + _('to {team}', { team: umpTeam(lead) }) : '');
+      send({ type: 'score', text: _('Game, {team}. {games}.', { team: umpTeam(w), games: games }), priority: 2, tone: 'game' }, 'flag');
     } else if (st && b.point) {
       send({ type: 'score', text: scoreCall(st, umpTeam), priority: st.goldenPoint ? 3 : 1 });
+      // 15-15 is "salim" (sama lima) in Indonesia; the commentator joke only exists in a dictionary that has the lines
+      if (!st.inTiebreak && !(st._r && st._r.pts) && st.points.A === 1 && st.points.B === 1) send({ type: 'salim', sameTick: true });
     }
 
     // commentator extras: game / set / match
@@ -620,9 +633,9 @@
       if (ctx.gameStreak.team === gw) ctx.gameStreak.n++; else { ctx.gameStreak.team = gw; ctx.gameStreak.n = 1; }
       const lg = st && st.log && st.log.length ? st.log[st.log.length - 1] : null;
       const hold = lg ? lg.serverTeam === gw : false, broke = lg ? lg.serverTeam !== gw : false;
-      const sc = b.game.score, srv = (sc.A === sc.B) ? 'all square' : gamesPhrase(sc).replace('Games ', '');
+      const sc = b.game.score;
       if (!b.set && !b.match) {
-        const g = send({ type: 'game', T: teamLbl(gw), S: sc.A === sc.B ? nw(sc.A) + ' all' : nw(Math.max(sc.A, sc.B)) + '–' + nw(Math.min(sc.A, sc.B)), tb: b.game.tb, hold: hold && !b.game.tb, broke: broke && !b.game.tb, importance: 0, sameTick: true }, 'flag');
+        const g = send({ type: 'game', T: teamLbl(gw), S: sc.A === sc.B ? _('{n} all', { n: nw(sc.A) }) : nw(Math.max(sc.A, sc.B)) + '–' + nw(Math.min(sc.A, sc.B)), tb: b.game.tb, hold: hold && !b.game.tb, broke: broke && !b.game.tb, importance: 0, sameTick: true }, 'flag');
         if (!g && ctx.gameStreak.n >= 3) send({ type: 'gameStreak', T: teamLbl(gw), n: ctx.gameStreak.n, sameTick: true });
       }
     }
@@ -696,14 +709,14 @@
     if (e.phase === 'introductions') { sm.T = teamLbl('A'); sm.O = teamLbl('B'); }
     if (e.phase === 'play') {
       const R = mod().rules, sid = R && R.state && R.state.server ? R.state.server.playerId : null;
-      sm.P = sid ? ctx.names[sid] || sid : 'the server';
+      sm.P = sid ? ctx.names[sid] || sid : _('the server');
       if (sid) ctx.lastPointServer = sid;
     }
     send(sm, 'info');
   }
   function onSpeak(e) {
     if (!ctx || !e || e.key || e.voice !== 'umpire') return;
-    if (/timeout/i.test(e.text)) send({ type: 'timeout' }, 'info');
+    if (e.kind === 'timeout') send({ type: 'timeout' }, 'info');
   }
   function onServeHit(e) { if (ctx && e && e.playerId) ctx.lastPointServer = e.playerId; }
 

@@ -1,7 +1,7 @@
 // Players: roster, attributes, kinematics, predictive interception, strike execution, serve routine.
 (function (HPO) {
   'use strict';
-  const U = HPO.util, BUS = HPO.BUS, CFG = HPO.cfg;
+  const U = HPO.util, BUS = HPO.BUS, CFG = HPO.cfg, _ = HPO.t;
   const lvl = a => U.clamp((a - 30) / 65, 0.02, 1);
   // a smash struck close to the net leaves the defenders less to read than one struck from the back of the court
   function smashDepthRead(hitter) {
@@ -39,9 +39,9 @@
     roster() { return ROSTER; },
     createCustom(input) {
       const name = typeof input.name === 'string' ? input.name.trim().replace(/\s+/g, ' ') : '';
-      if (!name || name.length > 40 || /[\u0000-\u001f\u007f]/.test(name)) throw new Error('Enter a name of 1–40 characters.');
-      if (input.gender !== 'M' && input.gender !== 'F') throw new Error('Choose a gender.');
-      if (!Number.isInteger(input.seed) || input.seed < 1 || input.seed > 4294967295) throw new Error('Invalid player seed.');
+      if (!name || name.length > 40 || /[\u0000-\u001f\u007f]/.test(name)) throw new Error(_('Enter a name of 1–40 characters.'));
+      if (input.gender !== 'M' && input.gender !== 'F') throw new Error(_('Choose a gender.'));
+      if (!Number.isInteger(input.seed) || input.seed < 1 || input.seed > 4294967295) throw new Error(_('Invalid player seed.'));
       const id = 'custom-' + input.seed.toString(16), existing = ROSTER.find(r => r.id === id);
       if (existing) return existing;
       const rg = HPO.makeRng(input.seed), attrs = {};
@@ -56,7 +56,7 @@
       ROSTER.push(def); return def;
     },
     restoreCustom(def) {
-      if (!def || def.custom !== true || def.id !== 'custom-' + Number(def.seed).toString(16)) throw new Error('Invalid saved player.');
+      if (!def || def.custom !== true || def.id !== 'custom-' + Number(def.seed).toString(16)) throw new Error(_('Invalid saved player.'));
       return P.createCustom(def);
     },
     get(id) { return P.byId[id]; },

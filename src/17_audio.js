@@ -225,7 +225,7 @@
     perSec: { count: 0, lastWindow: 0 }, started: {}, dropped: {}, venue: 'classicBlue', tension: 0, mood: 0
   };
   let hist = {}, recentStarts = [], lastRate = 0, sec = 0, stepAcc = {}, stepClock = 0, murLevel = 0, murTarget = 0.25, pendingReact = null, lastReactAt = -9, birdT = 3, clinkT = 8;
-  let loops = null, speechQ = [], speaking = false, speakStart = 0, voicesEn = null, hooked = false;
+  let loops = null, speechQ = [], speaking = false, speakStart = 0, voicesLang = null, hooked = false;
 
   const on = () => A.unlocked && A.enabled && !A.muted;
   const speedNow = () => { const m = HPO.mod.match; return m && m.speed ? m.speed : 1; };
@@ -391,16 +391,20 @@
   function loadVoices() {
     if (!speechOK()) return [];
     const v = speechSynthesis.getVoices() || [];
-    voicesEn = v.filter(function (x) { return /^en/i.test(x.lang); });
-    return voicesEn;
+    voicesLang = v.filter(function (x) { return new RegExp('^' + langPre(), 'i').test(x.lang); });
+    return voicesLang;
   }
+  // speech follows the page language (i18n.locale); English keeps its voice preferences, other languages take the first voice of that language
+  function langPre() { return String(HPO.mod.i18n && HPO.mod.i18n.locale || 'en').slice(0, 2); }
   function pickVoice(role) {
-    const v = voicesEn && voicesEn.length ? voicesEn : loadVoices(); if (!v.length) return null;
+    const v = voicesLang && voicesLang.length ? voicesLang : loadVoices(); if (!v.length) return null;
+    if (langPre() !== 'en') return v[0];
     const prefer = role === 'umpire' ? [/Google UK English Female/i, /Zira|Hazel|Samantha|Susan|Female/i, /en-GB/i] : [/Google UK English Male/i, /David|Daniel|Alex|Mark|Male/i, /en-GB/i, /en-US/i];
     for (let i = 0; i < prefer.length; i++) { const f = v.find(function (x) { return prefer[i].test(x.name) || prefer[i].test(x.lang); }); if (f) return f; }
     return v[0];
   }
-  function speechActive() { return A.speech && speechOK() && cfgVol.commentary > 0; }
+  // no voice for the page language: stay silent (text and chimes only) rather than read it with an English voice
+  function speechActive() { return A.speech && speechOK() && cfgVol.commentary > 0 && (langPre() === 'en' || (voicesLang && voicesLang.length > 0) || loadVoices().length > 0); }
   function toneKind(text) {
     if (/foot fault|^fault/i.test(text)) return 'fault';
     if (/^let/i.test(text)) return 'let';
@@ -414,7 +418,7 @@
     const p = ev.priority | 0, spd = speedNow();
     if (speechActive()) { enqueueSpeech(ev, p, spd); return; }
     // tone fallback (umpire only): short cues, rate-limited
-    if (ev.voice === 'umpire' && p >= 1 && !(spd >= 4 && p < 3) && !(spd >= 2 && p < 2)) play('chime', { kind: toneKind(ev.text), dest: A.env.commentary.out }, 'commentary');
+    if (ev.voice === 'umpire' && p >= 1 && !(spd >= 4 && p < 3) && !(spd >= 2 && p < 2)) play('chime', { kind: ev.tone || toneKind(ev.text), dest: A.env.commentary.out }, 'commentary');
   }
   function enqueueSpeech(ev, p, spd) {
     if (spd >= 4 && p < 3) return;
@@ -440,7 +444,7 @@
     try {
       const u = new SpeechSynthesisUtterance(it.text), v = pickVoice(it.voice);
       if (v) u.voice = v;
-      u.lang = (v && v.lang) || 'en-GB';
+      u.lang = (v && v.lang) || (HPO.mod.i18n && HPO.mod.i18n.locale) || 'en-GB';
       u.rate = it.voice === 'umpire' ? 0.95 : 1.12; u.pitch = it.voice === 'umpire' ? 0.85 : 1.05; u.volume = clamp(cfgVol.commentary * cfgVol.master, 0, 1);
       const done = function () { speaking = false; pump(); };
       u.onend = done; u.onerror = done;

@@ -39,3 +39,14 @@
 - **Follow-ups:** QTE telegraph cue before the freeze (needs an earlier lookahead); more OST; bigger ceremony; Studio/Play switch clarity; real-phone checks
 - **Links:** 7130d47
 - **Later:** interactive tutorial (`src/25_tutorial.js`, docs/TUTORIAL.md) replaces the first-run card set as the first match; version 2026.11.05.7.
+
+## 20:40 · Dictionary module for Bahasa Indonesia and text-impact map · claude · padel@main
+- **Status:** done
+- **Prompt:** Prepare a dictionary module where Bahasa Indonesia can be loaded; inspect the codebase for every place the dictionary will change text.
+- **Done:** `src/00_i18n.js` (`HPO.mod.i18n`, `HPO.t`; English text is the key, fallback to English, `?lang=id` opt-in) and an empty `src/00_lang_id.js`; `tools/i18n_tests.js` (10 checks, plus token and pool parity for any registered language); `docs/I18N.md` with the surface-by-surface map, coupling list and layout risks; CONTRACT 0.10.3; version 2026.11.05.9. No call site uses `HPO.t` yet, so game text is unchanged. Checked: i18n_tests, dupcheck, commentary_tests (1652 pass), headless Chrome with and without `?lang=id` (no errors, `<html lang>` follows). Not run: physics/scoring/player_ai/matrix/reflex suites and the browser journey.
+- **Files:** `src/00_i18n.js`, `src/00_lang_id.js`, `tools/i18n_tests.js`, `docs/I18N.md`, `docs/TESTING.md`, `CONTRACT.md`, `src/23_versions.js`
+- **Decisions:** D-2026-11-05-2040
+- **Follow-ups:** wire `t()` into the call sites (docs/I18N.md order of work); fix the text-parsing couplings first
+- **Links:** none
+- **Later (same day):** the user asked for the full Indonesian dictionary and words. Wired `HPO.t` into 19_ui, 21_game, 22_callouts, 24_qte, 25_tutorial, 23_versions, 08_rules.describeFormat, 06_players/09_match errors, 18_commentary (pools, umpire templates, salim), 16_replay_ceremony say/banner, 17_audio (voices by language, tone chimes) with four parallel forks; dictionary split in `src/00_lang_id*.js` (657 keys, 272 pool lines). In-world texts and padel terms stay English by the user's decision; Pause, Resume, Team, Auto, On, Off, None and the footer line kept English by the user's edit. Fixed `scoreCall` throwing in Blitz/Americano. Checked: i18n_tests 971, commentary_tests 1653, scoring --quick 119, americano_tests, qte_tests, dupcheck; headless Chrome with `?lang=id` (title, setup, tutorial, dock, match, pause, drawer, stats, Studio): no errors, `missing()` empty. Not run: physics, player_ai, matrix, reflex_stats, features_browser, a real phone, speech with an id-ID voice.
+- **Later still:** the user reviewed the full list and changed 62 entries (more English loanwords kept: swipe, tap, stat abbreviations, mute; "salim" explanation dropped from the scoring text). Applied to `src/00_lang_id*.js`, rebuilt. Committed and pushed on request.

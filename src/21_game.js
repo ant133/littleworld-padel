@@ -2,7 +2,7 @@
 // Presentation only; talks to the sim through the same public APIs as the panel (match.start via ui.newMatch, ai.setOrders, rules.challenge ...).
 (function (HPO) {
   'use strict';
-  const BUS = HPO.BUS;
+  const BUS = HPO.BUS, _ = HPO.t;
   const mod = n => HPO.mod[n];
   let API = null, S = null, EL = null, h = null, add = null, safe = null;
   const AN = 'p5'; // Annetta Arslan
@@ -54,9 +54,9 @@
   function lastName(d) { return d ? d.name.split(' ').slice(-1)[0] : ''; }
   function flag(d) { return API.flagEl(d && d.country && d.country.code); }
   function portrait(def, cls) { const c = h('canvas', { class: cls || 'gm-portrait', width: 24, height: 24 }); API.drawPortrait(c, def); return c; }
-  function segBtns(opts, get, set, cls) {
+  function segBtns(opts, get, set, cls, raw) {
     const root = h('div', { class: 'seg gm-seg ' + (cls || '') });
-    const btns = opts.map(o => { const b = h('button', { type: 'button', 'aria-pressed': 'false', onclick: () => { set(o[0]); paint(); } }, o[1]); b.dataset.v = String(o[0]); root.appendChild(b); return b; });
+    const btns = opts.map(o => { const b = h('button', { type: 'button', 'aria-pressed': 'false', onclick: () => { set(o[0]); paint(); } }, raw ? o[1] : _(o[1])); b.dataset.v = String(o[0]); root.appendChild(b); return b; });
     function paint() { const v = String(get()); btns.forEach(b => b.setAttribute('aria-pressed', b.dataset.v === v ? 'true' : 'false')); }
     paint(); return { root: root, paint: paint, btns: btns };
   }
@@ -81,14 +81,14 @@
     refreshAudio();
   }
   function volRow(bus) {
-    const music = bus === 'music', A = mod('audio'), has = !music || !!(A && A.hasMusic && A.hasMusic()), label = music ? 'Music' : 'Sound';
+    const music = bus === 'music', A = mod('audio'), has = !music || !!(A && A.hasMusic && A.hasMusic()), label = _(music ? 'Music' : 'Sound');
     const isOn = () => (music ? !!S.musicOn : soundIsOn());
     const setOn = v => { if (music) API.setMusic(v); else API.setSound(v); };
-    const tog = h('button', { type: 'button', class: 'gm-vtog', 'data-bus': bus, 'aria-label': label + ' on or off', title: label + ' on / off', onclick: () => toggleAudio(bus) });
-    const rng = h('input', { type: 'range', class: 'gm-vol', 'data-bus': bus, min: '0', max: '100', step: '5', 'aria-label': label + ' volume',
+    const tog = h('button', { type: 'button', class: 'gm-vtog', 'data-bus': bus, 'aria-label': _('{name} on or off', { name: label }), title: _('{name} on / off', { name: label }), onclick: () => toggleAudio(bus) });
+    const rng = h('input', { type: 'range', class: 'gm-vol', 'data-bus': bus, min: '0', max: '100', step: '5', 'aria-label': _('{name} volume', { name: label }),
       oninput: () => { const v = +rng.value / 100; API.setVolume(bus, v); if (v > 0 && !isOn()) setOn(true); else if (v === 0 && isOn()) setOn(false); refreshAudio(); } });
     const val = h('span', { class: 'gm-vval' });
-    const row = h('div', { class: 'gm-vrow' }, tog, h('div', { class: 'gm-vmid' }, h('div', { class: 'lbl rowline' }, h('span', null, has ? label : label + ' · no track yet'), val), rng));
+    const row = h('div', { class: 'gm-vrow' }, tog, h('div', { class: 'gm-vmid' }, h('div', { class: 'lbl rowline' }, h('span', null, has ? label : _('{name} · no track yet', { name: label })), val), rng));
     let last = '';
     function paint() {
       const on = isOn(), v = Math.round((S.vol[bus] || 0) * 100), key = on + ':' + v + ':' + has;
@@ -97,7 +97,7 @@
       tog.innerHTML = music ? (on ? MUS_ON : MUS_OFF) : (on ? SND_ON : SND_OFF);
       tog.setAttribute('aria-pressed', on ? 'true' : 'false');
       if (document.activeElement !== rng) rng.value = String(v);
-      val.textContent = on ? v + '%' : 'Off';
+      val.textContent = on ? v + '%' : _('Off');
       tog.disabled = rng.disabled = !has;
     }
     paints.push({ el: row, fn: paint }); paint(); return row;
@@ -106,17 +106,17 @@
   function calloutRow() {
     const sg = segBtns([['on', 'On'], ['off', 'Off']], () => (S.callouts ? 'on' : 'off'), v => API.setCallouts(v === 'on'), 'gm-co');
     paints.push({ el: sg.root, fn: sg.paint });
-    return h('div', { class: 'field gm-cofield' }, h('div', { class: 'lbl' }, 'Callouts (OUT!, SMASH! ...)'), sg.root);
+    return h('div', { class: 'field gm-cofield' }, h('div', { class: 'lbl' }, _('Callouts (OUT!, SMASH! ...)')), sg.root);
   }
   function speedRow() {
-    const sg = segBtns([['1', '1×'], ['2', '2×'], ['4', '4×']], () => String(S.speed), v => { API.setSpeed(+v); updateHud(true); }, 'gm-spd');
+    const sg = segBtns([['1', '1×'], ['2', '2×'], ['4', '4×']], () => String(S.speed), v => { API.setSpeed(+v); updateHud(true); }, 'gm-spd', true);
     paints.push({ el: sg.root, fn: sg.paint });
-    return h('div', { class: 'field gm-cofield' }, h('div', { class: 'lbl' }, 'Game speed'), sg.root);
+    return h('div', { class: 'field gm-cofield' }, h('div', { class: 'lbl' }, _('Game speed')), sg.root);
   }
   function qteRow() {
     const sg = segBtns([['off', 'Off'], ['relaxed', 'No timer'], ['occasional', 'Timed'], ['on', 'Timed, often']], () => G.qte, v => { G.qte = v; const Q = mod('qte'); if (Q) Q.setMode(v); }, 'gm-qte');
     paints.push({ el: sg.root, fn: sg.paint });
-    return h('div', { class: 'field gm-cofield' }, h('div', { class: 'lbl' }, 'QTE shots (swipe to aim winners and saves)'), sg.root);
+    return h('div', { class: 'field gm-cofield' }, h('div', { class: 'lbl' }, _('QTE shots (swipe to aim winners and saves)')), sg.root);
   }
   function openScreen(id, kids, cls) {
     closeScreen();
@@ -128,6 +128,9 @@
     return card;
   }
   function closeScreen() { if (G.scr) { G.scr.remove(); G.scr = null; } EL.stage.classList.remove('gm-covered'); }
+  // a sentence with one <em>: '{em}' marks where it goes
+  function rich(tpl, em) { const p = tpl.split('{em}'); return [p[0], h('em', null, em), p[1] || null]; }
+  const hint = f => FMT_HINT[f] ? _(FMT_HINT[f]) : '';
   function stamp(t) { return h('span', { class: 'sticker gm-stk' }, t); }
   function setSt(s) {
     G.st = s; EL.app.setAttribute('data-gm', s); updateVisibility();
@@ -158,7 +161,7 @@
   }
   function applyModeClass() {
     EL.app.classList.toggle('mode-play', G.mode === 'play'); EL.app.classList.toggle('mode-studio', G.mode === 'studio');
-    const b = document.getElementById('btn-mode'); if (b) b.textContent = G.mode === 'play' ? '⚙︎ Studio' : '▶ Play mode';
+    const b = document.getElementById('btn-mode'); if (b) { b.textContent = G.mode === 'play' ? _('⚙︎ Studio') : _('▶ Play mode'); b.title = _('Switch between Play and Studio'); }
     window.dispatchEvent(new Event('resize'));
   }
   function setMode(m) {
@@ -201,19 +204,19 @@
     const saved = (S.saved && S.saved.length) ? S.saved[S.saved.length - 1] : null;
     const an = pdef(AN);
     const kids = [
-      h('div', { class: 'gm-top' }, an ? portrait(an, 'gm-portrait sm') : null, h('div', null, h('div', { class: 'tag' }, HPO.cfg.TITLE()), stamp('Doubles · Jakarta'))),
-      h('h2', { class: 'gm-h' }, 'Play doubles with ', h('em', null, 'Annetta')),
-      h('p', { class: 'gm-p' }, 'Make your player, team up, win the Littleworld Jakarta Padel Cup.'),
+      h('div', { class: 'gm-top' }, an ? portrait(an, 'gm-portrait sm') : null, h('div', null, h('div', { class: 'tag' }, HPO.cfg.TITLE()), stamp(_('Doubles · Jakarta')))),
+      h('h2', { class: 'gm-h' }, rich(_('Play doubles with {em}'), 'Annetta')),
+      h('p', { class: 'gm-p' }, _('Make your player, team up, win the Littleworld Jakarta Padel Cup.')),
       h('div', { class: 'gm-acts' },
         saved
-          ? [h('button', { class: 'btn primary big', type: 'button', id: 'gm-continue', onclick: () => { G.player = saved; showSetup(); } }, 'Continue as ' + saved.name),
-             h('button', { class: 'btn big', type: 'button', id: 'gm-newplayer', onclick: () => showCreate() }, 'New player')]
-          : h('button', { class: 'btn primary big', type: 'button', id: 'gm-play', onclick: () => showCreate() }, 'Play with Annetta'),
-        h('button', { class: 'btn big', type: 'button', id: 'gm-watch', onclick: startWatch }, 'Just watch')),
+          ? [h('button', { class: 'btn primary big', type: 'button', id: 'gm-continue', onclick: () => { G.player = saved; showSetup(); } }, _('Continue as {name}', { name: saved.name })),
+             h('button', { class: 'btn big', type: 'button', id: 'gm-newplayer', onclick: () => showCreate() }, _('New player'))]
+          : h('button', { class: 'btn primary big', type: 'button', id: 'gm-play', onclick: () => showCreate() }, _('Play with Annetta')),
+        h('button', { class: 'btn big', type: 'button', id: 'gm-watch', onclick: startWatch }, _('Just watch'))),
       audioBlock(),
-      h('p', { class: 'gm-foot' }, h('a', { href: '#', id: 'gm-how-link', onclick: e => { e.preventDefault(); showHow(() => showTitle(true)); } }, 'How to play'), ' · ', h('a', { href: '#', id: 'gm-studio-link', onclick: e => { e.preventDefault(); setMode('studio'); } }, 'Studio controls'), ' · ',
-        h('a', { href: 'https://annetta.dev/' }, '← annetta.dev')),
-      h('p', { class: 'gm-foot it' }, 'Made in Jakarta with code, curiosity, and no spare towel.')
+      h('p', { class: 'gm-foot' }, h('a', { href: '#', id: 'gm-how-link', onclick: e => { e.preventDefault(); showHow(() => showTitle(true)); } }, _('How to play')), ' · ', h('a', { href: '#', id: 'gm-studio-link', onclick: e => { e.preventDefault(); setMode('studio'); } }, _('Studio controls')), ' · ',
+        h('a', { href: 'https://annetta.dev/' }, _('← annetta.dev'))),
+      h('p', { class: 'gm-foot it' }, _('Made in Jakarta with code, curiosity, and no spare towel.'))
     ];
     openScreen('gm-title', kids, 'title');
   }
@@ -223,17 +226,17 @@
     const P = mod('players'); if (!P) return null;
     const ros = P.roster(), id = 'custom-' + cp.seed.toString(16), had = ros.some(r => r.id === id);
     let d = null;
-    try { d = P.createCustom({ name: cp.name.trim() || 'Your name', gender: cp.gender, seed: cp.seed }); } catch (e) { return null; }
+    try { d = P.createCustom({ name: cp.name.trim() || _('Your name'), gender: cp.gender, seed: cp.seed }); } catch (e) { return null; }
     if (!had) { const i = ros.indexOf(d); if (i >= 0) ros.splice(i, 1); }
-    return Object.assign({}, d, { name: cp.name.trim() || 'Your name', country: { code: cp.nat, name: NATION_NAME[cp.nat] || cp.nat } });
+    return Object.assign({}, d, { name: cp.name.trim() || _('Your name'), country: { code: cp.nat, name: NATION_NAME[cp.nat] || cp.nat } });
   }
   function showCreate() {
     closePause(); clearHighlights();
     if (G.st !== 'create') { cp = { seed: rnd(), name: '', gender: 'F', nat: 'IDN' }; }
     setSt('create');
-    const name = h('input', { type: 'text', id: 'gm-name', maxlength: '40', placeholder: 'Your name', autocomplete: 'nickname', 'aria-label': 'Your name', value: cp.name });
+    const name = h('input', { type: 'text', id: 'gm-name', maxlength: '40', placeholder: _('Your name'), autocomplete: 'nickname', 'aria-label': _('Your name'), value: cp.name });
     const genderSeg = segBtns([['F', 'Woman'], ['M', 'Man']], () => cp.gender, v => { cp.gender = v; render(); });
-    const nat = h('select', { id: 'gm-nat', 'aria-label': 'Nationality' }, NATIONS.map(n => h('option', { value: n[0] }, n[1])));
+    const nat = h('select', { id: 'gm-nat', 'aria-label': _('Nationality') }, NATIONS.map(n => h('option', { value: n[0] }, _(n[1]))));
     nat.value = cp.nat;
     const portraitBox = h('div', { class: 'gm-pbox' });
     const nameLine = h('div', { class: 'gm-nm' }), archLine = h('div', { class: 'gm-meta' });
@@ -242,23 +245,23 @@
     const status = h('p', { class: 'hint gm-err', role: 'status', id: 'gm-cstatus' }, '');
     const an = pdef(AN);
     const partner = h('div', { class: 'gm-partner' }, an ? portrait(an, 'gm-portrait xs') : null,
-      h('div', null, h('div', { class: 'tag' }, 'Your partner'), h('div', { class: 'gm-nm sm' }, an ? an.name : 'Annetta Arslan'),
-        h('div', { class: 'gm-meta' }, (an ? API.ARCH[an.archetype] : '') + ' · World #' + (an ? an.ranking : '-') + ' ', an ? flag(an) : null)));
+      h('div', null, h('div', { class: 'tag' }, _('Your partner')), h('div', { class: 'gm-nm sm' }, an ? an.name : 'Annetta Arslan'),
+        h('div', { class: 'gm-meta' }, _('{arch} · World #{rank}', { arch: an ? _(API.ARCH[an.archetype]) : '', rank: an ? an.ranking : '-' }) + ' ', an ? flag(an) : null)));
     function render() {
       const d = previewDef(); if (!d) return;
       portraitBox.textContent = ''; portraitBox.appendChild(portrait(d, 'gm-portrait lg'));
       nameLine.textContent = ''; add(nameLine, [d.name, ' ', flag(d)]);
-      archLine.textContent = (API.ARCH[d.archetype] || d.archetype) + ' · ' + (d.hand === 'L' ? 'left' : 'right') + '-handed';
-      bars.textContent = ''; API.ATTRS.forEach(a => bars.appendChild(API.mbar(a[1], d.attrs[a[0]], '')));
-      typeLine.textContent = cp.gender === 'F' ? "You and Annetta play women's doubles." : 'You and Annetta play mixed doubles.';
+      archLine.textContent = _(d.hand === 'L' ? '{arch} · left-handed' : '{arch} · right-handed', { arch: _(API.ARCH[d.archetype] || d.archetype) });
+      bars.textContent = ''; API.ATTRS.forEach(a => bars.appendChild(API.mbar(_(a[1]), d.attrs[a[0]], '')));
+      typeLine.textContent = cp.gender === 'F' ? _("You and Annetta play women's doubles.") : _('You and Annetta play mixed doubles.');
       genderSeg.paint();
     }
-    name.addEventListener('input', () => { cp.name = name.value; nameLine.firstChild && (nameLine.firstChild.textContent = cp.name.trim() || 'Your name'); });
+    name.addEventListener('input', () => { cp.name = name.value; nameLine.firstChild && (nameLine.firstChild.textContent = cp.name.trim() || _('Your name')); });
     nat.addEventListener('change', () => { cp.nat = nat.value; render(); });
-    const shuffle = h('button', { class: 'btn orange', type: 'button', id: 'gm-shuffle', onclick: () => { cp.seed = rnd(); render(); } }, ico(SHUF), 'Shuffle look & stats');
+    const shuffle = h('button', { class: 'btn orange', type: 'button', id: 'gm-shuffle', onclick: () => { cp.seed = rnd(); render(); } }, ico(SHUF), _('Shuffle look & stats'));
     const save = h('button', { class: 'btn primary big', type: 'button', id: 'gm-save', onclick: async () => {
       const nm = name.value.trim();
-      if (!nm) { status.textContent = 'Give your player a name first.'; name.focus(); name.classList.remove('shake'); void name.offsetWidth; name.classList.add('shake'); return; }
+      if (!nm) { status.textContent = _('Give your player a name first.'); name.focus(); name.classList.remove('shake'); void name.offsetWidth; name.classList.add('shake'); return; }
       save.disabled = true;
       try {
         const P = mod('players');
@@ -267,21 +270,21 @@
         const ok = await API.savePlayerDef(def);
         S.saved = (S.saved || []).filter(x => x.id !== def.id); S.saved.push(def);
         G.player = def; G.firstRun = true;
-        API.toast(ok ? def.name + ' saved on this device.' : 'Playing as ' + def.name + '. Local saving is unavailable here.', { kind: ok ? 'good' : 'warn' });
+        API.toast(ok ? _('{name} saved on this device.', { name: def.name }) : _('Playing as {name}. Local saving is unavailable here.', { name: def.name }), { kind: ok ? 'good' : 'warn' });
         showSetup();
-      } catch (err) { status.textContent = err && err.message ? err.message : 'Could not create that player.'; save.disabled = false; }
-    } }, 'Save & continue');
+      } catch (err) { status.textContent = err && err.message ? err.message : _('Could not create that player.'); save.disabled = false; }
+    } }, _('Save & continue'));
     const card = openScreen('gm-create', [
-      h('div', { class: 'tag' }, '01 / Your player'),
-      h('h2', { class: 'gm-h sm' }, 'Make your player'),
+      h('div', { class: 'tag' }, _('01 / Your player')),
+      h('h2', { class: 'gm-h sm' }, _('Make your player')),
       h('div', { class: 'gm-prev' }, portraitBox, h('div', { class: 'gm-prevtxt' }, nameLine, archLine, shuffle)),
-      h('div', { class: 'field' }, h('label', { for: 'gm-name', class: 'lbl' }, 'Name'), name),
-      h('div', { class: 'grid2' }, h('div', { class: 'field' }, h('div', { class: 'lbl' }, 'You are'), genderSeg.root), h('div', { class: 'field' }, h('label', { for: 'gm-nat', class: 'lbl' }, 'Nationality'), nat)),
+      h('div', { class: 'field' }, h('label', { for: 'gm-name', class: 'lbl' }, _('Name')), name),
+      h('div', { class: 'grid2' }, h('div', { class: 'field' }, h('div', { class: 'lbl' }, _('You are')), genderSeg.root), h('div', { class: 'field' }, h('label', { for: 'gm-nat', class: 'lbl' }, _('Nationality')), nat)),
       typeLine,
       bars,
       partner,
       status,
-      h('div', { class: 'gm-acts row' }, h('button', { class: 'btn big', type: 'button', id: 'gm-cback', onclick: () => showTitle(true) }, 'Back'), save)
+      h('div', { class: 'gm-acts row' }, h('button', { class: 'btn big', type: 'button', id: 'gm-cback', onclick: () => showTitle(true) }, _('Back')), save)
     ], 'create');
     render();
     setTimeout(() => { try { name.focus(); } catch (e) { /* ignore */ } }, 60);
@@ -306,15 +309,15 @@
     const type = myType();
     if (!G.opp || G.oppType !== type || G.opp.some(id => id === G.player.id)) { G.opp = randomOpp(type); G.oppType = type; }
     const C = G.cfg;
-    const fmt = segBtns([['blitz', 'Blitz'], ['americano', 'Americano'], ['quick', 'Quick'], ['oneSet', 'One set'], ['bo3', 'Best of 3']], () => C.format, v => { C.format = v; scoField.hidden = FMT_PTS[v]; fmtHint.textContent = FMT_HINT[v] || ''; });
+    const fmt = segBtns([['blitz', 'Blitz'], ['americano', 'Americano'], ['quick', 'Quick'], ['oneSet', 'One set'], ['bo3', 'Best of 3']], () => C.format, v => { C.format = v; scoField.hidden = FMT_PTS[v]; fmtHint.textContent = hint(v); });
     const sco = segBtns([['golden', 'Golden Point'], ['advantage', 'Advantage']], () => C.scoring, v => { C.scoring = v; });
     const tod = segBtns([['day', 'Day'], ['dusk', 'Dusk'], ['night', 'Night']], () => C.tod, v => { C.tod = v; });
-    const scoField = h('div', { class: 'field' }, h('div', { class: 'lbl' }, 'Scoring'), sco.root), fmtHint = h('p', { class: 'hint' }, FMT_HINT[C.format] || '');
+    const scoField = h('div', { class: 'field' }, h('div', { class: 'lbl' }, _('Scoring')), sco.root), fmtHint = h('p', { class: 'hint' }, hint(C.format));
     scoField.hidden = !!FMT_PTS[C.format];
     const courts = h('div', { class: 'gm-courts' });
-    const cbtns = COURTS.map(c => { const b = h('button', { type: 'button', 'aria-pressed': 'false', 'data-v': c[0], onclick: () => { C.venue = c[0]; paintCourts(); } }, h('span', { class: 'ct ct-' + c[0] }, h('i')), h('b', null, c[1])); courts.appendChild(b); return b; });
+    const cbtns = COURTS.map(c => { const b = h('button', { type: 'button', 'aria-pressed': 'false', 'data-v': c[0], onclick: () => { C.venue = c[0]; paintCourts(); } }, h('span', { class: 'ct ct-' + c[0] }, h('i')), h('b', null, _(c[1]))); courts.appendChild(b); return b; });
     function paintCourts() { cbtns.forEach(b => b.setAttribute('aria-pressed', b.dataset.v === C.venue ? 'true' : 'false')); tod.btns.forEach(b => { b.disabled = C.venue === 'indoor'; }); todHint.hidden = C.venue !== 'indoor'; }
-    const todHint = h('p', { class: 'hint', hidden: true }, 'Indoor courts always use hall lighting.');
+    const todHint = h('p', { class: 'hint', hidden: true }, _('Indoor courts always use hall lighting.'));
     const oppBox = h('div', { class: 'gm-opp' });
     function paintOpp() {
       oppBox.textContent = '';
@@ -322,17 +325,17 @@
     }
     const me = G.player, an = pdef(AN);
     const kids = [
-      h('div', { class: 'tag' }, '02 / Quick match'),
-      h('h2', { class: 'gm-h sm' }, 'Set up the match'),
+      h('div', { class: 'tag' }, _('02 / Quick match')),
+      h('h2', { class: 'gm-h sm' }, _('Set up the match')),
       h('div', { class: 'gm-team' }, h('span', { class: 'dot' }), h('b', null, me.name), flag(me), ' & ', h('b', null, an ? an.name : 'Annetta'), an ? flag(an) : null,
-        h('span', { class: 'chip' }, type === 'W' ? "Women's doubles" : 'Mixed doubles')),
-      h('div', { class: 'field' }, h('div', { class: 'lbl' }, 'Format'), fmt.root, fmtHint),
+        h('span', { class: 'chip' }, type === 'W' ? _("Women's doubles") : _('Mixed doubles'))),
+      h('div', { class: 'field' }, h('div', { class: 'lbl' }, _('Format')), fmt.root, fmtHint),
       scoField,
-      h('div', { class: 'field' }, h('div', { class: 'lbl' }, 'Court'), courts),
-      h('div', { class: 'field' }, h('div', { class: 'lbl' }, 'Time'), tod.root, todHint),
-      h('div', { class: 'field' }, h('div', { class: 'lbl rowline' }, h('span', null, 'Opponents · random pair'), h('button', { class: 'btn small orange', type: 'button', id: 'gm-oppshuffle', onclick: () => { G.opp = randomOpp(type, G.opp); paintOpp(); } }, ico(SHUF), 'Shuffle')), oppBox),
-      h('div', { class: 'gm-acts row' }, h('button', { class: 'btn big', type: 'button', id: 'gm-sback', onclick: () => showTitle(true) }, 'Back'),
-        h('button', { class: 'btn primary big', type: 'button', id: 'gm-kick', onclick: kickoff }, 'Kick off'))
+      h('div', { class: 'field' }, h('div', { class: 'lbl' }, _('Court')), courts),
+      h('div', { class: 'field' }, h('div', { class: 'lbl' }, _('Time')), tod.root, todHint),
+      h('div', { class: 'field' }, h('div', { class: 'lbl rowline' }, h('span', null, _('Opponents · random pair')), h('button', { class: 'btn small orange', type: 'button', id: 'gm-oppshuffle', onclick: () => { G.opp = randomOpp(type, G.opp); paintOpp(); } }, ico(SHUF), _('Shuffle'))), oppBox),
+      h('div', { class: 'gm-acts row' }, h('button', { class: 'btn big', type: 'button', id: 'gm-sback', onclick: () => showTitle(true) }, _('Back')),
+        h('button', { class: 'btn primary big', type: 'button', id: 'gm-kick', onclick: kickoff }, _('Kick off')))
     ];
     openScreen('gm-setup', kids, 'setup');
     paintCourts(); paintOpp();
@@ -343,20 +346,20 @@
     ['You are the coach', 'You and Annetta play by themselves, so there is nothing to steer. Your job is the game plan, plus a few big moments.'],
     ['Set the strategy', 'Open Strategy at the bottom. Pick a mindset (shield is safe, sword is attack), one plan, the kind of shots, and who takes the middle balls. A small tag shows what is switched on, and your plan announces itself when it works.'],
     ['Winning chances', 'When your player gets a winning chance, or a hard smash is coming at you, time freezes. Swipe from the glowing ring to aim the shot. No time? Tap "Let it play". Aim lets you place your next shot yourself; Timeout and Challenge are what they sound like.'],
-    ['Padel in 20 seconds', () => 'Two against two. Serve underhand into the diagonal box. The ball may bounce once on your side, and it may also hit the glass walls and stay in play. ' + (mod('rules') ? mod('rules').describeFormat(G.cfg.format, G.cfg.scoring) : '')]
+    ['Padel in 20 seconds', () => _('Two against two. Serve underhand into the diagonal box. The ball may bounce once on your side, and it may also hit the glass walls and stay in play. {format}', { format: mod('rules') ? mod('rules').describeFormat(G.cfg.format, G.cfg.scoring) : '' })]
   ];
   function showHow(next) {
     let i = 0;
-    const body = h('div', { class: 'gm-howbody' }), nb = h('button', { class: 'btn primary big', type: 'button', id: 'gm-hownext' }, 'Next');
+    const body = h('div', { class: 'gm-howbody' }), nb = h('button', { class: 'btn primary big', type: 'button', id: 'gm-hownext' }, _('Next'));
     const done = () => { if (next) next(); else showTitle(true); };
     function paint() {
       body.textContent = '';
-      add(body, [h('div', { class: 'tag' }, 'How to play · ' + (i + 1) + ' of ' + HOW.length), h('h2', { class: 'gm-h sm' }, HOW[i][0]), h('p', { class: 'gm-p' }, typeof HOW[i][1] === 'function' ? HOW[i][1]() : HOW[i][1])]);
-      nb.textContent = i === HOW.length - 1 ? "Let's play" : 'Next';
+      add(body, [h('div', { class: 'tag' }, _('How to play · {n} of {total}', { n: i + 1, total: HOW.length })), h('h2', { class: 'gm-h sm' }, _(HOW[i][0])), h('p', { class: 'gm-p' }, typeof HOW[i][1] === 'function' ? HOW[i][1]() : _(HOW[i][1]))]);
+      nb.textContent = i === HOW.length - 1 ? _("Let's play") : _('Next');
     }
     nb.onclick = () => { if (i < HOW.length - 1) { i++; paint(); } else done(); };
     paint();
-    openScreen('gm-how', [body, h('div', { class: 'gm-acts row' }, h('button', { class: 'btn big', type: 'button', id: 'gm-howskip', onclick: done }, 'Skip'), nb)], 'how');
+    openScreen('gm-how', [body, h('div', { class: 'gm-acts row' }, h('button', { class: 'btn big', type: 'button', id: 'gm-howskip', onclick: done }, _('Skip')), nb)], 'how');
   }
 
   // ---------- kick off ----------
@@ -383,45 +386,45 @@
   function buildHud() {
     hud.root = h('div', { id: 'gm-hud' });
     // top-right icons
-    hud.pause = btn('gm-pause', '', '❚❚', 'Pause (Space)', () => { API.togglePause(); updateHud(true); });
-    hud.cam = btn('gm-cam', 'txt sm', 'CAM', 'Camera', () => { const R = mod('render'); let i = CAM_CYCLE.findIndex(c => c[0] === (R && R.cameraMode)); i = (i + 1) % CAM_CYCLE.length; API.setCam(CAM_CYCLE[i][0]); G.camPref = CAM_CYCLE[i][0]; API.toast('Camera: ' + CAM_CYCLE[i][1], { ms: 1400 }); updateHud(true); });
-    hud.mix = btn('gm-mix', '', '', 'Volume and callouts', () => toggleMix()); hud.mix.innerHTML = MIX; hud.mix.setAttribute('aria-expanded', 'false');
-    hud.pop = h('div', { class: 'gm-pop', id: 'gm-pop', hidden: true }, h('div', { class: 'tag' }, 'Sound, music, callouts'), audioBlock(), calloutRow());
+    hud.pause = btn('gm-pause', '', '❚❚', _('Pause (Space)'), () => { API.togglePause(); updateHud(true); });
+    hud.cam = btn('gm-cam', 'txt sm', 'CAM', _('Camera'), () => { const R = mod('render'); let i = CAM_CYCLE.findIndex(c => c[0] === (R && R.cameraMode)); i = (i + 1) % CAM_CYCLE.length; API.setCam(CAM_CYCLE[i][0]); G.camPref = CAM_CYCLE[i][0]; API.toast(_('Camera: {name}', { name: _(CAM_CYCLE[i][1]) }), { ms: 1400 }); updateHud(true); });
+    hud.mix = btn('gm-mix', '', '', _('Volume and callouts'), () => toggleMix()); hud.mix.innerHTML = MIX; hud.mix.setAttribute('aria-expanded', 'false');
+    hud.pop = h('div', { class: 'gm-pop', id: 'gm-pop', hidden: true }, h('div', { class: 'tag' }, _('Sound, music, callouts')), audioBlock(), calloutRow());
     hud.icons = h('div', { class: 'gm-icons' }, hud.pause, hud.cam, hud.mix);
     // coach bar
-    hud.steps = MIND.map((n, i) => h('button', { type: 'button', class: 'gm-step', 'data-v': String(i - 2), title: n, 'aria-label': 'Mindset: ' + n, 'aria-pressed': 'false', onclick: () => setOrder({ mindset: i - 2 }, 'Mindset: ' + n + ': ' + MIND_FX[i]) }));
-    hud.mindLab = h('span', { class: 'gm-lab2' }, 'Balanced');
+    hud.steps = MIND.map((n, i) => h('button', { type: 'button', class: 'gm-step', 'data-v': String(i - 2), title: _(n), 'aria-label': _('Mindset: {name}', { name: _(n) }), 'aria-pressed': 'false', onclick: () => setOrder({ mindset: i - 2 }, _('Mindset: {name}: {fx}', { name: _(n), fx: _(MIND_FX[i]) })) }));
+    hud.mindLab = h('span', { class: 'gm-lab2' }, _('Balanced'));
     const ic = (cls, svg) => { const e = h('span', { class: cls }); e.innerHTML = svg; return e; };
     hud.mind = h('div', { class: 'gm-mind' }, h('div', { class: 'gm-mindrow' }, ic('gm-ico', IC.shield), h('div', { class: 'gm-steps' }, hud.steps), ic('gm-ico', IC.sword)), hud.mindLab);
-    hud.planBtns = PLAN_UI.map(q => { const b = h('button', { type: 'button', class: 'gm-plan', 'data-plan': q[0], 'aria-pressed': 'false', title: q[1] + ': ' + q[2], 'aria-label': q[1], onclick: () => togglePlan(q[0]) }); b.innerHTML = IC[q[0]]; return b; });
-    hud.planLab = h('span', { class: 'gm-lab2' }, 'No plan');
+    hud.planBtns = PLAN_UI.map(q => { const b = h('button', { type: 'button', class: 'gm-plan', 'data-plan': q[0], 'aria-pressed': 'false', title: _('{name}: {desc}', { name: _(q[1]), desc: _(q[2]) }), 'aria-label': _(q[1]), onclick: () => togglePlan(q[0]) }); b.innerHTML = IC[q[0]]; return b; });
+    hud.planLab = h('span', { class: 'gm-lab2' }, _('No plan'));
     hud.plans = h('div', { class: 'gm-plans' }, h('div', { class: 'gm-planrow' }, hud.planBtns), hud.planLab);
-    hud.styleBtns = STYLE_UI.map(q => h('button', { type: 'button', class: 'gm-sty', 'data-style': q[0], 'aria-pressed': 'false', onclick: () => setOrder({ style: q[0] }, 'Shots: ' + q[1] + ': ' + STYLE_FX[q[0]]) }, q[1]));
-    hud.style = h('div', { class: 'gm-style' }, h('div', { class: 'gm-sty-row' }, hud.styleBtns), h('span', { class: 'gm-lab2' }, 'Shots'));
-    hud.midBtns = MID_UI.map(q => h('button', { type: 'button', class: 'gm-sty gm-mid', 'data-mid': q[0], 'aria-pressed': 'false', onclick: () => setMid(q[0] === '' ? undefined : +q[0]) }, q[1]));
-    hud.mid = h('div', { class: 'gm-style' }, h('div', { class: 'gm-sty-row' }, hud.midBtns), h('span', { class: 'gm-lab2' }, 'Middle balls'));
+    hud.styleBtns = STYLE_UI.map(q => h('button', { type: 'button', class: 'gm-sty', 'data-style': q[0], 'aria-pressed': 'false', onclick: () => setOrder({ style: q[0] }, _('Shots: {name}: {fx}', { name: _(q[1]), fx: _(STYLE_FX[q[0]]) })) }, _(q[1])));
+    hud.style = h('div', { class: 'gm-style' }, h('div', { class: 'gm-sty-row' }, hud.styleBtns), h('span', { class: 'gm-lab2' }, _('Shots')));
+    hud.midBtns = MID_UI.map(q => h('button', { type: 'button', class: 'gm-sty gm-mid', 'data-mid': q[0], 'aria-pressed': 'false', onclick: () => setMid(q[0] === '' ? undefined : +q[0]) }, _(q[1])));
+    hud.mid = h('div', { class: 'gm-style' }, h('div', { class: 'gm-sty-row' }, hud.midBtns), h('span', { class: 'gm-lab2' }, _('Middle balls')));
     const moment = (id, svg, title, fn) => { const b = h('button', { type: 'button', class: 'gm-mo', id: id, title: title, 'aria-label': title, onclick: fn }); b.innerHTML = svg + '<span class="gm-badge" hidden></span>'; return b; };
-    hud.go = moment('gm-go', IC.go, 'Go for it: your next winning chance becomes a swipe shot (QTE)', () => { const Q = mod('qte'); if (!Q) return; const on = Q.arm(); API.toast(on ? 'Go for it: you take the next winning chance' : (Q.mode === 'off' ? 'QTE shots are off (pause menu)' : 'Go for it cancelled'), { kind: 'info', ms: 1800 }); updateHud(true); }); hud.go.setAttribute('aria-pressed', 'false');
-    hud.aim = moment('gm-aim', IC.aim, 'Aim your next shot', () => API.toggleAim()); hud.aim.setAttribute('aria-pressed', 'false');
-    hud.tmo = moment('gm-timeout', IC.timeout, 'Timeout', () => { API.callTimeout(); updateHud(true); });
-    hud.chal = moment('gm-challenge', IC.challenge, 'Challenge (Eagle Eye)', () => { API.doChallenge(); updateHud(true); });
-    hud.fab = h('button', { type: 'button', class: 'gm-fab', id: 'gm-fab', 'aria-expanded': 'false', 'aria-label': 'Strategy', onclick: () => { const o = hud.coach.classList.toggle('open'); hud.fab.setAttribute('aria-expanded', String(o)); } });
-    hud.fab.innerHTML = '<span class="gm-chev">' + IC.chev + '</span><span>Strategy</span>';
+    hud.go = moment('gm-go', IC.go, _('Go for it: your next winning chance becomes a swipe shot (QTE)'), () => { const Q = mod('qte'); if (!Q) return; const on = Q.arm(); API.toast(on ? _('Go for it: you take the next winning chance') : (Q.mode === 'off' ? _('QTE shots are off (pause menu)') : _('Go for it cancelled')), { kind: 'info', ms: 1800 }); updateHud(true); }); hud.go.setAttribute('aria-pressed', 'false');
+    hud.aim = moment('gm-aim', IC.aim, _('Aim your next shot'), () => API.toggleAim()); hud.aim.setAttribute('aria-pressed', 'false');
+    hud.tmo = moment('gm-timeout', IC.timeout, _('Timeout'), () => { API.callTimeout(); updateHud(true); });
+    hud.chal = moment('gm-challenge', IC.challenge, _('Challenge (Eagle Eye)'), () => { API.doChallenge(); updateHud(true); });
+    hud.fab = h('button', { type: 'button', class: 'gm-fab', id: 'gm-fab', 'aria-expanded': 'false', 'aria-label': _('Strategy'), onclick: () => { const o = hud.coach.classList.toggle('open'); hud.fab.setAttribute('aria-expanded', String(o)); } });
+    hud.fab.innerHTML = '<span class="gm-chev">' + IC.chev + '</span><span>' + _('Strategy') + '</span>';
     hud.hintTxt = h('span', null);
     hud.hint = h('div', { class: 'gm-hint', hidden: true }, hud.hintTxt,
-      h('button', { type: 'button', class: 'gm-hint-go', onclick: () => { if (hs.cur) togglePlan(hs.cur[0], true); hideHint(); } }, 'Apply'),
-      h('button', { type: 'button', class: 'gm-hint-x', 'aria-label': 'Dismiss hint', onclick: () => hideHint() }, '×'));
+      h('button', { type: 'button', class: 'gm-hint-go', onclick: () => { if (hs.cur) togglePlan(hs.cur[0], true); hideHint(); } }, _('Apply')),
+      h('button', { type: 'button', class: 'gm-hint-x', 'aria-label': _('Dismiss hint'), onclick: () => hideHint() }, '×'));
     hud.tag = h('div', { class: 'gm-tag', hidden: true });
     hud.sheet = h('div', { class: 'gm-sheet' }, hud.mind, hud.plans, hud.style, hud.mid);
     hud.coach = h('div', { class: 'gm-dock' }, hud.hint, hud.tag, h('div', { class: 'gm-dockrow' }, hud.sheet, h('div', { class: 'gm-moments' }, hud.fab, hud.go, hud.aim, hud.tmo, hud.chal)));
     hud.ticker = h('div', { class: 'gm-ticker', hidden: true });
-    hud.skip = h('button', { type: 'button', class: 'btn small gm-skip', id: 'gm-skip', onclick: () => { API.skipCeremony(); } }, 'Skip intro ▸');
-    hud.watchBar = h('div', { class: 'gm-watchbar' }, h('button', { type: 'button', class: 'btn primary', id: 'gm-watch-play', onclick: () => showCreateOrSetup() }, 'Play with Annetta'));
+    hud.skip = h('button', { type: 'button', class: 'btn small gm-skip', id: 'gm-skip', onclick: () => { API.skipCeremony(); } }, _('Skip intro ▸'));
+    hud.watchBar = h('div', { class: 'gm-watchbar' }, h('button', { type: 'button', class: 'btn primary', id: 'gm-watch-play', onclick: () => showCreateOrSetup() }, _('Play with Annetta')));
     hud.labels = h('div', { class: 'gm-labels' });
-    hud.labYou = h('div', { class: 'gm-lab you' }, 'YOU'); hud.labAn = h('div', { class: 'gm-lab an' }, 'ANNETTA');
+    hud.labYou = h('div', { class: 'gm-lab you' }, _('YOU')); hud.labAn = h('div', { class: 'gm-lab an' }, _('ANNETTA'));
     hud.labels.append(hud.labYou, hud.labAn);
     // chevron tab on the left edge: the scoreboard stays, the chevron opens the full match centre (score, stats, players, feed) under it
-    hud.sbTab = h('button', { type: 'button', class: 'gm-sbtab', id: 'gm-sbtab', 'aria-expanded': 'false', 'aria-controls': 'gm-drawer', 'aria-label': 'Open match centre', title: 'Match centre', onclick: () => toggleSb() });
+    hud.sbTab = h('button', { type: 'button', class: 'gm-sbtab', id: 'gm-sbtab', 'aria-expanded': 'false', 'aria-controls': 'gm-drawer', 'aria-label': _('Open match centre'), title: _('Match centre'), onclick: () => toggleSb() });
     hud.sbTab.innerHTML = CHEV;
     hud.drawer = h('div', { class: 'gm-drawer', id: 'gm-drawer', hidden: true });
     ['pointerdown', 'wheel', 'touchstart'].forEach(ev => hud.drawer.addEventListener(ev, e => e.stopPropagation(), { passive: true }));
@@ -451,7 +454,7 @@
     }
     EL.app.classList.toggle('gm-sb-open', G.sbOpen);
     hud.sbTab.setAttribute('aria-expanded', G.sbOpen ? 'true' : 'false');
-    hud.sbTab.setAttribute('aria-label', G.sbOpen ? 'Close match centre' : 'Open match centre');
+    hud.sbTab.setAttribute('aria-label', G.sbOpen ? _('Close match centre') : _('Open match centre'));
   }
   function showCreateOrSetup() { const s = S.saved && S.saved.length; if (s) { G.player = G.player || S.saved[S.saved.length - 1]; showSetup(); } else showCreate(); }
   function updateVisibility() {
@@ -474,7 +477,7 @@
     const cur = API.orders('A').plan, q = PLAN_UI.find(x => x[0] === k); if (!q) return;
     const clear = !on && cur === k;
     hs.planN = 0;
-    setOrder({ plan: clear ? null : k }, clear ? 'Plan cleared' : 'Plan: ' + q[1] + ': ' + q[2]);
+    setOrder({ plan: clear ? null : k }, clear ? _('Plan cleared') : _('Plan: {name}: {desc}', { name: _(q[1]), desc: _(q[2]) }));
   }
   // smart hint: every 0.25 s sample where the opponents stand; suggest a plan at most every 30 s (docs/QTE.md section 1)
   const hs = { net: [], deep: [], clock: 0, shownAt: -99, cur: null, planN: 0, planAt: -99 };
@@ -485,15 +488,15 @@
     const pl = API.orders('A').plan; if (!pl) return;
     const ops = P.list.filter(p => p.team === 'B'), k = e.shot, t = e.target || { x: 0, z: 0 }, lob = k === 'lobDef' || k === 'lobOff';
     let msg = null;
-    if (pl === 'breakNet' && lob && ops.some(p => Math.abs(p.pos.x) < 4)) msg = 'Over the net pair';
-    else if (pl === 'exhaust' && (lob || k === 'dejada' || k === 'slice' || k === 'chiquita')) msg = 'Wearing them down';
-    else if (pl === 'hunt') { const w = ops.slice().sort((a, b) => a.attrs.defense - b.attrs.defense)[0]; if (w && Math.hypot(w.pos.x - t.x, w.pos.z - t.z) < 3.2) msg = 'At ' + w.name.split(' ')[0]; }
-    else if (pl === 'net' && /volley|smash|bandeja|vibora/.test(k)) msg = 'Taking the net';
-    else if (pl === 'glass' && (k === 'wallDef' || k === 'bajada' || Math.abs(t.z) > 4)) msg = 'Using the glass';
-    else if (pl === 'middle' && Math.abs(t.z) < 1) msg = 'Down the middle';
+    if (pl === 'breakNet' && lob && ops.some(p => Math.abs(p.pos.x) < 4)) msg = _('Over the net pair');
+    else if (pl === 'exhaust' && (lob || k === 'dejada' || k === 'slice' || k === 'chiquita')) msg = _('Wearing them down');
+    else if (pl === 'hunt') { const w = ops.slice().sort((a, b) => a.attrs.defense - b.attrs.defense)[0]; if (w && Math.hypot(w.pos.x - t.x, w.pos.z - t.z) < 3.2) msg = _('At {name}', { name: w.name.split(' ')[0] }); }
+    else if (pl === 'net' && /volley|smash|bandeja|vibora/.test(k)) msg = _('Taking the net');
+    else if (pl === 'glass' && (k === 'wallDef' || k === 'bajada' || Math.abs(t.z) > 4)) msg = _('Using the glass');
+    else if (pl === 'middle' && Math.abs(t.z) < 1) msg = _('Down the middle');
     if (!msg) return;
     hs.planN++;
-    if (hs.clock - hs.planAt > 7) { hs.planAt = hs.clock; API.toast('Your plan: ' + msg, { kind: 'good', ms: 1500 }); }
+    if (hs.clock - hs.planAt > 7) { hs.planAt = hs.clock; API.toast(_('Your plan: {msg}', { msg: msg }), { kind: 'good', ms: 1500 }); }
   }
   function showHint(sg) { hs.cur = sg; hs.shownAt = hs.clock; hud.hintTxt.textContent = sg[1]; hud.hint.hidden = false; hud.root.classList.add('hinting'); }
   function hideHint() { hs.cur = null; if (hud.hint) hud.hint.hidden = true; if (hud.root) hud.root.classList.remove('hinting'); }
@@ -509,10 +512,10 @@
     const frac = a => a.reduce((x, y) => x + y, 0) / a.length, o = API.orders('A'), nm = p => p.name.split(' ')[0];
     const byFat = ops.slice().sort((a, b) => b.fatigue - a.fatigue), byDef = ops.slice().sort((a, b) => a.attrs.defense - b.attrs.defense);
     let sg = null;
-    if (byFat[0].fatigue >= 0.12 && byFat[0].fatigue - byFat[1].fatigue >= 0.04) sg = ['exhaust', nm(byFat[0]) + ' is tired: wear them down'];
-    else if (frac(hs.net) >= 0.6) sg = ['breakNet', "They're glued to the net: lob over them"];
-    else if (frac(hs.deep) >= 0.6) sg = ['net', "They're sitting deep: take the net"];
-    else if (byDef[1].attrs.defense - byDef[0].attrs.defense >= 10) sg = ['hunt', nm(byDef[0]) + ' defends worst: hunt them'];
+    if (byFat[0].fatigue >= 0.12 && byFat[0].fatigue - byFat[1].fatigue >= 0.04) sg = ['exhaust', _('{name} is tired: wear them down', { name: nm(byFat[0]) })];
+    else if (frac(hs.net) >= 0.6) sg = ['breakNet', _("They're glued to the net: lob over them")];
+    else if (frac(hs.deep) >= 0.6) sg = ['net', _("They're sitting deep: take the net")];
+    else if (byDef[1].attrs.defense - byDef[0].attrs.defense >= 10) sg = ['hunt', _('{name} defends worst: hunt them', { name: nm(byDef[0]) })];
     if (sg && sg[0] !== o.plan) showHint(sg);
   }
   function setMid(i) {
@@ -520,7 +523,7 @@
     S.coachTeam = 'A'; API.claimCoach();
     safe(() => Ai.setOrders('A', { middlePriority: i }), 'mid');
     const P = mod('players'), who = P && P.list && i === 1 ? P.list.filter(p => p.team === 'A').sort((a, b) => a.slot - b.slot)[1] : null;
-    API.toast('Middle balls: ' + (i === undefined ? 'whoever is closer' : i === 0 ? 'you' : (who ? who.name.split(' ')[0] : 'Annetta')), { kind: 'info', ms: 1800 });
+    API.toast(_('Middle balls: {who}', { who: i === undefined ? _('whoever is closer') : i === 0 ? _('you') : (who ? who.name.split(' ')[0] : 'Annetta') }), { kind: 'info', ms: 1800 });
     updateHud(true);
   }
   const U_clamp = v => Math.max(-2, Math.min(2, v));
@@ -529,18 +532,18 @@
     if (!hud.root || hud.root.hidden) return;
     const M = mod('match'), Rl = mod('rules'), o = API.orders('A');
     hud.pause.textContent = M && M.paused ? '▶' : '❚❚';
-    hud.pause.title = M && M.paused ? 'Resume (Space)' : 'Pause (Space)';
+    hud.pause.title = M && M.paused ? _('Resume (Space)') : _('Pause (Space)');
     const R = mod('render'); const cc = CAM_CYCLE.find(c => c[0] === (R && R.cameraMode));
-    hud.cam.title = 'Camera: ' + (cc ? cc[1] : (R && R.cameraMode) || '-');
+    hud.cam.title = _('Camera: {name}', { name: cc ? _(cc[1]) : (R && R.cameraMode) || '-' });
     refreshAudio();
     const mid = o.middlePriority === 0 || o.middlePriority === 1 ? String(o.middlePriority) : '', mi = U_clamp(o.mindset | 0), pl = o.plan || '', st = o.style || 'mix';
     const Qh = mod('qte'); if (Qh) { hud.go.setAttribute('aria-pressed', String(Qh.armed)); hud.go.disabled = Qh.mode === 'off'; }
-    hud.steps.forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.v === mi))); hud.mindLab.textContent = MIND[mi + 2];
-    hud.planBtns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.plan === pl))); hud.planLab.textContent = pl ? PLAN_UI.find(q => q[0] === pl)[1] : 'No plan';
+    hud.steps.forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.v === mi))); hud.mindLab.textContent = _(MIND[mi + 2]);
+    hud.planBtns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.plan === pl))); hud.planLab.textContent = pl ? _(PLAN_UI.find(q => q[0] === pl)[1]) : _('No plan');
     hud.styleBtns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.style === st)));
     hud.midBtns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mid === mid)));
-    const tg = [mi ? MIND[mi + 2] : '', pl ? PLAN_UI.find(q => q[0] === pl)[1] + (hs.planN ? ' x' + hs.planN : '') : '', st !== 'mix' ? st : '', mid !== '' ? 'middle: ' + (mid === '0' ? 'you' : 'Annetta') : ''].filter(Boolean);
-    hud.tag.hidden = !tg.length; if (tg.length) hud.tag.textContent = 'Your strategy: ' + tg.join(' · ');
+    const tg = [mi ? _(MIND[mi + 2]) : '', pl ? _(PLAN_UI.find(q => q[0] === pl)[1]) + (hs.planN ? ' x' + hs.planN : '') : '', st !== 'mix' ? _(st) : '', mid !== '' ? _('middle: {who}', { who: mid === '0' ? _('you') : 'Annetta' }) : ''].filter(Boolean);
+    hud.tag.hidden = !tg.length; if (tg.length) hud.tag.textContent = _('Your strategy: {list}', { list: tg.join(' · ') });
     if (Rl && Rl.state) {
       const st = Rl.state, tl = st.timeouts ? st.timeouts.A : 0, cl = st.challenges ? st.challenges.A : 0;
       const canT = tl > 0 && M && M.phase === 'play' && !st.over;
@@ -593,11 +596,11 @@
   }
   function onFlags(e) {
     if (G.mode !== 'play' || G.st !== 'playing') return;
-    const pick = e.matchPoint ? ['Match point', e.matchPoint] : e.setPoint ? ['Set point', e.setPoint] : e.breakPoint ? ['Break point', e.breakPoint] : null;
+    const pick = e.matchPoint ? ['m', e.matchPoint] : e.setPoint ? ['s', e.setPoint] : e.breakPoint ? ['b', e.breakPoint] : null;
     if (!pick) return;
-    const txt = pick[0] + (pick[1] === 'A' ? ' for you' : ' for them');
+    const mine = pick[1] === 'A', txt = pick[0] + pick[1];
     if (txt === lastFlagToast) return; lastFlagToast = txt; setTimeout(() => { if (lastFlagToast === txt) lastFlagToast = ''; }, 8000);
-    API.toast(txt + (pick[1] === 'A' ? '!' : '. Hold on.'), { kind: pick[1] === 'A' ? 'good' : 'warn', ms: 2800 });
+    API.toast(pick[0] === 'm' ? (mine ? _('Match point for you!') : _('Match point for them. Hold on.')) : pick[0] === 's' ? (mine ? _('Set point for you!') : _('Set point for them. Hold on.')) : (mine ? _('Break point for you!') : _('Break point for them. Hold on.')), { kind: mine ? 'good' : 'warn', ms: 2800 });
   }
 
   // ---------- pause menu ----------
@@ -613,14 +616,14 @@
     const rp = mod('replay'); if (rp && rp.active) { rp.stop(); return; }   // pause during a replay skips it
     const M = mod('match'); wasPaused = !!(M && M.paused); if (M && !wasPaused) M.pause(true);
     pauseEl = h('div', { class: 'gm-screen', id: 'gm-pause-menu' }, h('div', { class: 'gm-card small' },
-      h('div', { class: 'tag' }, 'Paused'), h('h2', { class: 'gm-h sm' }, 'Take a breather'),
+      h('div', { class: 'tag' }, _('Paused')), h('h2', { class: 'gm-h sm' }, _('Take a breather')),
       audioBlock(), calloutRow(), qteRow(), speedRow(),
       h('div', { class: 'gm-acts' },
-        h('button', { class: 'btn primary big', type: 'button', id: 'gm-resume', onclick: resumeFromPause }, 'Resume'),
-        G.st === 'playing' ? h('button', { class: 'btn big', type: 'button', id: 'gm-tutorial', onclick: () => { closePause(); const Tu = mod('tutorial'); if (Tu) Tu.start(); } }, 'Tutorial') : null,
-        G.st === 'playing' ? h('button', { class: 'btn big', type: 'button', id: 'gm-restart', onclick: () => { closePause(true); kickoff(); } }, 'Restart') : null,
-        h('button', { class: 'btn big', type: 'button', id: 'gm-totitle', onclick: () => { closePause(true); showTitle(); } }, 'Back to title'),
-        h('button', { class: 'btn big', type: 'button', id: 'gm-tostudio', onclick: () => setMode('studio') }, 'Studio controls'))));
+        h('button', { class: 'btn primary big', type: 'button', id: 'gm-resume', onclick: resumeFromPause }, _('Resume')),
+        G.st === 'playing' ? h('button', { class: 'btn big', type: 'button', id: 'gm-tutorial', onclick: () => { closePause(); const Tu = mod('tutorial'); if (Tu) Tu.start(); } }, _('Tutorial')) : null,
+        G.st === 'playing' ? h('button', { class: 'btn big', type: 'button', id: 'gm-restart', onclick: () => { closePause(true); kickoff(); } }, _('Restart')) : null,
+        h('button', { class: 'btn big', type: 'button', id: 'gm-totitle', onclick: () => { closePause(true); showTitle(); } }, _('Back to title')),
+        h('button', { class: 'btn big', type: 'button', id: 'gm-tostudio', onclick: () => setMode('studio') }, _('Studio controls')))));
     EL.stage.appendChild(pauseEl); EL.stage.classList.add('gm-menu');
   }
   function resumeFromPause() { closePause(); }
@@ -647,17 +650,17 @@
     setSt('results');
     openScreen('gm-results', [
       h('div', { class: 'tag' }, HPO.cfg.TITLE()),
-      won ? stamp('Champions') : stamp('Good fight'),
-      h('h2', { class: 'gm-h' }, won ? ['You & ', h('em', null, 'Annetta'), ' take the cup'] : 'So close. Rematch?'),
-      h('div', { class: 'gm-score' }, sets || '–', h('small', null, ' vs ' + opp)),
-      h('div', { class: 'gm-ks' }, row('Winners', sum('winners')), row('Aces', sum('aces')), row('Longest rally', ms ? (ms.longest || 0) : 0), row('Distance', dist.toFixed(2) + ' km'), row('Points won', ms ? ms.teams.A.pointsWon : '-')),
-      mvp ? h('div', { class: 'mvp' }, h('b', null, 'MVP: '), mvp.p.name, ' · ' + mvp.p.stats.winners + ' winners, ' + mvp.p.stats.unforced + ' unforced') : null,
+      won ? stamp(_('Champions')) : stamp(_('Good fight')),
+      h('h2', { class: 'gm-h' }, won ? rich(_('You & {em} take the cup'), 'Annetta') : _('So close. Rematch?')),
+      h('div', { class: 'gm-score' }, sets || '–', h('small', null, _(' vs {opp}', { opp: opp }))),
+      h('div', { class: 'gm-ks' }, row(_('Winners'), sum('winners')), row(_('Aces'), sum('aces')), row(_('Longest rally'), ms ? (ms.longest || 0) : 0), row(_('Distance'), dist.toFixed(2) + ' km'), row(_('Points won'), ms ? ms.teams.A.pointsWon : '-')),
+      mvp ? h('div', { class: 'mvp' }, h('b', null, _('MVP: ')), mvp.p.name, _(' · {w} winners, {u} unforced', { w: mvp.p.stats.winners, u: mvp.p.stats.unforced })) : null,
       h('div', { class: 'gm-acts' },
-        h('button', { class: 'btn primary big', type: 'button', id: 'gm-again', onclick: kickoff }, 'Play again'),
-        h('button', { class: 'btn big', type: 'button', id: 'gm-chsetup', onclick: () => showSetup() }, 'Change setup'),
+        h('button', { class: 'btn primary big', type: 'button', id: 'gm-again', onclick: kickoff }, _('Play again')),
+        h('button', { class: 'btn big', type: 'button', id: 'gm-chsetup', onclick: () => showSetup() }, _('Change setup')),
         h('div', { class: 'grid2' },
-          h('button', { class: 'btn', type: 'button', id: 'gm-rnew', onclick: () => showCreate() }, 'New player'),
-          h('button', { class: 'btn', type: 'button', id: 'gm-rtitle', onclick: () => showTitle() }, 'Back to title')))
+          h('button', { class: 'btn', type: 'button', id: 'gm-rnew', onclick: () => showCreate() }, _('New player')),
+          h('button', { class: 'btn', type: 'button', id: 'gm-rtitle', onclick: () => showTitle() }, _('Back to title'))))
     ], 'results');
   }
 })(HPO);

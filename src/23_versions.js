@@ -3,16 +3,16 @@
 (function (HPO) {
   'use strict';
   const VERSIONS = ['2026.11.05.10', '2026.11.05.9', '2026.11.05.8', '2026.11.05.7', '2026.11.05.6', '2026.11.05.5', '2026.11.05.4', '2026.11.05.3', '2026.11.05.2', '2026.11.05.1', '2026.11.03', '2026.11.02'];
-  const foot = document.getElementById('foot');
+  const _ = HPO.t, foot = document.getElementById('foot');
   if (!foot) return;
   const date = v => {
     const p = v.split('.');
-    return new Date(Date.UTC(+p[0], +p[1] - 1, +p[2])).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+    return new Date(Date.UTC(+p[0], +p[1] - 1, +p[2])).toLocaleDateString(HPO.mod.i18n.locale, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
   };
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e; };
   const box = el('details', 'versions'), list = el('ul');
   box.open = true;
-  box.appendChild(el('summary', '', 'Version ' + VERSIONS[0] + ' · built ' + date(VERSIONS[0])));
+  box.appendChild(el('summary', '', _('Version {v} · built {date}', { v: VERSIONS[0], date: date(VERSIONS[0]) })));
   VERSIONS.forEach(x => {
     const li = el('li');
     li.appendChild(el('b', '', x));

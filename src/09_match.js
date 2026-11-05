@@ -1,7 +1,7 @@
 // Match flow: owns the sim tick order, the match coroutine (walk-on -> ceremony), point loop and statistics.
 (function (HPO) {
   'use strict';
-  const U = HPO.util, BUS = HPO.BUS, S = HPO.sched;
+  const U = HPO.util, BUS = HPO.BUS, S = HPO.sched, _ = HPO.t;
   const R = () => HPO.mod.rules, P = () => HPO.mod.players, A = () => HPO.mod.ai, Bl = () => HPO.mod.ball;
   const NETSHOTS = { volleyFH: 1, volleyBH: 1, smashFlat: 1, smashKick: 1, bandeja: 1, vibora: 1, chiquita: 1, dejada: 1 };
 
@@ -27,8 +27,8 @@
         else { ta = [men[0].id, wom[0].id]; tb = [men[2].id, wom[2].id]; }
       }
       const ids = ta.concat(tb);
-      if (ta.length !== 2 || tb.length !== 2 || new Set(ids).size !== 4 || ids.some(id => !pool.some(p => p.id === id))) throw new Error('Choose four different players eligible for this match type.');
-      if (cfg.type === 'X' && [ta, tb].some(team => team.filter(id => roster.find(p => p.id === id).gender === 'F').length !== 1)) throw new Error('Mixed teams require one woman and one man.');
+      if (ta.length !== 2 || tb.length !== 2 || new Set(ids).size !== 4 || ids.some(id => !pool.some(p => p.id === id))) throw new Error(_('Choose four different players eligible for this match type.'));
+      if (cfg.type === 'X' && [ta, tb].some(team => team.filter(id => roster.find(p => p.id === id).gender === 'F').length !== 1)) throw new Error(_('Mixed teams require one woman and one man.'));
       cfg.teamA = ta; cfg.teamB = tb;
       M.cfg = cfg;
       P().setup(ta, tb); A().reset(); Bl().reset();
@@ -344,7 +344,7 @@
       if (b && b.marginCm <= 6 && HPO.streams.ai.chance(0.6)) {
         const res = rl.challenge(loser, 0);
         if (res) {
-          BUS.emit('speak', { text: 'Challenge from Team ' + loser + '. ' + (res.overturned ? 'The call is overturned.' : 'The call stands.'), voice: 'umpire', priority: 2 });
+          BUS.emit('speak', { text: res.overturned ? _('Challenge from Team {team}. The call is overturned.', { team: loser }) : _('Challenge from Team {team}. The call stands.', { team: loser }), voice: 'umpire', priority: 2 });
           const rp = HPO.mod.replay;
           if (rp && rp.play && !M.cfg.fast) { rp.play({ kind: 'challenge', speed: 0.3 }); yield S.until(() => !rp.active, 14); } else yield wait(1);
         }
@@ -360,7 +360,7 @@
   }
   M.timeout = function* (team) {
     BUS.emit('changeover:start', { kind: 'timeout', team: team });
-    BUS.emit('speak', { text: 'Tactical timeout, Team ' + team + '.', voice: 'umpire', priority: 2 });
+    BUS.emit('speak', { text: _('Tactical timeout, Team {team}.', { team: team }), voice: 'umpire', priority: 2, kind: 'timeout' });
     P().list.forEach(function (p) { p.intent = { type: 'move', x: HPO.court.sides[p.team] * 1.4, z: (p.slot ? -1 : 1) * 4.2, cap: 0.5 }; });
     yield wait(8);
     P().rest(0.04);
