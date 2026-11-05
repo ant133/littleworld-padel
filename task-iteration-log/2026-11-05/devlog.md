@@ -50,3 +50,12 @@
 - **Links:** none
 - **Later (same day):** the user asked for the full Indonesian dictionary and words. Wired `HPO.t` into 19_ui, 21_game, 22_callouts, 24_qte, 25_tutorial, 23_versions, 08_rules.describeFormat, 06_players/09_match errors, 18_commentary (pools, umpire templates, salim), 16_replay_ceremony say/banner, 17_audio (voices by language, tone chimes) with four parallel forks; dictionary split in `src/00_lang_id*.js` (657 keys, 272 pool lines). In-world texts and padel terms stay English by the user's decision; Pause, Resume, Team, Auto, On, Off, None and the footer line kept English by the user's edit. Fixed `scoreCall` throwing in Blitz/Americano. Checked: i18n_tests 971, commentary_tests 1653, scoring --quick 119, americano_tests, qte_tests, dupcheck; headless Chrome with `?lang=id` (title, setup, tutorial, dock, match, pause, drawer, stats, Studio): no errors, `missing()` empty. Not run: physics, player_ai, matrix, reflex_stats, features_browser, a real phone, speech with an id-ID voice.
 - **Later still:** the user reviewed the full list and changed 62 entries (more English loanwords kept: swipe, tap, stat abbreviations, mute; "salim" explanation dropped from the scoring text). Applied to `src/00_lang_id*.js`, rebuilt. Committed and pushed on request.
+
+## 22:50 · Language switch and Studio gear removal · claude · padel@main
+- **Status:** done
+- **Prompt:** Add a language switch to the title screen and the volume/callouts popover; remove the ⚙ Studio header button from Play mode.
+- **Done:** `langBtn()` in `src/21_game.js` (reload with `?lang=`, confirm mid-match), CSS hides `#btn-mode` in Play mode, README/CONTRACT 0.10.4/I18N.md updated, version 2026.11.05.11. Checked in headless Chrome (en, id, id at 390 px): button label flips, gear hidden, no errors; i18n_tests and dupcheck pass. Not run: other suites, features_browser, real phone.
+- **Files:** `src/21_game.js`, `src/shell.css`, `src/00_lang_id_play.js`, `src/23_versions.js`, `README.md`, `CONTRACT.md`, `docs/I18N.md`
+- **Decisions:** none
+- **Follow-ups:** switch is not in Studio or the pause menu; mid-match it restarts the match
+- **Links:** see changes.md

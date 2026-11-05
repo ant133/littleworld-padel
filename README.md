@@ -34,7 +34,7 @@ Saved players live in this browser's IndexedDB (database `littleworld-padel`). T
 
 ### Studio mode
 
-The original full control panel is still there, optional: the **⚙ Studio** button, the pause menu, or `?mode=studio`. It has every match setting, all coach presets and serve/return/aim controls, camera and lighting, audio sliders, the match centre (stats, feed), and the debug overlay.
+The original full control panel is still there, optional: the **Studio controls** link (title screen and pause menu), or `?mode=studio`. It has every match setting, all coach presets and serve/return/aim controls, camera and lighting, audio sliders, the match centre (stats, feed), and the debug overlay.
 
 ### Keys
 

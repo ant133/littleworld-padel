@@ -166,6 +166,7 @@
     ' vs {opp}': ' lawan {opp}',
     'Winners': 'Winner', 'Aces': 'Ace', 'Longest rally': 'Rally terpanjang', 'Distance': 'Jarak',
     'MVP: ': 'MVP: ', ' · {w} winners, {u} unforced': ' · {w} winner, {u} unforced',
-    'Play again': 'Main lagi', 'Change setup': 'Ubah pengaturan'
+    'Play again': 'Main lagi', 'Change setup': 'Ubah pengaturan',
+    'Switching language restarts the match. Continue?': 'Ganti bahasa akan memulai ulang match. Lanjut?'
   }, 'id-ID');
 })(HPO);

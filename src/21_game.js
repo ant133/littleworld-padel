@@ -103,6 +103,14 @@
     paints.push({ el: row, fn: paint }); paint(); return row;
   }
   function audioBlock() { return h('div', { class: 'gm-audio' }, volRow('master'), volRow('music')); }
+  // Language switch: the panels are built once, so it reloads with ?lang= (no storage). Mid-match it asks first because the match is lost.
+  function langBtn() {
+    const id = HPO.mod.i18n.lang === 'id';
+    return h('button', { class: 'btn small gm-lang', type: 'button', id: 'gm-lang', lang: id ? 'en' : 'id', onclick: () => {
+      if (G.st !== 'title' && G.st !== 'create' && G.st !== 'setup' && !confirm(_('Switching language restarts the match. Continue?'))) return;
+      const u = new URL(location.href); u.searchParams.set('lang', id ? 'en' : 'id'); location.href = u.href;
+    } }, id ? 'English' : 'Bahasa Indonesia');
+  }
   function calloutRow() {
     const sg = segBtns([['on', 'On'], ['off', 'Off']], () => (S.callouts ? 'on' : 'off'), v => API.setCallouts(v === 'on'), 'gm-co');
     paints.push({ el: sg.root, fn: sg.paint });
@@ -214,6 +222,7 @@
           : h('button', { class: 'btn primary big', type: 'button', id: 'gm-play', onclick: () => showCreate() }, _('Play with Annetta')),
         h('button', { class: 'btn big', type: 'button', id: 'gm-watch', onclick: startWatch }, _('Just watch'))),
       audioBlock(),
+      h('p', { class: 'gm-foot' }, langBtn()),
       h('p', { class: 'gm-foot' }, h('a', { href: '#', id: 'gm-how-link', onclick: e => { e.preventDefault(); showHow(() => showTitle(true)); } }, _('How to play')), ' · ', h('a', { href: '#', id: 'gm-studio-link', onclick: e => { e.preventDefault(); setMode('studio'); } }, _('Studio controls')), ' · ',
         h('a', { href: 'https://annetta.dev/' }, _('← annetta.dev'))),
       h('p', { class: 'gm-foot it' }, _('Made in Jakarta with code, curiosity, and no spare towel.'))
@@ -389,7 +398,7 @@
     hud.pause = btn('gm-pause', '', '❚❚', _('Pause (Space)'), () => { API.togglePause(); updateHud(true); });
     hud.cam = btn('gm-cam', 'txt sm', 'CAM', _('Camera'), () => { const R = mod('render'); let i = CAM_CYCLE.findIndex(c => c[0] === (R && R.cameraMode)); i = (i + 1) % CAM_CYCLE.length; API.setCam(CAM_CYCLE[i][0]); G.camPref = CAM_CYCLE[i][0]; API.toast(_('Camera: {name}', { name: _(CAM_CYCLE[i][1]) }), { ms: 1400 }); updateHud(true); });
     hud.mix = btn('gm-mix', '', '', _('Volume and callouts'), () => toggleMix()); hud.mix.innerHTML = MIX; hud.mix.setAttribute('aria-expanded', 'false');
-    hud.pop = h('div', { class: 'gm-pop', id: 'gm-pop', hidden: true }, h('div', { class: 'tag' }, _('Sound, music, callouts')), audioBlock(), calloutRow());
+    hud.pop = h('div', { class: 'gm-pop', id: 'gm-pop', hidden: true }, h('div', { class: 'tag' }, _('Sound, music, callouts')), audioBlock(), calloutRow(), h('div', { class: 'gm-langrow' }, langBtn()));
     hud.icons = h('div', { class: 'gm-icons' }, hud.pause, hud.cam, hud.mix);
     // coach bar
     hud.steps = MIND.map((n, i) => h('button', { type: 'button', class: 'gm-step', 'data-v': String(i - 2), title: _(n), 'aria-label': _('Mindset: {name}', { name: _(n) }), 'aria-pressed': 'false', onclick: () => setOrder({ mindset: i - 2 }, _('Mindset: {name}: {fx}', { name: _(n), fx: _(MIND_FX[i]) })) }));

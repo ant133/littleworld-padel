@@ -263,6 +263,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
    PLAY MODE (default). Studio mode = the original layout above.
    ===================================================================== */
 .mode-play #panel{display:none}
+.mode-play #btn-mode{display:none}
 .mode-play #fab{display:none}
 #app.mode-play{height:100vh;height:100dvh;min-height:0;overflow:hidden}
 .mode-play #topbar{height:40px;padding:0 10px;gap:10px}
@@ -517,6 +518,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
 .gm-pop{position:absolute;right:60px;top:10px;z-index:12;width:min(290px,calc(100% - 76px));padding:10px 12px 12px;background:var(--card);border:1px solid var(--ink);box-shadow:5px 6px 0 #1264992e}
 .gm-pop .gm-audio{margin:8px 0 4px}
 .gm-pop .gm-cofield{margin:8px 0 0}
+.gm-langrow{margin:10px 0 0}
 @media (max-width:899px){.gm-pop{right:62px}.gm-icons{gap:4px}}
 .gm-icons .gm-ib.off{color:#12395488}
 .versions{margin-top:12px;font-size:11.5px}
