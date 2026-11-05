@@ -6,3 +6,7 @@
 - [ ] `node tools/build.js --check` ends with 'The "file" argument must be of type string' and flags offline at 3.3 MB (over the 3 MB target); cause not investigated (from 2026-11-04)
 - [ ] Re-run the 40-match balance stats after the lob/vibora change; trim lobBase/lobNet if overall lobs should be back under 14%
 - [ ] Check touch gestures and the Aim button on a real phone
+- [ ] QTE: build the attack QTE (behind-the-player camera, hit ring, swipe, mishit on failure), then the defence QTE; add the Go for it moment to the dock (docs/QTE.md)
+- [ ] Check the coach dock on a real phone (sheet height covers the court while open)
+- [ ] Full regression suites and features_browser before the next release (skipped after the QTE and dock restyle by request)
+- [ ] QTE: defence dive (extra reach) not built; real-phone feel of the swipe and the 2.8 s window; audio sting is a simple synth tone

@@ -35,7 +35,22 @@
     const hit = bounced ? { p: { x: bounced.x, z: bounced.z } } : B.predict(st, 5, 30).contacts.find(c => c.surf === 'floor');
     return !!hit && hit.p.x * HPO.court.sides[p.team] >= 8 && Math.abs(hit.p.x) <= 10 && Math.abs(hit.p.z) <= 5;
   }
-  function mods(team) { return Object.assign({ smash: 1, vibora: 1, flat: 1, lob: 1, slice: 1, bandeja: 1, volley: 1, chiquita: 1, wallDef: 1, risk: 1, netBias: 0 }, PRESETS[teams[team].orders.preset] || {}); }
+  // Play-mode coach dock (docs/QTE.md): mindset dial, one plan, style. They compose with the Studio preset: numbers multiply, netBias adds, flags (focus, tire, glass, middle, breakNet) are set.
+  const MINDSET = [
+    { smash: 0.5, vibora: 0.5, lob: 1.6, wallDef: 1.3, risk: 1.5, flat: 0.7, netBias: -1 }, { smash: 0.7, vibora: 0.7, lob: 1.3, risk: 1.25, flat: 0.85 }, {},
+    { smash: 1.3, vibora: 1.3, flat: 1.2, lob: 0.75, risk: 0.8, netBias: 1 }, { smash: 2, vibora: 1.6, flat: 1.4, lob: 0.5, risk: 0.6, netBias: 2 }];
+  const PLANS = {
+    exhaust: { focus: 1, tire: 1, lob: 1.4, slice: 1.3, chiquita: 1.3, risk: 1.1, smash: 0.8 }, hunt: { focus: 1 }, net: { netBias: 2, volley: 1.2, bandeja: 1.2 },
+    breakNet: { breakNet: 1, lob: 1.5 }, glass: { glass: 1, wallDef: 1.2 }, middle: { middle: 1 }
+  };
+  const STYLES = { spin: { flat: 0.5, top: 1.3, slice: 1.25, vibora: 1.25 }, flat: { flat: 1.8, top: 0.7, slice: 0.7, smash: 1.1 } };
+  function mods(team) {
+    const o = teams[team].orders, m = { smash: 1, vibora: 1, flat: 1, top: 1, lob: 1, slice: 1, bandeja: 1, volley: 1, chiquita: 1, wallDef: 1, risk: 1, netBias: 0 };
+    [PRESETS[o.preset], MINDSET[U.clamp(o.mindset | 0, -2, 2) + 2], PLANS[o.plan], STYLES[o.style]].forEach(t => {
+      if (t) for (const k in t) { if (k === 'netBias') m[k] += t[k]; else if (typeof m[k] === 'number') m[k] *= t[k]; else m[k] = t[k]; }
+    });
+    return m;
+  }
 
   const AI = HPO.mod.ai = {
     teams: teams, PRESETS: PRESETS,
@@ -149,7 +164,7 @@
       } else if (near && low) {
         w.chiquita = 2.6 * m.chiquita; w.volleyFH = w.volleyBH = 1.4 * m.volley; w.lobDef = (0.6 + 0.5 * oppNet) * m.lob;
       } else {
-        w.flatGround = 1.0 * m.flat; w.topGround = 1.7; w.slice = 1.3 * m.slice;
+        w.flatGround = 1.0 * m.flat; w.topGround = 1.7 * m.top; w.slice = 1.3 * m.slice;
         w.lobDef = (T.lobBase + T.lobNet * oppNet + 1.3 * press) * m.lob;
         w.lobOff = 0.5 * m.lob * (oppNet ? 1.2 : 0.4);
         w.chiquita = (oppNet >= 1 && h < 1.15 && mid) ? 1.0 * m.chiquita : 0.0;
@@ -158,7 +173,7 @@
         if (info.walls >= 2 && info.slack > 0.12) w.counterDW = 1.3;
         if (mid && h > 0.6) w.volleyFH = w.volleyBH = 0.8 * m.volley;
       }
-      Object.keys(w).forEach(k => { if (LOB[k]) w[k] *= (deepLob ? 0 : 0.55) * Math.pow(T.lobTire, Math.max(0, lobRun - 1)); });
+      Object.keys(w).forEach(k => { if (LOB[k]) w[k] *= (deepLob ? 0 : 0.55) * (m.breakNet && oppNet >= 1 ? 1.8 : 1) * Math.pow(T.lobTire, Math.max(0, lobRun - 1)); });
       if (oppNet >= 2) { if (w.flatGround) w.flatGround *= 0.55; if (w.topGround) w.topGround *= 0.7; }
       if (w.volleyFH !== undefined) { if (info.fh) w.volleyBH = 0; else w.volleyFH = 0; }
 
@@ -206,9 +221,35 @@
         }
       }
       tm.aim = null;
-      return pick;
+      const qo = HPO.mod.qte && HPO.mod.qte.take ? HPO.mod.qte.take(p) : null;
+      return qo ? qteShot(p, info, pick, qo, ops, oppNet, press, m, tm) : pick;
     }
   };
+
+  // The visitor's swipe (docs/QTE.md): the stroke type comes from the ball and the gesture, the swipe supplies target, pace and error. A swipe the solver
+  // cannot fly falls back to the AI's own shot; a missed swipe is a mishit (the AI's shot, soft and sloppy).
+  function qteKinds(o, info, p) {
+    if (o.gesture) return { lob: ['lobDef', 'lobOff'], drive: ['flatGround', 'topGround', 'lobDef'], block: ['chiquita', 'slice', 'lobDef'], wall: ['wallDef', 'lobDef'], scramble: ['lobDef'] }[o.gesture] || ['lobDef'];
+    const h = info.height, depth = Math.abs(p.pos.x);
+    if (h >= 2.05 && depth < 6.5) return ['smashFlat', 'smashKick', 'vibora'];
+    if (h >= 1.85) return ['vibora', 'bandeja'];
+    if (depth < 4.8 && h >= 0.95) return [info.fh ? 'volleyFH' : 'volleyBH'];
+    return ['flatGround', 'topGround'];
+  }
+  function qteShot(p, info, pick, o, ops, oppNet, press, m, tm) {
+    if (o.mishit) { pick.effort = Math.min(pick.effort, 0.4); pick.errMul = 1.6; pick.reason = 'qte-mishit'; return pick; }   // a missed swipe: the AI's shot, softer and a little sloppy
+    const S = HPO.mod.shots, ks = qteKinds(o, info, p);
+    if (o.target.x * -HPO.court.sides[p.team] < 0.5) { pick.reason = 'qte-fallback'; return pick; }                          // never trust a target on our own half
+    for (let i = 0; i < ks.length; i++) {
+      const base = aimFor(p, ks[i], info, ops, oppNet, press, m, tm);
+      for (const e of [o.effort, o.effort * 0.8, 0.5]) {
+        if (S.nominal(info.p, ks[i], o.target, { effort: e, netMargin: base.netMargin }).feasible) {
+          return { kind: ks[i], target: { x: o.target.x, z: o.target.z }, effort: e, intent: base.intent, reason: 'qte', netMargin: base.netMargin, errMul: o.errMul };
+        }
+      }
+    }
+    pick.reason = 'qte-fallback'; return pick;
+  }
 
   // The ball has flown out of the court after a bounce and the player has run out to it: whatever goes over the fence or through the
   // entrance and lands in the other half will do. Each option is flown through the real integrator first, so a ball that would hit
@@ -272,7 +313,7 @@
     const cands = [];
     const clampT = t => ({ x: U.clamp(t.x, ox * 0, ox * 99), z: t.z });
     const addAim = (dx, z, tag) => cands.push({ x: ox * dx, z: U.clamp(z, -5 + marginZ, 5 - marginZ), tag: tag });
-    const weak = ops.slice().sort((a, b) => weakness(b) - weakness(a))[0];
+    const weak = ops.slice().sort((a, b) => m.tire ? b.fatigue - a.fatigue : weakness(b) - weakness(a))[0];
     let kindDepth;
     const effortBase = 0.35 + 0.3 * (m.flat - 0.8) + 0.2 * lvl(p.attrs.power);
     let effort = U.clamp(effortBase, 0.2, 0.9);
@@ -321,7 +362,7 @@
       let dmin = 99; ops.forEach(q => { dmin = Math.min(dmin, Math.hypot(q.pos.x - c.x, q.pos.z - c.z)); });
       s += Math.min(dmin, 5) * (c.tag === 'feet' ? -0.2 : 0.5);
       if (c.tag === 'feet') s += 1.0;
-      if (weak) { const dw = Math.hypot(weak.pos.x - c.x, weak.pos.z - c.z); s += (tm.orders.preset === 'focusOne' || tm.orders.focusOpponent !== undefined) ? Math.max(0, 3 - dw) * 0.8 : Math.max(0, 3 - dw) * 0.25 * weakness(weak); }
+      if (weak) { const dw = Math.hypot(weak.pos.x - c.x, weak.pos.z - c.z); s += m.tire ? Math.min(dw, 6) * 0.4 : (m.focus || tm.orders.preset === 'focusOne' || tm.orders.focusOpponent !== undefined) ? Math.max(0, 3 - dw) * 0.8 : Math.max(0, 3 - dw) * 0.25 * weakness(weak); } // tire: far from them, so they run
       if (m.middle) s += (1.5 - Math.abs(c.z)) * 0.8;
       if (m.glass && (c.tag === 'glass' || c.tag === 'wallside' || Math.abs(c.z) > 2.8)) s += 1.2;
       s -= Math.abs(c.z) > 5 - marginZ ? 1 : 0;

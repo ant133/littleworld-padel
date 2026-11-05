@@ -111,6 +111,10 @@ Sensitivity (20-match cells, noise about 3 pp): `readScale` is the strongest sma
 
 Lob and vibora pass (28 matches, 4 Nov / 5 Nov 2026): lob share by opponents at the net (0 / 1 / 2) went from 9.4 / 13.8 / 29.3 % to 8.4 / 17.2 / 35 % (overall 15.9 % to 17.8 %, above the 8-14 % target by request); vibora on near-net balls at 1.5-1.85 m went from 0.1 % to 29 %. The 40-match balance table above was not re-run after this change; regression suites were (dupcheck, physics 20/20, scoring 119/119, player_ai, commentary 1652, matrix 18/18). Touch gestures, the Aim button, the Eagle Eye camera restore and floodlight hiding were checked with synthetic pointer events in headless Chrome at 390x844 (not on a real phone).
 
+Coach dock (5 Nov 2026): 9 matches per setting, team A ordered through `ai.setOrders`, about 300 points each. Fortress: lobs 27 % (base 18.5), smashes 9 % (base 15), rally 12.3 (base 10.3). All-in: smashes 23 %, lobs 10 %. Spin / Flat shift the groundstroke mix (flat 1.5 / 5.5 %, slice 14 / 7 % against 2.6 / 9.8 base). Wear them down: opponents' fatigue 0.30 (base 0.18) and lobs 21 %. Break the net: lobs 30 %. Take the net: volleys 19.6 % (base 15.7). `features_browser` now checks 5 mindset stops, 6 plans, 3 styles and the Aim button. The smart hint and the phone Coach sheet were checked with screenshots at 1280x800 and 390x844 only.
+
+QTE (5 Nov 2026): `tools/qte_tests.js` stubs the module and checks the sim side (a good swipe lands 1.7 m from the target against 3.9 m for a sloppy one; a missed swipe plays the soft shot; a target on the player's own half falls back to the AI shot). The overlay, camera and swipes were checked in headless Chrome with forced triggers (`qte.force`, `qte.durScale`) and synthetic pointer events: attack, defence (glass and drive gestures) and a timeout. The full regression suites and the browser journey were not re-run after the QTE and the dock restyle (by request); the last full pass is the one above.
+
 ## Not verified / known gaps
 
 - A real Android phone (device pixel ratio, pinch zoom at the new 18× limit, the native dropdown pickers); the stripes fix is verified only at an emulated 2.625 ratio.

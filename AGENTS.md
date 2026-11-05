@@ -34,7 +34,7 @@ Where things live:
 - Each module owns its files and nothing else. Cross-module calls go through BUS events or injected interfaces (`ui.api` for Play mode).
 - Prefer reliability over decoration. If perf or complexity forces a trade-off, cut props, not physics or rules.
 - Every change that touches physics, scoring or AI must be validated headless (no renderer) before merging: `physics_tests`, `scoring_tests`, `player_ai_tests`, and `matrix` for flow changes.
-- Every UI or camera change must be checked in the browser (`features_browser`, and look at screenshots) and on a phone-sized viewport.
+- Every UI or camera change must be looked at in the browser (screenshots, including a phone-sized viewport). Do not run the full regression suites or the browser journey (`features_browser`) after each change; run them only when the user asks.
 - Keep debug overlay hidden by default.
 - After changing code, rebuild (`node tools/build.js`) and update the docs it affects; do not leave a stale test or doc behind.
 - Never commit or push unless the user asks; pushing to `main` deploys the public site.

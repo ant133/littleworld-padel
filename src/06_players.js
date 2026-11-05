@@ -390,6 +390,7 @@
       p: pl.p, v: pl.v, dt: pl.t - P.now, slack: pl.slack, walls: pl.walls, ownBounces: pl.ownBounces, afterWall: pl.afterWall,
       ballSpeed: pl.ballSpeed, fh: isForehand(p, pl.p), height: pl.p.y, reach: pl.reach, outside: !!pl.outside, above: !!pl.above
     };
+    const Q = HPO.mod.qte; if (Q && Q.offer && Q.offer(p, pl, info)) return; // QTE open: the sim is paused until the swipe (or time) resolves it
     const pick = ai && ai.decideShot ? ai.decideShot(p, info) : { kind: 'flatGround', target: { x: -HPO.court.sides[p.team] * 6, z: 0 }, effort: 0.5 };
     if (!pick) { p.plan = null; p.swing = null; p.intent = { type: 'move', x: p.pos.x, z: p.pos.z }; return; }
     let kind = pick.kind;
@@ -400,7 +401,7 @@
     const tc = Math.max(P.now + 0.05, pl.t);
     p.swing = {
       kind: kind, target: pick.target, effort: pick.effort, spin: pick.spinScale, netMargin: pick.netMargin, warm: !!pick.warm, tc: tc, start: tc - lead, clip: clip, fh: info.fh, info: info,
-      reason: pick.reason, intent: pick.intent, done: false, planAt: p.planAt,
+      reason: pick.reason, intent: pick.intent, errMul: pick.errMul, done: false, planAt: p.planAt,
       dirAngle: Math.atan2(pick.target.z - p.pos.z, pick.target.x - p.pos.x) * 0.55 + P.facing(p.team) * 0.45
     };
     p.anim = { clip: clip + (info.fh ? '' : ''), t: 0, rate: 1, fh: info.fh };
@@ -443,7 +444,8 @@
     const pressure = sw.warm ? 0.05 : U.clamp(0.75 * (1 - tmargin) + 0.5 * aftermath + 0.02 * Math.max(0, speed - 12) + (sw.info.afterWall ? 0.08 : 0), 0, 1);
     let nom = HPO.mod.shots.nominal(bp, sw.kind, sw.target, { effort: sw.effort, spinScale: sw.spin, netMargin: sw.netMargin });
     if (!nom.feasible && !sw.warm) nom = rescueShot(p, sw, bp, nom);
-    const ex = HPO.mod.shots.execute(nom, execCtx(p, diff, pressure, stretch));
+    const cx = execCtx(p, diff, pressure, stretch); cx.errMul = sw.errMul;
+    const ex = HPO.mod.shots.execute(nom, cx);
     B.launch({ p: bp, v: ex.v, w: ex.w, hitter: p.id, team: p.team });
     p.stats.shots++;
     p.plan = null;

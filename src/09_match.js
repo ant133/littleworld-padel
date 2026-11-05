@@ -64,7 +64,7 @@
       M.acc += Math.min(realDt, 0.1) * M.speed;
       let n = 0;
       const dt = HPO.cfg.SIM_DT, max = HPO.cfg.MAX_SUBSTEPS * 2;
-      while (M.acc >= dt && n < max) { M.tick(dt); M.acc -= dt; n++; }
+      while (M.acc >= dt && n < max && !M.paused) { M.tick(dt); M.acc -= dt; n++; }
       if (n >= max) M.acc = 0;
       return n;
     },

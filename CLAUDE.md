@@ -7,7 +7,7 @@ Web toy for annetta.dev, feature-complete and deployed through GitHub Pages. Wor
 
 ## Dev commands
 - `node tools/devpage.js` → dev.html (all src/*.js); open via `file:///.../dev.html?cam=club|close|follow|top&tod=day|dusk|night&venue=classicBlue|terracotta|fastBlue|indoor&speed=1&fast=0|1&px=2`. Play mode is the default; add `mode=studio` for the full panel, `title=0` to skip the title.
-- Tests: `node tools/dupcheck.js`, `physics_tests.js`, `scoring_tests.js [--quick]`, `player_ai_tests.js`, `commentary_tests.js`, `reflex_stats.js [--n N]` (smash and volley-chain statistics), `matrix.js --part k/3`, `sim_cli.js --n N [--tune {json}]`. Results and gaps: docs/TESTING.md.
+- Tests (only when asked, see Workflow): `node tools/dupcheck.js`, `qte_tests.js`, `physics_tests.js`, `scoring_tests.js [--quick]`, `player_ai_tests.js`, `commentary_tests.js`, `reflex_stats.js [--n N]` (smash and volley-chain statistics), `matrix.js --part k/3`, `sim_cli.js --n N [--tune {json}]`. Results and gaps: docs/TESTING.md.
 - Browser (headless Chrome via `tools/browser.js`): `e2e.js` (match sampler), `features_browser.js` (Play-mode journey, saved players, camera, offline render, phone), `visual_matrix.js` (courts × lighting × cameras). Run `node tools/build.js` first for the ones that load `dist/`.
 - Ship: `node tools/build.js [--check]` → dist/littleworld-online.html + -offline.html; `node tools/make_artifact.js` → dist/littleworld-artifact.html (artifact publish).
 - Key docs: CONTRACT.md, docs/PLAY_MODE.md, docs/VISUAL_CONTRACT.md, docs/API_*.md, docs/TESTING.md, docs/GITHUB_PAGES.md.
@@ -25,8 +25,9 @@ Web toy for annetta.dev, feature-complete and deployed through GitHub Pages. Wor
 
 ## Workflow for changes
 1. Read CONTRACT.md for the module; change the contract first if an interface changes.
-2. Sim, rules or AI change → run the headless suites (`physics_tests`, `scoring_tests`, `player_ai_tests`, `matrix`).
-3. UI, camera or world change → `node tools/build.js`, then `features_browser.js` and look at screenshots (desktop and 390×844).
+2. Sim, rules or AI change → run `dupcheck` and the one test that covers what you touched (for example `qte_tests.js` for the QTE), not the whole set.
+3. UI, camera or world change → `node tools/build.js` and look at a screenshot of the new UI (desktop and 390×844).
+   **Do not run the full regression suites** (`physics_tests`, `scoring_tests`, `player_ai_tests`, `commentary_tests`, `matrix`, `reflex_stats`) **or the browser journey** (`features_browser`, `e2e`, `visual_matrix`) after a feature or fix. Run them only when the user asks (for example before a release). In the final message say which checks you did not run.
 4. Update the docs the change touches (CONTRACT.md change log, docs/TESTING.md numbers) in the same pass.
 5. Do not commit or push unless asked; a push to `main` publishes the site.
 6. Every shipped change adds its version at the top of `VERSIONS` in `src/23_versions.js` (version = build date `YYYY.MM.DD`, `.N` suffix for a second version the same day); it is listed at the bottom of Studio mode.

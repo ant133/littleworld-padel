@@ -878,7 +878,7 @@
     BUS.emit('ui:setting', { key: 'speed', value: v });
     EL.chipSpeed.textContent = (v < 1 ? v : v) + '×'; sync();
   }
-  function togglePause() { const M = mod('match'); if (!M) return; if (tmo) { endRest(); return; } M.pause(); sync(); updateBannerPause(); }
+  function togglePause() { const M = mod('match'); if (!M || (mod('qte') && mod('qte').open)) return; if (tmo) { endRest(); return; } M.pause(); sync(); updateBannerPause(); }
   function updateBannerPause() {
     const M = mod('match');
     if (tmo) return;

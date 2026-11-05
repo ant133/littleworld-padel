@@ -146,6 +146,7 @@
       osc(E, { type: 'sine', f0: 430, f1: 230, t: t, dur: 0.06, peak: 0.28, a: 0.002, pan: p && p.pan });
       noise(E, { ftype: 'bandpass', f0: 1600, q: 1, t: t, dur: 0.015, peak: 0.12, a: 0.001, pan: p && p.pan });
     },
+    sting(E, t) { osc(E, { type: 'sawtooth', f0: 220, f1: 990, t: t, dur: 0.4, peak: 0.16, a: 0.01, filter: ['lowpass', 2600, 0.8] }); osc(E, { type: 'square', f0: 110, f1: 330, t: t, dur: 0.4, peak: 0.1, a: 0.01, filter: ['lowpass', 1200, 0.7] }); },
     click(E, t) { osc(E, { type: 'square', f0: 920, f1: 640, t: t, dur: 0.05, peak: 0.1, a: 0.002, filter: ['lowpass', 3000, 0.7] }); },
     clap(E, t, p) {
       const l = clamp(p.level === undefined ? 1 : p.level, 0.3, 3), dur = 1.6 + l * 0.7, dense = 220 + l * 120;
@@ -215,7 +216,7 @@
   // ------------------------------------------------------------------ module state
   const cfgVol = { master: 0.8, fx: 0.9, crowd: 0.8, commentary: 0.9, ambience: 0.7, music: 0.5 };
   const LIMITS = { // [minGapMs, maxPerSecond]
-    pok: [90, 6], turf: [50, 9], glass: [110, 5], mesh: [120, 4], net: [150, 4], tape: [120, 4], post: [150, 3], step: [90, 8], tok: [300, 2], click: [40, 10],
+    sting: [400, 2], pok: [90, 6], turf: [50, 9], glass: [110, 5], mesh: [120, 4], net: [150, 4], tape: [120, 4], post: [150, 3], step: [90, 8], tok: [300, 2], click: [40, 10],
     clap: [1500, 1], cheer: [2200, 1], gasp: [1800, 1], groan: [1800, 1], wave: [8000, 1], chime: [200, 4], bird: [1200, 2], pop: [60, 12], fanfare: [5000, 1]
   };
   const A = HPO.mod.audio = {
@@ -467,6 +468,7 @@
     setSpeech(v) { A.speech = !!v; if (v && speechOK()) loadVoices(); if (!v) cancelSpeech(); },
     setVolume(bus, v) { if (!(bus in cfgVol)) return; cfgVol[bus] = clamp(+v || 0, 0, 1); applyGains(); if (bus === 'commentary' && cfgVol.commentary <= 0) cancelSpeech(); },
     uiClick() { play('click', {}); },
+    sting() { play('sting', {}); },
     fanfare() { if (!on()) return; allow('fanfare'); try { S.fanfare(A.env.fx, tNow(), { dest: A.env.fx.out }); } catch (e) { U.logError('audio.fanfare', e); } },
     celebrate() {
       if (!on()) return;

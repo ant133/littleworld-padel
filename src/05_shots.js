@@ -178,7 +178,7 @@
       return (1.55 - 1.1 * acc) *
         (1 + 1.0 * (ctx.difficulty || 0)) * (1 + (HPO.cfg.TUNE.pressK || 1.0) * (ctx.pressure || 0)) *
         (1 + 0.5 * (ctx.fatigue || 0)) * (1 + 0.4 * (1 - (ctx.confidence === undefined ? 0.5 : ctx.confidence))) *
-        (1 + (HPO.cfg.TUNE.stretchK || 1.6) * (ctx.stretch || 0));
+        (1 + (HPO.cfg.TUNE.stretchK || 1.6) * (ctx.stretch || 0)) * (ctx.errMul || 1); // errMul: QTE swipe quality (docs/QTE.md)
     },
     // fast estimate for AI (no integration): difficulty 0..1 for kind at contact height / ball speed
     difficulty(kind, hitY, ballSpeed, stretch) {

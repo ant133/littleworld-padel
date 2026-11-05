@@ -19,3 +19,13 @@
 - **Decisions:** none
 - **Follow-ups:** re-run the 40-match balance stats; check touch and the Aim button on a real phone; trim lob share if 14% is wanted
 - **Links:** e814679
+
+## 16:00 · Coach dock redesign and QTE spec · claude · padel@main
+- **Status:** done
+- **Prompt:** Replace the Play-mode coach dropdowns with a floating icon dock (defend/attack dial, one exclusive plan, spin/flat, moments, smart hint); then QTE shots (attack and defence) with a behind-the-player camera.
+- **Plan:** Spec (docs/QTE.md + CONTRACT) first, then the dock, then attack QTE, then defence QTE.
+- **Done so far:** `docs/QTE.md` spec; coach dock (mindset dial, six exclusive plans, spin/mix/flat, Aim/Timeout/Challenge, smart hint, phone Coach sheet); AI orders `mindset`, `plan`, `style` in `ai.mods`; tests and docs updated. Version 2026.11.05.4. Uncommitted.
+- **Files:** `docs/QTE.md`, `src/07_ai.js`, `src/21_game.js`, `src/shell.css`, `src/23_versions.js`, `tools/features_browser.js`, `docs/PLAY_MODE.md`, `docs/TESTING.md`, `CONTRACT.md`
+- **Done (later):** QTE built (`src/24_qte.js`, camera mode `qte`, attack and defence, mishit on failure, 2.8 s / 2.4 s windows, Go for it, Off/Occasional/On setting); dock restyled to the annetta.dev card style, closed by default behind a Strategy toggle on small screens; CLAUDE.md and AGENTS.md now say not to run the full suites or the browser journey after each change. Not run by request: full regression suites, features_browser. Version 2026.11.05.5. Uncommitted.
+- **Files (added):** `src/24_qte.js`, `tools/qte_tests.js`, `tools/browser.js`
+- **Later still:** QTE windows 4.2 s / 3.6 s (+50%); Middle balls (Auto / You / Annetta) is now the fourth group of the Strategy sheet instead of a hidden `...` menu; the dock is wider and folds behind Strategy under 1100 px.

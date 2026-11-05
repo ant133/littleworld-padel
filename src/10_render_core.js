@@ -7,7 +7,8 @@
   const EL = 40 * Math.PI / 180;
   const YAW0 = Math.PI / 4;           // yaw of quarter-turn index 0
   const CAM_D = 140;                  // camera distance from its target (orthographic: only affects clipping/fog)
-  const MODES = ['follow', 'club', 'close', 'top', 'free'];
+  const MODES = ['follow', 'club', 'close', 'top', 'free', 'qte'];
+  const QTE_EL = 62 * Math.PI / 180;  // QTE camera: behind the hitter, high enough to see the whole court (R.qteYaw is set by the qte module)
   const ZOOM_MAX = 18;                // orthographic half-height can shrink to well under a metre
   const FOLLOW_HALF = 11.5;           // TV follow: visible half-height in metres at zoom 1 (landscape)
 
@@ -511,6 +512,12 @@
       v.yawK += dir > 0 ? 1 : -1; R.yawIndex = ((v.yawK % 4) + 4) % 4;
       if (R.cameraMode === 'free') v.yawT = YAW0 + v.yawK * Math.PI / 2;
     },
+    camSnapshot() { const v = R.view; return { mode: R.cameraMode, zoom: v.zoom, followId: R.followId, followBall: R.followBall, freeBase: v.freeBase, t: { x: v.tTarget.x, y: v.tTarget.y, z: v.tTarget.z } }; },
+    camRestore(s) { // a free camera cannot be restored through setCameraMode (same mode, no-op): put its target and zoom back by hand
+      if (!s) return; const v = R.view;
+      if (s.mode === 'free') { R.setCameraMode('free'); if (s.freeBase) v.freeBase = s.freeBase; v.tTarget.set(s.t.x, s.t.y, s.t.z); if (s.zoom) v.zoom = s.zoom; }
+      else { R.followId = s.followId || null; R.followBall = s.followBall !== false; R.setCameraMode(s.mode || 'club'); if (s.zoom) v.zoom = s.zoom; }
+    },
     zoom(d) { R.view.zoom = U.clamp(R.view.zoom * Math.pow(1.12, d), 0.45, ZOOM_MAX); }, // delta > 0 zooms IN
     resetView() { const v = R.view; v.zoom = 1; v.yawK = 0; R.yawIndex = 0; R.followId = null; R.followBall = true; v.tTarget.set(0, 0, 0); R.setCameraMode(HPO.cfg.mobile ? 'follow' : 'club'); },
     followPlayer(id) { R.followId = id || null; if (id) R.setCameraMode('follow'); },
@@ -571,7 +578,8 @@
       for (let i = 0; i < 28; i++) { const a = i / 28 * Math.PI * 2; club.push(Math.cos(a) * 47, 0, Math.sin(a) * 47, Math.cos(a) * 44, -6, Math.sin(a) * 44); }
       club.push(0, -14, 0, -22, 15, -34, 22, 15, -34, -16, 15, -11, 16, 15, 11, 16, 15, -11, -16, 15, 11);
       [-1, 1].forEach(function (sx) { [-1, 1].forEach(function (sz) { [0, 4.2].forEach(function (y) { close.push(sx * 11.2, y, sz * 6.4); }); top.push(sx * 12, 0, sz * 7); }); });
-      R._pts = { club: club, close: close, top: top }; return R._pts;
+      const court = []; [-1, 1].forEach(function (sx) { [-1, 1].forEach(function (sz) { [0, 3].forEach(function (y) { court.push(sx * 10.5, y, sz * 5.5); }); }); });
+      R._pts = { club: club, close: close, top: top, court: court }; return R._pts;
     },
     _followPoint(out) {
       const bs = HPO.mod.ball && HPO.mod.ball.state, pl = HPO.mod.players && HPO.mod.players.list;
@@ -596,6 +604,7 @@
       else if (mode === 'close') { R._fit(pts.close, v.yawT, v.elT, 1.08, f); baseHalf = f.half; v.tTarget.copy(t.right).multiplyScalar(f.cx).addScaledVector(t.up, f.cy); }
       else if (mode === 'top') { R._fit(pts.top, v.yawT, v.elT, 1.06, f); baseHalf = f.half; v.tTarget.set(0, 0, 0).addScaledVector(t.right, f.cx).addScaledVector(t.up, f.cy); }
       else if (mode === 'follow') { R._followPoint(v.tTarget); baseHalf = FOLLOW_HALF * Math.max(1, 1.5 / R.aspect) * (HPO.cfg.mobile ? 0.55 : 1); kT = 3; }
+      else if (mode === 'qte') { v.yawT = R.qteYaw || 0; v.elT = QTE_EL; R._fit(pts.court, v.yawT, v.elT, 1.12, f); baseHalf = f.half; v.tTarget.copy(t.right).multiplyScalar(f.cx).addScaledVector(t.up, f.cy); kT = 6; }
       else { baseHalf = v.freeBase; kT = 10; }
       v.halfT = baseHalf / v.zoom;
       v.target.lerp(v.tTarget, K(dt, kT));

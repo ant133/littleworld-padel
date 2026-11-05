@@ -36,12 +36,17 @@ The coach bar controls **team A only** and is intentionally limited:
 
 | Control | Maps to |
 | --- | --- |
-| Coach dropdown (`#gm-tactic`): Balanced, Attack, Safe, Net, Lobs, Smash | `ai.setOrders('A', {preset})` with `balanced`, `aggressive`, `safe`, `controlNet`, `defensive`, `moreSmashes` |
-| Middle ball dropdown (`#gm-middle`): Auto, You, Annetta | `ai.setOrders('A', {middlePriority: undefined, 0 or 1})` |
-| Timeout · n | `rules` timeout (one per match); enabled only during play |
-| Challenge · n | `rules.canChallenge('A')`; two per set |
+| Mindset dial (`.gm-step`, 5 stops, shield to sword) | `ai.setOrders('A', {mindset: -2..2})` |
+| Plan icons (`.gm-plan`, one at a time; tap again to clear) | `{plan: 'exhaust' \| 'hunt' \| 'net' \| 'breakNet' \| 'glass' \| 'middle' \| null}` |
+| Shots (`.gm-sty`): Spin, Mix, Flat | `{style: 'spin' \| 'mix' \| 'flat'}` |
+| Middle balls (`.gm-mid`, fourth group of the sheet): Auto, You, Annetta | `ai.setOrders('A', {middlePriority: undefined, 0 or 1})` |
+| Go for it (`#gm-go`) | `qte.arm()`: the next winning chance becomes a swipe shot |
+| Aim (`#gm-aim`) | `ui.api.toggleAim()`: tap the opponent's half |
+| Timeout (`#gm-timeout`, badge = left) | `rules` timeout (one per match); enabled only during play |
+| Challenge (`#gm-challenge`, badge = left) | `rules.canChallenge('A')`; two per set |
+| Hint chip | suggests a plan from the opponents' fatigue, net/deep positions and defense; Apply sets it (see docs/QTE.md) |
 
-Everything else (serve/return direction, aim-click, focus opponent, all other presets) is Studio-only. A commentary ticker shows the latest feed line above the coach bar; match/set/break point shows as a toast. Your pair is ringed (`actors.highlight`) and labelled by projecting the rigs' positions each frame.
+The dock floats at the bottom of the match view. On phones and short windows only the Strategy button and the moment buttons show; Strategy (chevron above the label) opens the dial, plans and shots as a sheet. QTE shots: see docs/QTE.md; the pause menu has the Off / Occasional / On setting. Everything else (serve/return direction, aim-click, focus opponent, all other presets) is Studio-only. A commentary ticker shows the latest feed line above the coach bar; match/set/break point shows as a toast. Your pair is ringed (`actors.highlight`) and labelled by projecting the rigs' positions each frame.
 
 ## Persistence
 

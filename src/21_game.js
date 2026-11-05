@@ -7,7 +7,22 @@
   let API = null, S = null, EL = null, h = null, add = null, safe = null;
   const AN = 'p5'; // Annetta Arslan
   const NATIONS = [['IDN', 'Indonesia'], ['ESP', 'Spain'], ['ARG', 'Argentina'], ['NED', 'Netherlands'], ['JPN', 'Japan'], ['SWE', 'Sweden'], ['ITA', 'Italy'], ['BRA', 'Brazil'], ['FRA', 'France'], ['GER', 'Germany'], ['POR', 'Portugal'], ['CHI', 'Chile'], ['AUS', 'Australia'], ['GBR', 'United Kingdom']];
-  const PRESETS = [['balanced', 'Balanced'], ['aggressive', 'Attack'], ['safe', 'Safe'], ['controlNet', 'Net'], ['defensive', 'Lobs'], ['moreSmashes', 'Smash']];
+  // coach dock (docs/QTE.md section 1)
+  const MIND = ['Fortress', 'Safe', 'Balanced', 'Pressure', 'All-in'];
+  const PLAN_UI = [['exhaust', 'Wear them down', 'Aim at the tired one and make them run'], ['hunt', 'Hunt the weak one', 'Every ball at the weaker defender'], ['net', 'Take the net', 'Step up and volley'],
+    ['breakNet', 'Break the net', 'Lob deep over a pair at the net'], ['glass', 'Use the glass', 'Angles and rebounds'], ['middle', 'Down the middle', 'Split the pair']];
+  const STYLE_UI = [['spin', 'Spin'], ['mix', 'Mix'], ['flat', 'Flat']];
+  const MID_UI = [['', 'Auto'], ['0', 'You'], ['1', 'Annetta']];   // who takes the middle balls
+  const P_ = d => '<svg ' + 'xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"' + '>' + d + '</svg>';
+  const IC = {
+    shield: P_('<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>'), sword: P_('<path d="M20 4l-10 10M15 4h5v5M8 16l-4 4M6 12l6 6"/>'),
+    exhaust: P_('<rect x="3" y="8" width="16" height="9" rx="1"/><path d="M21 11v3M6 12v1"/>'), hunt: P_('<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>'),
+    net: P_('<path d="M3 5v15M21 5v15M3 8h18M3 12h18M3 16h18M9 8v8M15 8v8"/>'), breakNet: P_('<path d="M3 19C6 2 18 2 21 19M17 15l4 4 1-5"/>'),
+    glass: P_('<path d="M3 5v14M3 6l8 12 4-12 6 10"/>'), middle: P_('<path d="M5 4v16M19 4v16M12 5v13M9 15l3 3 3-3"/>'),
+    go: P_('<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>'), aim: P_('<circle cx="12" cy="12" r="6"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/>'), timeout: P_('<circle cx="12" cy="13" r="8"/><path d="M12 8v5l3 2M9 2h6"/>'),
+    chev: P_('<path d="M6 15l6-6 6 6"/>'),
+    challenge: P_('<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'), coach: P_('<path d="M4 6h16M4 12h16M4 18h16"/>')
+  };
   const COURTS = [['classicBlue', 'Classic Blue'], ['terracotta', 'Terracotta'], ['fastBlue', 'Fast Blue'], ['indoor', 'Indoor']];
   const CAM_CYCLE = [['close', 'Close-up'], ['follow', 'TV follow'], ['club', 'Whole club'], ['top', 'Top-down']];
   // the whole club is too small to read on a phone, so phones default to the TV follow camera
@@ -20,7 +35,7 @@
   const NATION_NAME = {}; NATIONS.forEach(n => { NATION_NAME[n[0]] = n[1]; });
 
   const G = HPO.mod.game = {
-    mode: 'play', st: 'boot', scr: null, player: null, opp: null,
+    mode: 'play', st: 'boot', scr: null, player: null, opp: null, qte: 'occasional',
     cfg: { format: 'quick', scoring: 'golden', venue: 'classicBlue', tod: 'day' },
     init: init, update: update, onFeed: onFeed, onEscape: onEscape, blocking: blocking, active: active, results: results,
     showTitle: showTitle, showCreate: showCreate, showSetup: showSetup, setMode: setMode, onSaved: onSaved, suppressResults: suppressResults
@@ -89,6 +104,11 @@
     paints.push({ el: sg.root, fn: sg.paint });
     return h('div', { class: 'field gm-cofield' }, h('div', { class: 'lbl' }, 'Callouts (OUT!, SMASH! ...)'), sg.root);
   }
+  function qteRow() {
+    const sg = segBtns([['off', 'Off'], ['occasional', 'Occasional'], ['on', 'On']], () => G.qte, v => { G.qte = v; const Q = mod('qte'); if (Q) Q.setMode(v); }, 'gm-qte');
+    paints.push({ el: sg.root, fn: sg.paint });
+    return h('div', { class: 'field gm-cofield' }, h('div', { class: 'lbl' }, 'QTE shots (swipe to aim winners and saves)'), sg.root);
+  }
   function openScreen(id, kids, cls) {
     closeScreen();
     const card = h('div', { class: 'gm-card ' + (cls || ''), role: 'dialog', 'aria-label': id });
@@ -100,7 +120,10 @@
   }
   function closeScreen() { if (G.scr) { G.scr.remove(); G.scr = null; } EL.stage.classList.remove('gm-covered'); }
   function stamp(t) { return h('span', { class: 'sticker gm-stk' }, t); }
-  function setSt(s) { G.st = s; EL.app.setAttribute('data-gm', s); updateVisibility(); }
+  function setSt(s) {
+    G.st = s; EL.app.setAttribute('data-gm', s); updateVisibility();
+    const Q = mod('qte'); if (Q) { Q.enabled = s === 'playing'; if (!Q.enabled) Q.cancel(); }
+  }
 
   // ---------- init ----------
   function init(ctx, api) {
@@ -304,13 +327,14 @@
   // ---------- kick off ----------
   function kickoff() {
     const me = G.player; if (!me) return showCreate();
-    closeScreen(); closePause(); clearTimeout(attractT);
+    closeScreen(); closePause(); clearTimeout(attractT); hideHint();
     const C = G.cfg;
     S.type = myType(); S.teamA = [me.id, AN]; S.teamB = (G.opp || randomOpp(S.type)).slice();
     S.format = C.format; S.scoring = C.scoring; S.venue = C.venue; S.tod = C.tod; S.seed = '';
     S.coachTeam = 'A'; S.coachClaimed = true; S.speed = 1;
+    const Qt = mod('qte'); if (Qt) { Qt.setMode(G.qte); Qt.armed = false; Qt.pointsSince = 9; Qt.gameUsed = 0; }
     const Ai = mod('ai');
-    ['A', 'B'].forEach(t => safe(() => { if (Ai && Ai.setOrders) Ai.setOrders(t, { preset: 'balanced', serveDir: 'auto', returnDir: 'auto', middlePriority: undefined, focusOpponent: undefined, aimPoint: undefined }); }, 'orders'));
+    ['A', 'B'].forEach(t => safe(() => { if (Ai && Ai.setOrders) Ai.setOrders(t, { preset: 'balanced', mindset: 0, plan: null, style: 'mix', serveDir: 'auto', returnDir: 'auto', middlePriority: undefined, focusOpponent: undefined, aimPoint: undefined }); }, 'orders'));
     setSt('playing'); hlKey = '';
     API.newMatch();
     const M = mod('match'); if (M) M.coachTeam = 'A';
@@ -331,19 +355,30 @@
     hud.studio = btn('gm-studio', '', '⚙︎', 'Studio controls', () => setMode('studio'));
     hud.icons = h('div', { class: 'gm-icons' }, hud.pause, hud.speed, hud.cam, hud.mix, hud.studio);
     // coach bar
-    // dropdowns instead of a chip row: the picker costs one line of height on a phone
-    hud.tactic = h('select', { class: 'gm-select', id: 'gm-tactic', 'aria-label': 'Coach tactic', onchange: () => { const p = PRESETS.find(x => x[0] === hud.tactic.value); if (p) setPreset(p[0], p[1]); } },
-      PRESETS.map(p => h('option', { value: p[0] }, p[1])));
-    hud.middle = h('select', { class: 'gm-select', id: 'gm-middle', 'aria-label': 'Who takes the middle balls', onchange: () => setMid(hud.middle.value === '' ? undefined : +hud.middle.value) },
-      h('option', { value: '' }, 'Auto'), h('option', { value: '0' }, 'You'), h('option', { value: '1' }, 'Annetta'));
-    hud.tmo = h('button', { type: 'button', class: 'gm-act', id: 'gm-timeout', onclick: () => { API.callTimeout(); updateHud(true); } }, 'Timeout');
-    hud.chal = h('button', { type: 'button', class: 'gm-act', id: 'gm-challenge', onclick: () => { API.doChallenge(); updateHud(true); } }, 'Challenge');
-    hud.aim = h('button', { type: 'button', class: 'gm-act', id: 'gm-aim', 'aria-pressed': 'false', onclick: () => API.toggleAim() }, 'Aim');
-    hud.coach = h('div', { class: 'gm-coach' },
-      h('div', { class: 'gm-coachrow' },
-        h('label', { class: 'gm-pick', for: 'gm-tactic' }, h('span', null, 'Coach'), hud.tactic),
-        h('label', { class: 'gm-pick mid', for: 'gm-middle' }, h('span', null, 'Middle ball'), hud.middle),
-        h('div', { class: 'gm-acts2' }, hud.aim, hud.tmo, hud.chal)));
+    hud.steps = MIND.map((n, i) => h('button', { type: 'button', class: 'gm-step', 'data-v': String(i - 2), title: n, 'aria-label': 'Mindset: ' + n, 'aria-pressed': 'false', onclick: () => setOrder({ mindset: i - 2 }, 'Mindset: ' + n) }));
+    hud.mindLab = h('span', { class: 'gm-lab2' }, 'Balanced');
+    const ic = (cls, svg) => { const e = h('span', { class: cls }); e.innerHTML = svg; return e; };
+    hud.mind = h('div', { class: 'gm-mind' }, h('div', { class: 'gm-mindrow' }, ic('gm-ico', IC.shield), h('div', { class: 'gm-steps' }, hud.steps), ic('gm-ico', IC.sword)), hud.mindLab);
+    hud.planBtns = PLAN_UI.map(q => { const b = h('button', { type: 'button', class: 'gm-plan', 'data-plan': q[0], 'aria-pressed': 'false', title: q[1] + ': ' + q[2], 'aria-label': q[1], onclick: () => togglePlan(q[0]) }); b.innerHTML = IC[q[0]]; return b; });
+    hud.planLab = h('span', { class: 'gm-lab2' }, 'No plan');
+    hud.plans = h('div', { class: 'gm-plans' }, h('div', { class: 'gm-planrow' }, hud.planBtns), hud.planLab);
+    hud.styleBtns = STYLE_UI.map(q => h('button', { type: 'button', class: 'gm-sty', 'data-style': q[0], 'aria-pressed': 'false', onclick: () => setOrder({ style: q[0] }, 'Shots: ' + q[1]) }, q[1]));
+    hud.style = h('div', { class: 'gm-style' }, h('div', { class: 'gm-sty-row' }, hud.styleBtns), h('span', { class: 'gm-lab2' }, 'Shots'));
+    hud.midBtns = MID_UI.map(q => h('button', { type: 'button', class: 'gm-sty gm-mid', 'data-mid': q[0], 'aria-pressed': 'false', onclick: () => setMid(q[0] === '' ? undefined : +q[0]) }, q[1]));
+    hud.mid = h('div', { class: 'gm-style' }, h('div', { class: 'gm-sty-row' }, hud.midBtns), h('span', { class: 'gm-lab2' }, 'Middle balls'));
+    const moment = (id, svg, title, fn) => { const b = h('button', { type: 'button', class: 'gm-mo', id: id, title: title, 'aria-label': title, onclick: fn }); b.innerHTML = svg + '<span class="gm-badge" hidden></span>'; return b; };
+    hud.go = moment('gm-go', IC.go, 'Go for it: your next winning chance becomes a swipe shot (QTE)', () => { const Q = mod('qte'); if (!Q) return; const on = Q.arm(); API.toast(on ? 'Go for it: you take the next winning chance' : (Q.mode === 'off' ? 'QTE shots are off (pause menu)' : 'Go for it cancelled'), { kind: 'info', ms: 1800 }); updateHud(true); }); hud.go.setAttribute('aria-pressed', 'false');
+    hud.aim = moment('gm-aim', IC.aim, 'Aim your next shot', () => API.toggleAim()); hud.aim.setAttribute('aria-pressed', 'false');
+    hud.tmo = moment('gm-timeout', IC.timeout, 'Timeout', () => { API.callTimeout(); updateHud(true); });
+    hud.chal = moment('gm-challenge', IC.challenge, 'Challenge (Eagle Eye)', () => { API.doChallenge(); updateHud(true); });
+    hud.fab = h('button', { type: 'button', class: 'gm-fab', id: 'gm-fab', 'aria-expanded': 'false', 'aria-label': 'Strategy', onclick: () => { const o = hud.coach.classList.toggle('open'); hud.fab.setAttribute('aria-expanded', String(o)); } });
+    hud.fab.innerHTML = '<span class="gm-chev">' + IC.chev + '</span><span>Strategy</span>';
+    hud.hintTxt = h('span', null);
+    hud.hint = h('div', { class: 'gm-hint', hidden: true }, hud.hintTxt,
+      h('button', { type: 'button', class: 'gm-hint-go', onclick: () => { if (hs.cur) togglePlan(hs.cur[0], true); hideHint(); } }, 'Apply'),
+      h('button', { type: 'button', class: 'gm-hint-x', 'aria-label': 'Dismiss hint', onclick: () => hideHint() }, '×'));
+    hud.sheet = h('div', { class: 'gm-sheet' }, hud.mind, hud.plans, hud.style, hud.mid);
+    hud.coach = h('div', { class: 'gm-dock' }, hud.hint, h('div', { class: 'gm-dockrow' }, hud.sheet, h('div', { class: 'gm-moments' }, hud.fab, hud.go, hud.aim, hud.tmo, hud.chal)));
     hud.ticker = h('div', { class: 'gm-ticker', hidden: true });
     hud.skip = h('button', { type: 'button', class: 'btn small gm-skip', id: 'gm-skip', onclick: () => { API.skipCeremony(); } }, 'Skip intro ▸');
     hud.watchBar = h('div', { class: 'gm-watchbar' }, h('button', { type: 'button', class: 'btn primary', id: 'gm-watch-play', onclick: () => showCreateOrSetup() }, 'Play with Annetta'));
@@ -393,13 +428,39 @@
     hud.coach.hidden = G.st !== 'playing'; hud.watchBar.hidden = G.st !== 'watch';
     if (show) updateHud(true);
   }
-  function setPreset(key, label) {
+  function setOrder(o, label) {
     const Ai = mod('ai'); if (!Ai || !Ai.setOrders) return;
-    if (Ai.PRESETS && !Ai.PRESETS[key]) return;
     S.coachTeam = 'A'; API.claimCoach();
-    safe(() => Ai.setOrders('A', { preset: key, focusOpponent: undefined }), 'preset');
-    API.toast('Coach: ' + label, { kind: 'info', ms: 1800 });
+    safe(() => Ai.setOrders('A', Object.assign({ focusOpponent: undefined }, o)), 'order');
+    if (label) API.toast(label, { kind: 'info', ms: 1600 });
     updateHud(true);
+  }
+  function togglePlan(k, on) {
+    const cur = API.orders('A').plan, q = PLAN_UI.find(x => x[0] === k); if (!q) return;
+    const clear = !on && cur === k;
+    setOrder({ plan: clear ? null : k }, clear ? 'Plan cleared' : 'Plan: ' + q[1]);
+  }
+  // smart hint: every 0.25 s sample where the opponents stand; suggest a plan at most every 30 s (docs/QTE.md section 1)
+  const hs = { net: [], deep: [], clock: 0, shownAt: -99, cur: null };
+  function showHint(sg) { hs.cur = sg; hs.shownAt = hs.clock; hud.hintTxt.textContent = sg[1]; hud.hint.hidden = false; hud.root.classList.add('hinting'); }
+  function hideHint() { hs.cur = null; if (hud.hint) hud.hint.hidden = true; if (hud.root) hud.root.classList.remove('hinting'); }
+  function hintTick(dt) {
+    const P = mod('players'), M = mod('match');
+    if (G.st !== 'playing' || !P || !P.list || !M || M.phase !== 'play') return;
+    const ops = P.list.filter(p => p.team === 'B'); if (ops.length < 2) return;
+    hs.clock += dt;
+    hs.net.push(ops.every(p => Math.abs(p.pos.x) < 4) ? 1 : 0); hs.deep.push(ops.every(p => Math.abs(p.pos.x) > 6) ? 1 : 0);
+    if (hs.net.length > 32) { hs.net.shift(); hs.deep.shift(); }
+    if (hs.cur) { if (hs.clock - hs.shownAt > 9) hideHint(); return; }
+    if (hs.clock - hs.shownAt < 30 || hs.net.length < 24) return;
+    const frac = a => a.reduce((x, y) => x + y, 0) / a.length, o = API.orders('A'), nm = p => p.name.split(' ')[0];
+    const byFat = ops.slice().sort((a, b) => b.fatigue - a.fatigue), byDef = ops.slice().sort((a, b) => a.attrs.defense - b.attrs.defense);
+    let sg = null;
+    if (byFat[0].fatigue >= 0.12 && byFat[0].fatigue - byFat[1].fatigue >= 0.04) sg = ['exhaust', nm(byFat[0]) + ' is tired: wear them down'];
+    else if (frac(hs.net) >= 0.6) sg = ['breakNet', "They're glued to the net: lob over them"];
+    else if (frac(hs.deep) >= 0.6) sg = ['net', "They're sitting deep: take the net"];
+    else if (byDef[1].attrs.defense - byDef[0].attrs.defense >= 10) sg = ['hunt', nm(byDef[0]) + ' defends worst: hunt them'];
+    if (sg && sg[0] !== o.plan) showHint(sg);
   }
   function setMid(i) {
     const Ai = mod('ai'); if (!Ai || !Ai.setOrders) return;
@@ -409,6 +470,8 @@
     API.toast('Middle balls: ' + (i === undefined ? 'whoever is closer' : i === 0 ? 'you' : (who ? who.name.split(' ')[0] : 'Annetta')), { kind: 'info', ms: 1800 });
     updateHud(true);
   }
+  const U_clamp = v => Math.max(-2, Math.min(2, v));
+  function badge(b, n) { const e = b.lastChild; e.textContent = n; e.hidden = !(n > 0); }
   function updateHud(force) {
     if (!hud.root || hud.root.hidden) return;
     const M = mod('match'), Rl = mod('rules'), o = API.orders('A');
@@ -418,15 +481,18 @@
     const R = mod('render'); const cc = CAM_CYCLE.find(c => c[0] === (R && R.cameraMode));
     hud.cam.title = 'Camera: ' + (cc ? cc[1] : (R && R.cameraMode) || '-');
     refreshAudio();
-    const cur = o.preset || 'balanced', mid = o.middlePriority === 0 || o.middlePriority === 1 ? String(o.middlePriority) : '';
-    if (document.activeElement !== hud.tactic && hud.tactic.value !== cur) hud.tactic.value = cur;
-    if (document.activeElement !== hud.middle && hud.middle.value !== mid) hud.middle.value = mid;
+    const mid = o.middlePriority === 0 || o.middlePriority === 1 ? String(o.middlePriority) : '', mi = U_clamp(o.mindset | 0), pl = o.plan || '', st = o.style || 'mix';
+    const Qh = mod('qte'); if (Qh) { hud.go.setAttribute('aria-pressed', String(Qh.armed)); hud.go.disabled = Qh.mode === 'off'; }
+    hud.steps.forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.v === mi))); hud.mindLab.textContent = MIND[mi + 2];
+    hud.planBtns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.plan === pl))); hud.planLab.textContent = pl ? PLAN_UI.find(q => q[0] === pl)[1] : 'No plan';
+    hud.styleBtns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.style === st)));
+    hud.midBtns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mid === mid)));
     if (Rl && Rl.state) {
       const st = Rl.state, tl = st.timeouts ? st.timeouts.A : 0, cl = st.challenges ? st.challenges.A : 0;
       const canT = tl > 0 && M && M.phase === 'play' && !st.over;
-      hud.tmo.textContent = 'Timeout · ' + tl; hud.tmo.disabled = !canT;
+      hud.tmo.disabled = !canT; badge(hud.tmo, tl);
       const canC = Rl.canChallenge ? Rl.canChallenge('A', 0) : false;
-      hud.chal.textContent = 'Challenge · ' + cl; hud.chal.disabled = !canC; hud.chal.classList.toggle('ready', canC);
+      hud.chal.disabled = !canC; badge(hud.chal, cl); hud.chal.classList.toggle('ready', canC);
     }
     hud.skip.hidden = !(G.st === 'playing' && M && PRE[M.phase]);
     void force;
@@ -441,7 +507,7 @@
   function update(dt) {
     if (!hud.root) return;
     acc += dt;
-    if (acc > 0.25) { acc = 0; updateHud(); }
+    if (acc > 0.25) { acc = 0; updateHud(); hintTick(0.25); }
     if (hud.root.hidden || G.st !== 'playing') return;
     const P = mod('players'), A = mod('actors'), R = mod('render'), rp = mod('replay');
     if (!P || !P.list || !G.player) return;
@@ -489,10 +555,11 @@
     if (G.st === 'playing' || G.st === 'watch') showPause();
   }
   function showPause() {
+    if (mod('qte') && mod('qte').open) return;
     const M = mod('match'); wasPaused = !!(M && M.paused); if (M && !wasPaused) M.pause(true);
     pauseEl = h('div', { class: 'gm-screen', id: 'gm-pause-menu' }, h('div', { class: 'gm-card small' },
       h('div', { class: 'tag' }, 'Paused'), h('h2', { class: 'gm-h sm' }, 'Take a breather'),
-      audioBlock(), calloutRow(),
+      audioBlock(), calloutRow(), qteRow(),
       h('div', { class: 'gm-acts' },
         h('button', { class: 'btn primary big', type: 'button', id: 'gm-resume', onclick: resumeFromPause }, 'Resume'),
         G.st === 'playing' ? h('button', { class: 'btn big', type: 'button', id: 'gm-restart', onclick: () => { closePause(true); kickoff(); } }, 'Restart') : null,
