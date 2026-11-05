@@ -409,7 +409,7 @@
       const d = rules.describe(st, names);
       out.empty = false; out.A = { pt: d.pointsText.A, g: st.games.A }; out.B = { pt: d.pointsText.B, g: st.games.B };
       out.sets = st.sets || []; out.server = st.server && st.server.team; out.tb = !!d.tiebreak; out.banner = d.banner; out.over = !!st.over; out.winner = st.winner;
-      out.golden = !!st.goldenPoint; out.setsText = d.setsText; out.serverName = surname(d.serverName);
+      out.golden = !!st.goldenPoint; out.pts = !!d.pointsMode; out.setsText = d.setsText; out.serverName = surname(d.serverName);
     } catch (e) { U.logError('worldClub.snap', e); }
     return out;
   }
@@ -463,12 +463,14 @@
         rect(g, 0, y, 256, 34, hot ? (Math.floor(TT * 8) % 2 ? '#2d7d46' : '#1f5f36') : (k ? '#0c2237' : '#10304d'));
         if (sn.server === tm) { g.fillStyle = '#d8f24a'; g.beginPath(); g.arc(8, y + 17, 4, 0, 7); g.fill(); }
         txt(g, label(sn, tm, 7), 17, y + 17, 11, '#fffaf0');
-        for (let i = 0; i < 3; i++) {
-          const st = sn.sets[i], x = 124 + i * 20; rect(g, x, y + 4, 18, 26, '#0a1b2c');
-          if (st) { const v = st[tm], o = st[tm === 'A' ? 'B' : 'A']; txt(g, String(v), x + 9, y + 17, 16, v > o ? '#fffaf0' : '#6f8aa5', 'center'); }
+        if (!sn.pts) {
+          for (let i = 0; i < 3; i++) {
+            const st = sn.sets[i], x = 124 + i * 20; rect(g, x, y + 4, 18, 26, '#0a1b2c');
+            if (st) { const v = st[tm], o = st[tm === 'A' ? 'B' : 'A']; txt(g, String(v), x + 9, y + 17, 16, v > o ? '#fffaf0' : '#6f8aa5', 'center'); }
+          }
+          rect(g, 186, y + 4, 26, 26, '#f2a93b'); txt(g, String(sn[tm].g), 199, y + 17, 20, '#123954', 'center');
         }
-        rect(g, 186, y + 4, 26, 26, '#f2a93b'); txt(g, String(sn[tm].g), 199, y + 17, 20, '#123954', 'center');
-        const pt = sn[tm].pt; txt(g, pt, 234, y + 17, pt.length > 2 ? 18 : 26, '#fffaf0', 'center');
+        const pt = sn[tm].pt; txt(g, pt, 234, y + 17, pt.length > 2 ? 18 : sn.pts ? 30 : 26, '#fffaf0', 'center');
       });
       ledFooter(g, sn);
     } else if (mode === 'game' || mode === 'set') {
@@ -510,9 +512,9 @@
       rect(g, 2, y, 188, 27, k ? '#0e2236' : '#12304a');
       if (sn.server === tm && Math.floor(TT * 2) % 2 === 0 || (sn.server === tm && TT - E.pointT > 0)) { g.fillStyle = '#d8f24a'; g.beginPath(); g.arc(9, y + 13, 3.5, 0, 7); g.fill(); }
       txt(g, label(sn, tm, 3), 17, y + 14, 11, '#fffaf0');
-      for (let i = 0; i < 3; i++) { const st = sn.sets[i]; rect(g, 82 + i * 18, y + 3, 16, 21, '#07111c'); if (st) txt(g, String(st[tm]), 90 + i * 18, y + 14, 13, st[tm] > st[tm === 'A' ? 'B' : 'A'] ? '#fffaf0' : '#6f8aa5', 'center'); }
-      rect(g, 138, y + 3, 20, 21, '#f2a93b'); txt(g, String(sn[tm].g), 148, y + 14, 15, '#123954', 'center');
-      txt(g, sn[tm].pt, 175, y + 14, sn[tm].pt.length > 2 ? 14 : 18, '#fffaf0', 'center');
+      if (!sn.pts) for (let i = 0; i < 3; i++) { const st = sn.sets[i]; rect(g, 82 + i * 18, y + 3, 16, 21, '#07111c'); if (st) txt(g, String(st[tm]), 90 + i * 18, y + 14, 13, st[tm] > st[tm === 'A' ? 'B' : 'A'] ? '#fffaf0' : '#6f8aa5', 'center'); }
+      if (!sn.pts) { rect(g, 138, y + 3, 20, 21, '#f2a93b'); txt(g, String(sn[tm].g), 148, y + 14, 15, '#123954', 'center'); }
+      txt(g, sn[tm].pt, sn.pts ? 160 : 175, y + 14, sn[tm].pt.length > 2 ? 14 : 18, '#fffaf0', 'center');
     });
     rect(g, 0, 76, 192, 20, '#07111c');
     const pulse = Math.floor(TT * 3) % 2;

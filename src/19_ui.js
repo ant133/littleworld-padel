@@ -42,7 +42,7 @@
   const ATTRS = [['power', 'PWR'], ['accuracy', 'ACC'], ['reflexes', 'REF'], ['coverage', 'COV'], ['stamina', 'STA'], ['net', 'NET'], ['defense', 'DEF'], ['wallRead', 'WAL'], ['tactics', 'TAC']];
   const ARCH = { netAttacker: 'Net attacker', wallSpecialist: 'Wall specialist', allRound: 'All-rounder', smasher: 'Smasher', precision: 'Precision', counterpuncher: 'Counter-puncher' };
   const SKIN = ['#f7d9c0', '#efc29a', '#c98f62', '#8d5a3b'];
-  const FORMAT_NAMES = { quick: 'Quick', oneSet: 'One Set', bo3: 'Best of 3' };
+  const FORMAT_NAMES = { quick: 'Quick', oneSet: 'One Set', bo3: 'Best of 3', blitz: 'Blitz Americano', americano: 'Americano' };
   const PHASE_NAMES = { intro: 'Welcome', walkon: 'Walk-on', introductions: 'Introductions', toss: 'Coin toss', warmup: 'Warm-up', changeover: 'Changeover', setBreak: 'Set break', matchEnd: 'Match over', handshake: 'Handshake', ceremony: 'Ceremony', results: 'Final' };
   const KEYS = [['Space', 'Pause / resume'], ['N', 'New match'], ['Q / E', 'Rotate camera'], ['1 - 5', 'Camera mode'], ['+ / -', 'Zoom'], ['R', 'Reset view'], ['C', 'Challenge'], ['A', 'Aim next shot, then click the court'], ['S', 'Sound on / off'], ['M', 'Mute'], ['`', 'Debug overlay'], ['?', 'This sheet']];
 
@@ -215,18 +215,17 @@
       const sets = st.sets || [];
       const oth = other(team);
       const cellVals = sets.map(s => ({ v: s[team] + (s.tb && s[team] < s[oth] ? '' : ''), win: s[team] > s[oth] }));
-      const games = st.games ? st.games[team] : 0;
-      const csig = JSON.stringify([cellVals, games]);
+      const games = st.games ? st.games[team] : 0, ptsMode = !!(st._r && st._r.pts);
+      const csig = ptsMode ? 'pts' : JSON.stringify([cellVals, games]);
       if (row._cellSig !== csig) {
         const prevG = row._games;
         row._cellSig = csig; row._cells.textContent = '';
-        cellVals.forEach(c => row._cells.appendChild(h('div', { class: 'sb-cell dim' + (c.win ? ' win' : '') }, String(c.v))));
-        const gc = h('div', { class: 'sb-cell g' }, h('span', { class: prevG !== undefined && prevG !== games ? 'flip' : '' }, String(games)));
-        row._cells.appendChild(gc);
+        if (ptsMode) { /* Americano: only the running point count */ } else cellVals.forEach(c => row._cells.appendChild(h('div', { class: 'sb-cell dim' + (c.win ? ' win' : '') }, String(c.v))));
+        if (!ptsMode) row._cells.appendChild(h('div', { class: 'sb-cell g' }, h('span', { class: prevG !== undefined && prevG !== games ? 'flip' : '' }, String(games))));
       }
       row._games = games;
       let pt = d ? d.pointsText[team] : '0';
-      if (st.over) pt = '–';
+      if (st.over && !ptsMode) pt = '–';
       if (row._ptsText !== pt) {
         const sp = row._pts.firstChild; sp.textContent = pt;
         if (row._ptsText !== null) { sp.classList.remove('flip'); void sp.offsetWidth; sp.classList.add('flip'); }
@@ -235,7 +234,8 @@
     });
     const f = st.config && st.config.format ? st.config.format : (mod('match') && mod('match').cfg && mod('match').cfg.format) || 'quick';
     const sc = (st.config && st.config.scoring) || S.scoring;
-    $('#sb-fmt', EL.sbCard).textContent = (FORMAT_NAMES[f] || f) + (sc === 'golden' ? ' · Golden Point' : ' · Advantage');
+    const pm = st._r && st._r.pts;
+    $('#sb-fmt', EL.sbCard).textContent = (FORMAT_NAMES[f] || f) + (pm ? ' · ' + (Math.floor(pm / 2) + 1) + ' of ' + pm + ' clinches' : sc === 'golden' ? ' · Golden Point' : ' · Advantage');
     EL.chipTb.hidden = !st.inTiebreak;
     updateStickers(st);
     updatePhaseLabel();
@@ -360,7 +360,7 @@
 
   function buildMatchSec() {
     const b = [];
-    b.push(field('Format', seg([['quick', 'Quick', 'First to 4 games, tie-break at 4-4'], ['oneSet', 'One Set', 'First to 6 games'], ['bo3', 'Best of 3', 'Two sets to win']], () => S.format, v => { S.format = v; sync(); }).root));
+    b.push(field('Format', seg([['quick', 'Quick', 'First to 4 games, tie-break at 4-4'], ['oneSet', 'One Set', 'First to 6 games'], ['bo3', 'Best of 3', 'Two sets to win'], ['blitz', 'Blitz', '9 points, 2 serves each, first to 5 clinches'], ['americano', 'Americano', '21 points, 5 serves each, first to 11 clinches']], () => S.format, v => { S.format = v; sync(); }).root));
     b.push(field('Match type', seg([['M', "Men's"], ['W', "Women's"], ['X', 'Mixed']], () => S.type, v => { S.type = v; applyDefaults(v); refillPickers(); sync(); }).root));
     b.push(field('Scoring', seg([['advantage', 'Advantage'], ['golden', 'Golden Point', 'One deciding point at 40-40']], () => S.scoring, v => { S.scoring = v; sync(); }).root));
     EL.pick = {};
@@ -472,10 +472,6 @@
     b.push(field('Glass transparency', gl));
     b.push(sw('Court markings', () => S.markings, v => { S.markings = v; const w = mod('worldCourt'); if (w && w.setOptions) safe(() => w.setOptions({ showMarkings: v }), 'markings'); }, 'sw-marks').root);
     b.push(sw('Ball trail', () => S.trail, v => { S.trail = v; const a = mod('actors'); if (a && a.setTrail) safe(() => a.setTrail(v), 'trail'); }, 'sw-trail').root);
-    const out = h('span', { class: 'mono' }, '2');
-    const px = slider(1, 6, 1, () => S.px, v => { S.px = v; const R = mod('render'); if (R && R.setPixelSize) safe(() => R.setPixelSize(v), 'px'); out.textContent = v; }, 'rg-px');
-    syncs.push(() => { out.textContent = S.px; });
-    b.push(h('div', { class: 'field' }, h('div', { class: 'lbl rowline' }, h('span', null, 'Pixel size'), out), px, h('p', { class: 'hint' }, 'Chunkier pixels run faster.')));
     b.push(sw('Raw 3D (debug look)', () => S.raw, v => { S.raw = v; const R = mod('render'); if (R && R.debugRaw) safe(() => R.debugRaw(v), 'raw'); }, 'sw-raw').root);
     return section('02', 'Court', 'Court and look', false, b, 'sec-court');
   }
@@ -826,6 +822,14 @@
     const R = (x, y, w, hh, c) => { g.fillStyle = c; g.fillRect(x, y, w, hh); };
     const skin = SKIN[L.skin] || SKIN[1], hair = hex(L.hair || 0x222222), o1 = hex((L.outfit || [0x1e6bd6, 0xffffff])[0]), o2 = hex((L.outfit || [0, 0xffffff])[1]);
     g.clearRect(0, 0, 24, 24);
+    if (L.mascot) { // Annetta, after the mascot: navy bob with a fringe, blush, white polo with a blue collar and a star
+      R(5, 5, 14, 13, hair); R(4, 9, 2, 8, hair); R(18, 9, 2, 8, hair);
+      R(4, 17, 16, 7, o1); R(9, 17, 6, 2, o2); R(4, 17, 2, 2, o2); R(18, 17, 2, 2, o2); R(16, 20, 1, 3, o2); R(15, 21, 3, 1, o2);
+      R(9, 15, 6, 3, skin); R(7, 8, 10, 8, skin); R(6, 4, 12, 5, hair);
+      R(9, 10, 2, 2, '#123954'); R(13, 10, 2, 2, '#123954');   // the same eyes as everyone else
+      R(7, 13, 2, 1, '#f4a39a'); R(15, 13, 2, 1, '#f4a39a'); R(11, 13, 2, 1, '#b0584a');
+      return;
+    }
     const style = L.hairStyle || 'short';
     if (style === 'long') { R(6, 5, 12, 14, hair); }
     if (style === 'bob') { R(6, 5, 12, 10, hair); }

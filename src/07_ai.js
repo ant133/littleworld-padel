@@ -237,6 +237,7 @@
     return ['flatGround', 'topGround'];
   }
   function qteShot(p, info, pick, o, ops, oppNet, press, m, tm) {
+    if (o.skip) return pick;                                                                                                   // "let it play": the AI's own shot, no penalty
     if (o.mishit) { pick.effort = Math.min(pick.effort, 0.4); pick.errMul = 1.6; pick.reason = 'qte-mishit'; return pick; }   // a missed swipe: the AI's shot, softer and a little sloppy
     const S = HPO.mod.shots, ks = qteKinds(o, info, p);
     if (o.target.x * -HPO.court.sides[p.team] < 0.5) { pick.reason = 'qte-fallback'; return pick; }                          // never trust a target on our own half

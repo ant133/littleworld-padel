@@ -9,8 +9,8 @@
   const LABEL = { lob: 'LOB', drive: 'DRIVE', block: 'BLOCK', wall: 'GLASS', scramble: 'SCRAMBLE' };
 
   const Q = HPO.mod.qte = {
-    enabled: false, mode: 'occasional', open: false, armed: false, kind: null, order: null, force: null, durScale: 1, lastOrder: null, key: '', pointsSince: 9, gameUsed: 0, pending: null,
-    setMode(m) { Q.mode = m === 'off' || m === 'on' ? m : 'occasional'; if (Q.mode === 'off') Q.armed = false; },
+    enabled: false, mode: 'relaxed', open: false, armed: false, kind: null, order: null, force: null, durScale: 1, lastOrder: null, key: '', pointsSince: 9, gameUsed: 0, pending: null,
+    setMode(m) { Q.mode = m === 'off' || m === 'on' || m === 'occasional' ? m : 'relaxed'; if (Q.mode === 'off') Q.armed = false; },   // relaxed = occasional frequency, no timer
     arm(v) { Q.armed = Q.mode !== 'off' && (v === undefined ? !Q.armed : !!v); return Q.armed; },
 
     // called by players.commitSwing; true = the QTE is (still) open for this ball, so the swing must wait
@@ -30,6 +30,7 @@
     cancel() { if (Q.open) close(null, true); }
   };
 
+  const timed = () => Q.mode !== 'relaxed';
   function budgetOk() { return Q.mode === 'on' ? Q.pointsSince >= 2 : Q.pointsSince >= 3 && Q.gameUsed < 1; }
   BUS.on('point:end', function (e) {
     Q.pointsSince++;
@@ -72,9 +73,12 @@
     ui = {
       root: h('div', { id: 'qte', class: 'qte', hidden: true }),
       title: h('div', { class: 'qte-title' }), help: h('div', { class: 'qte-help' }), ring: h('div', { class: 'qte-ring' }, ringSvg),
-      mark: h('div', { class: 'qte-mark', hidden: true }, h('span', null)), lines: lines, ln: ln, arc: ringSvg.querySelector('.qte-arc')
+      mark: h('div', { class: 'qte-mark', hidden: true }, h('span', null)), lines: lines,
+      skip: h('button', { type: 'button', class: 'qte-skip' }, 'Let it play'), ln: ln, arc: ringSvg.querySelector('.qte-arc')
     };
-    ui.root.append(h('div', { class: 'qte-vig' }), lines, ui.ring, ui.mark, ui.title, ui.help);
+    ui.root.append(h('div', { class: 'qte-vig' }), lines, ui.ring, ui.mark, ui.title, ui.help, ui.skip);
+    ui.skip.addEventListener('pointerdown', e => e.stopPropagation()); ui.skip.addEventListener('pointerup', e => e.stopPropagation());
+    ui.skip.addEventListener('click', () => close({ skip: true }));
     api.EL.stage.appendChild(ui.root);
     ui.root.addEventListener('pointerdown', down); ui.root.addEventListener('pointermove', move);
     ui.root.addEventListener('pointerup', up); ui.root.addEventListener('pointercancel', () => { drag = null; if (ui) ui.mark.hidden = true; });
@@ -90,8 +94,9 @@
     R.qteYaw = cur.side * Math.PI / 2; R.setCameraMode('qte');
     ui.root.className = 'qte ' + kind; ui.root.hidden = false; ui.mark.hidden = true; ui.ln.setAttribute('x2', '0'); ui.ln.setAttribute('y2', '0');
     ui.title.textContent = kind === 'defence' ? 'SAVE IT!' : (info.height >= 1.85 ? 'SMASH IT!' : 'FINISH IT!');
-    ui.help.textContent = kind === 'defence' ? 'Swipe from the ring: up slow = lob, up fast = drive, up-left/right = block, sideways = glass, down = scramble'
-      : 'Swipe from the ring to aim. Longer and faster means harder and deeper';
+    const nt = timed() ? '' : ' (no timer)';
+    ui.help.textContent = kind === 'defence' ? 'Swipe from the ring: up slow = lob, up fast = drive, up-left/right = block, sideways = glass, down = scramble' + nt
+      : 'Swipe from the ring to aim. Longer and faster means harder and deeper' + nt;
     api.EL.app.classList.add('qte-on');
     try { if (mod('audio') && mod('audio').sting) mod('audio').sting(); if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) navigator.vibrate([40, 30, 40]); } catch (e) { /* optional */ }
     t0 = performance.now(); placeRing(); raf = requestAnimationFrame(loop);
@@ -106,7 +111,7 @@
     if (api) api.EL.app.classList.remove('qte-on');
     if (R && cur) R.camRestore(cur.cam);
     if (M) M.pause(false);
-    if (!aborted && api) { if (Q.order.mishit) api.toast('Too slow: mishit!', { kind: 'warn', ms: 1800 }); else if (Q.order.label) api.toast(Q.order.label, { kind: 'info', ms: 1200 }); }
+    if (!aborted && api) { if (Q.order.skip) { /* nothing to say */ } else if (Q.order.mishit) api.toast('Too slow: mishit!', { kind: 'warn', ms: 1800 }); else if (Q.order.label) api.toast(Q.order.label, { kind: 'info', ms: 1200 }); }
     drag = null; cur = null;
   }
 
@@ -118,9 +123,9 @@
     if (!Q.open) return;
     const el = (now - t0) / 1000, dur = DUR[cur.kind] * Q.durScale;
     placeRing();
-    ui.arc.setAttribute('stroke-dashoffset', (326.7 * U.clamp(el / dur, 0, 1)).toFixed(1));
+    ui.arc.setAttribute('stroke-dashoffset', timed() ? (326.7 * U.clamp(el / dur, 0, 1)).toFixed(1) : '0');
     if (drag && drag.ring) preview();
-    if (el >= dur) { close(null); return; }
+    if (timed() && el >= dur) { close(null); return; }
     raf = requestAnimationFrame(loop);
   }
 
@@ -138,7 +143,7 @@
   function up(e) {
     if (!drag || e.pointerId !== drag.id) return;
     const d = drag, p = stagePt(e); drag = null; ui.mark.hidden = true; ui.ln.setAttribute('x2', '0'); ui.ln.setAttribute('y2', '0');
-    const vx = p.x - d.cx, vy = p.y - d.cy, len = Math.hypot(p.x - d.x0, p.y - d.y0), dt = Math.max(30, performance.now() - d.t), q = 1 - U.clamp((performance.now() - t0) / 1000 / (DUR[cur.kind] * Q.durScale), 0, 1);
+    const vx = p.x - d.cx, vy = p.y - d.cy, len = Math.hypot(p.x - d.x0, p.y - d.y0), dt = Math.max(30, performance.now() - d.t), q = timed() ? 1 - U.clamp((performance.now() - t0) / 1000 / (DUR[cur.kind] * Q.durScale), 0, 1) : 0.5;
     if (d.ring && len >= 28) close(orderFor(p.x - d.x0, p.y - d.y0, len / dt, len, q));
     else if (!d.ring && len < 12) { const o = tapOrder(e, q); if (o) close(o); }
   }

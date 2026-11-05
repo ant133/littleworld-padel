@@ -12,6 +12,10 @@
   const PLAN_UI = [['exhaust', 'Wear them down', 'Aim at the tired one and make them run'], ['hunt', 'Hunt the weak one', 'Every ball at the weaker defender'], ['net', 'Take the net', 'Step up and volley'],
     ['breakNet', 'Break the net', 'Lob deep over a pair at the net'], ['glass', 'Use the glass', 'Angles and rebounds'], ['middle', 'Down the middle', 'Split the pair']];
   const STYLE_UI = [['spin', 'Spin'], ['mix', 'Mix'], ['flat', 'Flat']];
+  const FMT_PTS = { blitz: 1, americano: 1 };
+  const FMT_HINT = { blitz: '9 points, 2 serves each. 5 points clinches it. About 3 minutes.', americano: '21 points, 5 serves each. 11 points clinches it. About 6 minutes.', quick: 'First to 4 games.', oneSet: 'First to 6 games.', bo3: 'Two sets to win. A long one.' };
+  const MIND_FX = ['mostly lobs and glass, almost no smashes', 'more lobs, fewer risky shots', 'the normal mix', 'more smashes and net play', 'smashes everywhere, few lobs, big risks'];
+  const STYLE_FX = { spin: 'topspin, slice and vibora: safer, awkward bounces', mix: 'the normal mix', flat: 'flat and fast: more winners, more errors' };
   const MID_UI = [['', 'Auto'], ['0', 'You'], ['1', 'Annetta']];   // who takes the middle balls
   const P_ = d => '<svg ' + 'xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"' + '>' + d + '</svg>';
   const IC = {
@@ -35,10 +39,10 @@
   const NATION_NAME = {}; NATIONS.forEach(n => { NATION_NAME[n[0]] = n[1]; });
 
   const G = HPO.mod.game = {
-    mode: 'play', st: 'boot', scr: null, player: null, opp: null, qte: 'occasional',
-    cfg: { format: 'quick', scoring: 'golden', venue: 'classicBlue', tod: 'day' },
+    mode: 'play', st: 'boot', scr: null, player: null, opp: null, qte: 'relaxed',
+    cfg: { format: 'blitz', scoring: 'golden', venue: 'classicBlue', tod: 'day' },
     init: init, update: update, onFeed: onFeed, onEscape: onEscape, blocking: blocking, active: active, results: results,
-    showTitle: showTitle, showCreate: showCreate, showSetup: showSetup, setMode: setMode, onSaved: onSaved, suppressResults: suppressResults
+    showTitle: showTitle, showHow: showHow, showCreate: showCreate, showSetup: showSetup, setMode: setMode, onSaved: onSaved, suppressResults: suppressResults
   };
   let cp = { seed: 1, name: '', gender: 'F', nat: 'IDN' };
   let hud = {}, pauseEl = null, wasPaused = false, tickerT = 0, acc = 0, hlKey = '', lastFlagToast = '', attractT = 0;
@@ -104,8 +108,13 @@
     paints.push({ el: sg.root, fn: sg.paint });
     return h('div', { class: 'field gm-cofield' }, h('div', { class: 'lbl' }, 'Callouts (OUT!, SMASH! ...)'), sg.root);
   }
+  function speedRow() {
+    const sg = segBtns([['1', '1×'], ['2', '2×'], ['4', '4×']], () => String(S.speed), v => { API.setSpeed(+v); updateHud(true); }, 'gm-spd');
+    paints.push({ el: sg.root, fn: sg.paint });
+    return h('div', { class: 'field gm-cofield' }, h('div', { class: 'lbl' }, 'Game speed'), sg.root);
+  }
   function qteRow() {
-    const sg = segBtns([['off', 'Off'], ['occasional', 'Occasional'], ['on', 'On']], () => G.qte, v => { G.qte = v; const Q = mod('qte'); if (Q) Q.setMode(v); }, 'gm-qte');
+    const sg = segBtns([['off', 'Off'], ['relaxed', 'No timer'], ['occasional', 'Timed'], ['on', 'Timed, often']], () => G.qte, v => { G.qte = v; const Q = mod('qte'); if (Q) Q.setMode(v); }, 'gm-qte');
     paints.push({ el: sg.root, fn: sg.paint });
     return h('div', { class: 'field gm-cofield' }, h('div', { class: 'lbl' }, 'QTE shots (swipe to aim winners and saves)'), sg.root);
   }
@@ -123,20 +132,23 @@
   function setSt(s) {
     G.st = s; EL.app.setAttribute('data-gm', s); updateVisibility();
     const Q = mod('qte'); if (Q) { Q.enabled = s === 'playing'; if (!Q.enabled) Q.cancel(); }
+    const Tu = mod('tutorial'); if (Tu && s !== 'playing') { G.tutorialPending = false; Tu.stop(); }
   }
 
   // ---------- init ----------
   function init(ctx, api) {
     API = api; S = api.S; EL = api.EL; h = api.h; add = api.add; safe = api.safe;
     EL.app = document.getElementById('app') || document.body;
-    buildHud();
+    buildHud(); G.hud = hud;
     const modeBtn = document.getElementById('btn-mode');
     if (modeBtn) modeBtn.addEventListener('click', () => setMode(G.mode === 'play' ? 'studio' : 'play'));
     BUS.on('match:new', function () { hlKey = ''; if (G.st === 'title' || G.st === 'create' || G.st === 'setup') return; });
     BUS.on('match:phase', function (e) { if (e.phase === 'results' && (G.st === 'title' || G.st === 'create' || G.st === 'setup' || G.st === 'watch')) { clearTimeout(attractT); attractT = setTimeout(() => { if (G.st === 'title' || G.st === 'create' || G.st === 'setup') startAttract(); }, 5000); } });
     BUS.on('flag:update', onFlags);
+    BUS.on('shot:hit', onShot);
     document.addEventListener('pointerdown', function (e) { if (hud.pop && !hud.pop.hidden && !hud.pop.contains(e.target) && !hud.mix.contains(e.target)) toggleMix(false); }, true);
     // the intro/ceremony camera sweeps change the view: when play starts, go back to the camera the player picked
+    BUS.on('match:phase', function (e) { if (e.phase === 'play' && G.st === 'playing' && G.tutorialPending) { G.tutorialPending = false; const Tu = mod('tutorial'); if (Tu) setTimeout(() => Tu.start(), 300); } });
     BUS.on('match:phase', function (e) { if (e.phase === 'play' && G.st === 'playing' && G.camPref) safe(() => { API.setCam(G.camPref); const R = mod('render'); if (R && R.setFollowBall && G.camPref === 'follow') R.setFollowBall(true); }, 'camPref'); });
     const q = HPO.query;
     const m = q && q.get('mode');
@@ -199,7 +211,7 @@
           : h('button', { class: 'btn primary big', type: 'button', id: 'gm-play', onclick: () => showCreate() }, 'Play with Annetta'),
         h('button', { class: 'btn big', type: 'button', id: 'gm-watch', onclick: startWatch }, 'Just watch')),
       audioBlock(),
-      h('p', { class: 'gm-foot' }, h('a', { href: '#', id: 'gm-studio-link', onclick: e => { e.preventDefault(); setMode('studio'); } }, 'Studio controls'), ' · ',
+      h('p', { class: 'gm-foot' }, h('a', { href: '#', id: 'gm-how-link', onclick: e => { e.preventDefault(); showHow(() => showTitle(true)); } }, 'How to play'), ' · ', h('a', { href: '#', id: 'gm-studio-link', onclick: e => { e.preventDefault(); setMode('studio'); } }, 'Studio controls'), ' · ',
         h('a', { href: 'https://annetta.dev/' }, '← annetta.dev')),
       h('p', { class: 'gm-foot it' }, 'Made in Jakarta with code, curiosity, and no spare towel.')
     ];
@@ -254,7 +266,7 @@
         def.country = { code: cp.nat, name: NATION_NAME[cp.nat] || cp.nat };
         const ok = await API.savePlayerDef(def);
         S.saved = (S.saved || []).filter(x => x.id !== def.id); S.saved.push(def);
-        G.player = def;
+        G.player = def; G.firstRun = true;
         API.toast(ok ? def.name + ' saved on this device.' : 'Playing as ' + def.name + '. Local saving is unavailable here.', { kind: ok ? 'good' : 'warn' });
         showSetup();
       } catch (err) { status.textContent = err && err.message ? err.message : 'Could not create that player.'; save.disabled = false; }
@@ -294,9 +306,11 @@
     const type = myType();
     if (!G.opp || G.oppType !== type || G.opp.some(id => id === G.player.id)) { G.opp = randomOpp(type); G.oppType = type; }
     const C = G.cfg;
-    const fmt = segBtns([['quick', 'Quick'], ['oneSet', 'One set'], ['bo3', 'Best of 3']], () => C.format, v => { C.format = v; });
+    const fmt = segBtns([['blitz', 'Blitz'], ['americano', 'Americano'], ['quick', 'Quick'], ['oneSet', 'One set'], ['bo3', 'Best of 3']], () => C.format, v => { C.format = v; scoField.hidden = FMT_PTS[v]; fmtHint.textContent = FMT_HINT[v] || ''; });
     const sco = segBtns([['golden', 'Golden Point'], ['advantage', 'Advantage']], () => C.scoring, v => { C.scoring = v; });
     const tod = segBtns([['day', 'Day'], ['dusk', 'Dusk'], ['night', 'Night']], () => C.tod, v => { C.tod = v; });
+    const scoField = h('div', { class: 'field' }, h('div', { class: 'lbl' }, 'Scoring'), sco.root), fmtHint = h('p', { class: 'hint' }, FMT_HINT[C.format] || '');
+    scoField.hidden = !!FMT_PTS[C.format];
     const courts = h('div', { class: 'gm-courts' });
     const cbtns = COURTS.map(c => { const b = h('button', { type: 'button', 'aria-pressed': 'false', 'data-v': c[0], onclick: () => { C.venue = c[0]; paintCourts(); } }, h('span', { class: 'ct ct-' + c[0] }, h('i')), h('b', null, c[1])); courts.appendChild(b); return b; });
     function paintCourts() { cbtns.forEach(b => b.setAttribute('aria-pressed', b.dataset.v === C.venue ? 'true' : 'false')); tod.btns.forEach(b => { b.disabled = C.venue === 'indoor'; }); todHint.hidden = C.venue !== 'indoor'; }
@@ -312,8 +326,8 @@
       h('h2', { class: 'gm-h sm' }, 'Set up the match'),
       h('div', { class: 'gm-team' }, h('span', { class: 'dot' }), h('b', null, me.name), flag(me), ' & ', h('b', null, an ? an.name : 'Annetta'), an ? flag(an) : null,
         h('span', { class: 'chip' }, type === 'W' ? "Women's doubles" : 'Mixed doubles')),
-      h('div', { class: 'field' }, h('div', { class: 'lbl' }, 'Format'), fmt.root),
-      h('div', { class: 'field' }, h('div', { class: 'lbl' }, 'Scoring'), sco.root),
+      h('div', { class: 'field' }, h('div', { class: 'lbl' }, 'Format'), fmt.root, fmtHint),
+      scoField,
       h('div', { class: 'field' }, h('div', { class: 'lbl' }, 'Court'), courts),
       h('div', { class: 'field' }, h('div', { class: 'lbl' }, 'Time'), tod.root, todHint),
       h('div', { class: 'field' }, h('div', { class: 'lbl rowline' }, h('span', null, 'Opponents · random pair'), h('button', { class: 'btn small orange', type: 'button', id: 'gm-oppshuffle', onclick: () => { G.opp = randomOpp(type, G.opp); paintOpp(); } }, ico(SHUF), 'Shuffle')), oppBox),
@@ -322,6 +336,27 @@
     ];
     openScreen('gm-setup', kids, 'setup');
     paintCourts(); paintOpp();
+  }
+
+  // ---------- how to play (shown once for a new player, and from the title screen) ----------
+  const HOW = [
+    ['You are the coach', 'You and Annetta play by themselves, so there is nothing to steer. Your job is the game plan, plus a few big moments.'],
+    ['Set the strategy', 'Open Strategy at the bottom. Pick a mindset (shield is safe, sword is attack), one plan, the kind of shots, and who takes the middle balls. A small tag shows what is switched on, and your plan announces itself when it works.'],
+    ['Winning chances', 'When your player gets a winning chance, or a hard smash is coming at you, time freezes. Swipe from the glowing ring to aim the shot. No time? Tap "Let it play". Aim lets you place your next shot yourself; Timeout and Challenge are what they sound like.'],
+    ['Padel in 20 seconds', () => 'Two against two. Serve underhand into the diagonal box. The ball may bounce once on your side, and it may also hit the glass walls and stay in play. ' + (mod('rules') ? mod('rules').describeFormat(G.cfg.format, G.cfg.scoring) : '')]
+  ];
+  function showHow(next) {
+    let i = 0;
+    const body = h('div', { class: 'gm-howbody' }), nb = h('button', { class: 'btn primary big', type: 'button', id: 'gm-hownext' }, 'Next');
+    const done = () => { if (next) next(); else showTitle(true); };
+    function paint() {
+      body.textContent = '';
+      add(body, [h('div', { class: 'tag' }, 'How to play · ' + (i + 1) + ' of ' + HOW.length), h('h2', { class: 'gm-h sm' }, HOW[i][0]), h('p', { class: 'gm-p' }, typeof HOW[i][1] === 'function' ? HOW[i][1]() : HOW[i][1])]);
+      nb.textContent = i === HOW.length - 1 ? "Let's play" : 'Next';
+    }
+    nb.onclick = () => { if (i < HOW.length - 1) { i++; paint(); } else done(); };
+    paint();
+    openScreen('gm-how', [body, h('div', { class: 'gm-acts row' }, h('button', { class: 'btn big', type: 'button', id: 'gm-howskip', onclick: done }, 'Skip'), nb)], 'how');
   }
 
   // ---------- kick off ----------
@@ -337,6 +372,7 @@
     ['A', 'B'].forEach(t => safe(() => { if (Ai && Ai.setOrders) Ai.setOrders(t, { preset: 'balanced', mindset: 0, plan: null, style: 'mix', serveDir: 'auto', returnDir: 'auto', middlePriority: undefined, focusOpponent: undefined, aimPoint: undefined }); }, 'orders'));
     setSt('playing'); hlKey = '';
     API.newMatch();
+    if (G.firstRun) { G.firstRun = false; G.tutorialPending = true; setTimeout(() => API.skipCeremony(), 400); }   // a new player's first match is the guided one
     const M = mod('match'); if (M) M.coachTeam = 'A';
     G.camPref = HPO.cfg.mobile ? 'follow' : 'close'; API.setCam(G.camPref);
     updateHud(true);
@@ -348,21 +384,19 @@
     hud.root = h('div', { id: 'gm-hud' });
     // top-right icons
     hud.pause = btn('gm-pause', '', '❚❚', 'Pause (Space)', () => { API.togglePause(); updateHud(true); });
-    hud.speed = btn('gm-speed', 'txt', '1×', 'Speed', () => { const nx = { 1: 2, 2: 4, 4: 1 }[S.speed] || 1; API.setSpeed(nx); updateHud(true); });
     hud.cam = btn('gm-cam', 'txt sm', 'CAM', 'Camera', () => { const R = mod('render'); let i = CAM_CYCLE.findIndex(c => c[0] === (R && R.cameraMode)); i = (i + 1) % CAM_CYCLE.length; API.setCam(CAM_CYCLE[i][0]); G.camPref = CAM_CYCLE[i][0]; API.toast('Camera: ' + CAM_CYCLE[i][1], { ms: 1400 }); updateHud(true); });
     hud.mix = btn('gm-mix', '', '', 'Volume and callouts', () => toggleMix()); hud.mix.innerHTML = MIX; hud.mix.setAttribute('aria-expanded', 'false');
     hud.pop = h('div', { class: 'gm-pop', id: 'gm-pop', hidden: true }, h('div', { class: 'tag' }, 'Sound, music, callouts'), audioBlock(), calloutRow());
-    hud.studio = btn('gm-studio', '', '⚙︎', 'Studio controls', () => setMode('studio'));
-    hud.icons = h('div', { class: 'gm-icons' }, hud.pause, hud.speed, hud.cam, hud.mix, hud.studio);
+    hud.icons = h('div', { class: 'gm-icons' }, hud.pause, hud.cam, hud.mix);
     // coach bar
-    hud.steps = MIND.map((n, i) => h('button', { type: 'button', class: 'gm-step', 'data-v': String(i - 2), title: n, 'aria-label': 'Mindset: ' + n, 'aria-pressed': 'false', onclick: () => setOrder({ mindset: i - 2 }, 'Mindset: ' + n) }));
+    hud.steps = MIND.map((n, i) => h('button', { type: 'button', class: 'gm-step', 'data-v': String(i - 2), title: n, 'aria-label': 'Mindset: ' + n, 'aria-pressed': 'false', onclick: () => setOrder({ mindset: i - 2 }, 'Mindset: ' + n + ': ' + MIND_FX[i]) }));
     hud.mindLab = h('span', { class: 'gm-lab2' }, 'Balanced');
     const ic = (cls, svg) => { const e = h('span', { class: cls }); e.innerHTML = svg; return e; };
     hud.mind = h('div', { class: 'gm-mind' }, h('div', { class: 'gm-mindrow' }, ic('gm-ico', IC.shield), h('div', { class: 'gm-steps' }, hud.steps), ic('gm-ico', IC.sword)), hud.mindLab);
     hud.planBtns = PLAN_UI.map(q => { const b = h('button', { type: 'button', class: 'gm-plan', 'data-plan': q[0], 'aria-pressed': 'false', title: q[1] + ': ' + q[2], 'aria-label': q[1], onclick: () => togglePlan(q[0]) }); b.innerHTML = IC[q[0]]; return b; });
     hud.planLab = h('span', { class: 'gm-lab2' }, 'No plan');
     hud.plans = h('div', { class: 'gm-plans' }, h('div', { class: 'gm-planrow' }, hud.planBtns), hud.planLab);
-    hud.styleBtns = STYLE_UI.map(q => h('button', { type: 'button', class: 'gm-sty', 'data-style': q[0], 'aria-pressed': 'false', onclick: () => setOrder({ style: q[0] }, 'Shots: ' + q[1]) }, q[1]));
+    hud.styleBtns = STYLE_UI.map(q => h('button', { type: 'button', class: 'gm-sty', 'data-style': q[0], 'aria-pressed': 'false', onclick: () => setOrder({ style: q[0] }, 'Shots: ' + q[1] + ': ' + STYLE_FX[q[0]]) }, q[1]));
     hud.style = h('div', { class: 'gm-style' }, h('div', { class: 'gm-sty-row' }, hud.styleBtns), h('span', { class: 'gm-lab2' }, 'Shots'));
     hud.midBtns = MID_UI.map(q => h('button', { type: 'button', class: 'gm-sty gm-mid', 'data-mid': q[0], 'aria-pressed': 'false', onclick: () => setMid(q[0] === '' ? undefined : +q[0]) }, q[1]));
     hud.mid = h('div', { class: 'gm-style' }, h('div', { class: 'gm-sty-row' }, hud.midBtns), h('span', { class: 'gm-lab2' }, 'Middle balls'));
@@ -377,8 +411,9 @@
     hud.hint = h('div', { class: 'gm-hint', hidden: true }, hud.hintTxt,
       h('button', { type: 'button', class: 'gm-hint-go', onclick: () => { if (hs.cur) togglePlan(hs.cur[0], true); hideHint(); } }, 'Apply'),
       h('button', { type: 'button', class: 'gm-hint-x', 'aria-label': 'Dismiss hint', onclick: () => hideHint() }, '×'));
+    hud.tag = h('div', { class: 'gm-tag', hidden: true });
     hud.sheet = h('div', { class: 'gm-sheet' }, hud.mind, hud.plans, hud.style, hud.mid);
-    hud.coach = h('div', { class: 'gm-dock' }, hud.hint, h('div', { class: 'gm-dockrow' }, hud.sheet, h('div', { class: 'gm-moments' }, hud.fab, hud.go, hud.aim, hud.tmo, hud.chal)));
+    hud.coach = h('div', { class: 'gm-dock' }, hud.hint, hud.tag, h('div', { class: 'gm-dockrow' }, hud.sheet, h('div', { class: 'gm-moments' }, hud.fab, hud.go, hud.aim, hud.tmo, hud.chal)));
     hud.ticker = h('div', { class: 'gm-ticker', hidden: true });
     hud.skip = h('button', { type: 'button', class: 'btn small gm-skip', id: 'gm-skip', onclick: () => { API.skipCeremony(); } }, 'Skip intro ▸');
     hud.watchBar = h('div', { class: 'gm-watchbar' }, h('button', { type: 'button', class: 'btn primary', id: 'gm-watch-play', onclick: () => showCreateOrSetup() }, 'Play with Annetta'));
@@ -438,10 +473,28 @@
   function togglePlan(k, on) {
     const cur = API.orders('A').plan, q = PLAN_UI.find(x => x[0] === k); if (!q) return;
     const clear = !on && cur === k;
-    setOrder({ plan: clear ? null : k }, clear ? 'Plan cleared' : 'Plan: ' + q[1]);
+    hs.planN = 0;
+    setOrder({ plan: clear ? null : k }, clear ? 'Plan cleared' : 'Plan: ' + q[1] + ': ' + q[2]);
   }
   // smart hint: every 0.25 s sample where the opponents stand; suggest a plan at most every 30 s (docs/QTE.md section 1)
-  const hs = { net: [], deep: [], clock: 0, shownAt: -99, cur: null };
+  const hs = { net: [], deep: [], clock: 0, shownAt: -99, cur: null, planN: 0, planAt: -99 };
+  // a shot the current plan asked for: count it and say so now and then, so the plan is felt
+  function onShot(e) {
+    if (G.st !== 'playing' || !e || e.serve) return;
+    const P = mod('players'), hit = P && P.byId[e.playerId]; if (!hit || hit.team !== 'A') return;
+    const pl = API.orders('A').plan; if (!pl) return;
+    const ops = P.list.filter(p => p.team === 'B'), k = e.shot, t = e.target || { x: 0, z: 0 }, lob = k === 'lobDef' || k === 'lobOff';
+    let msg = null;
+    if (pl === 'breakNet' && lob && ops.some(p => Math.abs(p.pos.x) < 4)) msg = 'Over the net pair';
+    else if (pl === 'exhaust' && (lob || k === 'dejada' || k === 'slice' || k === 'chiquita')) msg = 'Wearing them down';
+    else if (pl === 'hunt') { const w = ops.slice().sort((a, b) => a.attrs.defense - b.attrs.defense)[0]; if (w && Math.hypot(w.pos.x - t.x, w.pos.z - t.z) < 3.2) msg = 'At ' + w.name.split(' ')[0]; }
+    else if (pl === 'net' && /volley|smash|bandeja|vibora/.test(k)) msg = 'Taking the net';
+    else if (pl === 'glass' && (k === 'wallDef' || k === 'bajada' || Math.abs(t.z) > 4)) msg = 'Using the glass';
+    else if (pl === 'middle' && Math.abs(t.z) < 1) msg = 'Down the middle';
+    if (!msg) return;
+    hs.planN++;
+    if (hs.clock - hs.planAt > 7) { hs.planAt = hs.clock; API.toast('Your plan: ' + msg, { kind: 'good', ms: 1500 }); }
+  }
   function showHint(sg) { hs.cur = sg; hs.shownAt = hs.clock; hud.hintTxt.textContent = sg[1]; hud.hint.hidden = false; hud.root.classList.add('hinting'); }
   function hideHint() { hs.cur = null; if (hud.hint) hud.hint.hidden = true; if (hud.root) hud.root.classList.remove('hinting'); }
   function hintTick(dt) {
@@ -477,7 +530,6 @@
     const M = mod('match'), Rl = mod('rules'), o = API.orders('A');
     hud.pause.textContent = M && M.paused ? '▶' : '❚❚';
     hud.pause.title = M && M.paused ? 'Resume (Space)' : 'Pause (Space)';
-    hud.speed.textContent = (M ? M.speed : S.speed) + '×';
     const R = mod('render'); const cc = CAM_CYCLE.find(c => c[0] === (R && R.cameraMode));
     hud.cam.title = 'Camera: ' + (cc ? cc[1] : (R && R.cameraMode) || '-');
     refreshAudio();
@@ -487,6 +539,8 @@
     hud.planBtns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.plan === pl))); hud.planLab.textContent = pl ? PLAN_UI.find(q => q[0] === pl)[1] : 'No plan';
     hud.styleBtns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.style === st)));
     hud.midBtns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mid === mid)));
+    const tg = [mi ? MIND[mi + 2] : '', pl ? PLAN_UI.find(q => q[0] === pl)[1] + (hs.planN ? ' x' + hs.planN : '') : '', st !== 'mix' ? st : '', mid !== '' ? 'middle: ' + (mid === '0' ? 'you' : 'Annetta') : ''].filter(Boolean);
+    hud.tag.hidden = !tg.length; if (tg.length) hud.tag.textContent = 'Your strategy: ' + tg.join(' · ');
     if (Rl && Rl.state) {
       const st = Rl.state, tl = st.timeouts ? st.timeouts.A : 0, cl = st.challenges ? st.challenges.A : 0;
       const canT = tl > 0 && M && M.phase === 'play' && !st.over;
@@ -556,12 +610,14 @@
   }
   function showPause() {
     if (mod('qte') && mod('qte').open) return;
+    const rp = mod('replay'); if (rp && rp.active) { rp.stop(); return; }   // pause during a replay skips it
     const M = mod('match'); wasPaused = !!(M && M.paused); if (M && !wasPaused) M.pause(true);
     pauseEl = h('div', { class: 'gm-screen', id: 'gm-pause-menu' }, h('div', { class: 'gm-card small' },
       h('div', { class: 'tag' }, 'Paused'), h('h2', { class: 'gm-h sm' }, 'Take a breather'),
-      audioBlock(), calloutRow(), qteRow(),
+      audioBlock(), calloutRow(), qteRow(), speedRow(),
       h('div', { class: 'gm-acts' },
         h('button', { class: 'btn primary big', type: 'button', id: 'gm-resume', onclick: resumeFromPause }, 'Resume'),
+        G.st === 'playing' ? h('button', { class: 'btn big', type: 'button', id: 'gm-tutorial', onclick: () => { closePause(); const Tu = mod('tutorial'); if (Tu) Tu.start(); } }, 'Tutorial') : null,
         G.st === 'playing' ? h('button', { class: 'btn big', type: 'button', id: 'gm-restart', onclick: () => { closePause(true); kickoff(); } }, 'Restart') : null,
         h('button', { class: 'btn big', type: 'button', id: 'gm-totitle', onclick: () => { closePause(true); showTitle(); } }, 'Back to title'),
         h('button', { class: 'btn big', type: 'button', id: 'gm-tostudio', onclick: () => setMode('studio') }, 'Studio controls'))));

@@ -424,7 +424,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
 @keyframes hint-in{0%{transform:translateY(12px) rotate(-1.5deg) scale(.85);opacity:0}100%{transform:rotate(-1.5deg);opacity:1}}
 #gm-hud.hinting .gm-ticker{bottom:140px}
 /* small screens (phones, tablets, short windows): the sheet folds away behind the Strategy button */
-@media (max-width:1099px),(max-height:640px){
+@media (max-width:1179px),(max-height:640px){
   .gm-dock{bottom:8px;width:calc(100% - 16px);gap:8px}
   .gm-dockrow{flex-direction:column;align-items:stretch;gap:8px}
   .gm-sheet{display:none;flex-wrap:wrap;justify-content:space-around;gap:8px 14px;padding:8px 10px 6px}
@@ -548,3 +548,28 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
 .qte-ln{stroke:var(--hl);stroke-width:4;stroke-dasharray:2 8;stroke-linecap:round}
 .qte-mark{position:absolute;left:0;top:0;width:34px;height:34px;margin:-17px 0 0 -17px;border:3px solid var(--hl);border-radius:50%;box-shadow:0 0 0 2px var(--ink);pointer-events:none;will-change:transform}
 .qte-mark span{position:absolute;left:50%;top:100%;transform:translateX(-50%);margin-top:6px;font:800 11px var(--head);letter-spacing:.14em;color:#fff;white-space:nowrap;text-shadow:1px 0 0 var(--ink),-1px 0 0 var(--ink),0 1px 0 var(--ink),0 -1px 0 var(--ink)}
+.qte-skip{position:absolute;right:12px;top:12px;min-height:34px;padding:0 14px;border:2px solid var(--ink);background:var(--cream);color:var(--ink);font:800 12px var(--head);letter-spacing:.12em;text-transform:uppercase;cursor:pointer;box-shadow:3px 3px 0 var(--ink)}
+.qte-skip:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.gm-tag{align-self:center;max-width:100%;padding:3px 10px;background:var(--cream);border:1px solid var(--ink);box-shadow:2px 3px 0 #1264992e;font:700 11px var(--head);letter-spacing:.08em;text-transform:uppercase;color:var(--tag);text-align:center}
+@media (min-width:1180px) and (min-height:641px){.gm-tag{display:none}}
+
+/* Tutorial: a spotlight on what is being explained, and Annetta's bubble (docs/TUTORIAL.md) */
+.tut{position:absolute;inset:0;z-index:11;pointer-events:none}
+.tut[hidden]{display:none}
+.tut-b{position:absolute;pointer-events:auto;background:transparent}
+.tut-hole{position:absolute;pointer-events:none;border:3px solid var(--hl);box-shadow:0 0 0 9999px #123954b3,0 0 0 2px var(--ink);animation:tut-glow 1.4s ease-in-out infinite alternate}
+.tut:not(.dim) .tut-hole{box-shadow:none}
+.tut-hole[hidden]{display:block;border-color:transparent;box-shadow:0 0 0 9999px #123954b3}
+.tut:not(.dim) .tut-b{pointer-events:none}
+@keyframes tut-glow{from{border-color:var(--hl)}to{border-color:#fff}}
+.tut-bubble{position:absolute;left:50%;transform:translateX(-50%);width:min(520px,calc(100% - 20px));display:flex;gap:10px;padding:10px 12px;background:var(--cream);border:2px solid var(--ink);box-shadow:5px 6px 0 var(--ink);pointer-events:auto}
+.tut-face{flex:none;width:56px;height:56px;image-rendering:pixelated;background:var(--sky);border:2px solid var(--ink)}
+.tut-body{flex:1;min-width:0}
+.tut-count{font:700 10px var(--head);letter-spacing:.2em;text-transform:uppercase;color:var(--tag)}
+.tut-text{margin:4px 0 8px;font-size:14px;line-height:1.4;color:var(--ink)}
+.tut-acts{display:flex;gap:8px;justify-content:flex-end;align-items:center;flex-wrap:wrap}
+.tut-skip,.tut-skipstep{border:0;background:none;color:var(--tag);font:700 12px var(--head);text-decoration:underline;cursor:pointer;padding:6px 4px}
+.tut-next{min-height:36px;padding:0 18px;border:2px solid var(--ink);background:var(--blue);color:var(--cream);font:800 13px var(--head);letter-spacing:.06em;text-transform:uppercase;cursor:pointer;box-shadow:3px 3px 0 var(--ink)}
+.tut-next:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.tut-next[hidden],.tut-skipstep[hidden]{display:none}
+@media (max-width:899px){.qte-title{top:24%}}

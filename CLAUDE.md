@@ -7,7 +7,7 @@ Web toy for annetta.dev, feature-complete and deployed through GitHub Pages. Wor
 
 ## Dev commands
 - `node tools/devpage.js` → dev.html (all src/*.js); open via `file:///.../dev.html?cam=club|close|follow|top&tod=day|dusk|night&venue=classicBlue|terracotta|fastBlue|indoor&speed=1&fast=0|1&px=2`. Play mode is the default; add `mode=studio` for the full panel, `title=0` to skip the title.
-- Tests (only when asked, see Workflow): `node tools/dupcheck.js`, `qte_tests.js`, `physics_tests.js`, `scoring_tests.js [--quick]`, `player_ai_tests.js`, `commentary_tests.js`, `reflex_stats.js [--n N]` (smash and volley-chain statistics), `matrix.js --part k/3`, `sim_cli.js --n N [--tune {json}]`. Results and gaps: docs/TESTING.md.
+- Tests (only when asked, see Workflow): `node tools/dupcheck.js`, `qte_tests.js`, `americano_tests.js`, `physics_tests.js`, `scoring_tests.js [--quick]`, `player_ai_tests.js`, `commentary_tests.js`, `reflex_stats.js [--n N]` (smash and volley-chain statistics), `matrix.js --part k/3`, `sim_cli.js --n N [--tune {json}]`. Results and gaps: docs/TESTING.md.
 - Browser (headless Chrome via `tools/browser.js`): `e2e.js` (match sampler), `features_browser.js` (Play-mode journey, saved players, camera, offline render, phone), `visual_matrix.js` (courts × lighting × cameras). Run `node tools/build.js` first for the ones that load `dist/`.
 - Ship: `node tools/build.js [--check]` → dist/littleworld-online.html + -offline.html; `node tools/make_artifact.js` → dist/littleworld-artifact.html (artifact publish).
 - Key docs: CONTRACT.md, docs/PLAY_MODE.md, docs/VISUAL_CONTRACT.md, docs/API_*.md, docs/TESTING.md, docs/GITHUB_PAGES.md.
@@ -40,10 +40,10 @@ Web toy for annetta.dev, feature-complete and deployed through GitHub Pages. Wor
 - Reference prior build: artifact EoFoLuqfiLm3q9PiYTTbeD (tennis "Hollybrook Open", ~1.0 MB). Current files: online ~0.75 MB, offline ~1.3 MB.
 
 ## Decisions in force
-- Experience: Play mode by default (title → create player → quick setup → full-screen match with a limited coach box for the visitor's team only); full panel optional as Studio. Match defaults: Quick, Golden Point, Classic Blue, Day, 1×; the title screen plays a live match behind it. Visitor teams up with Annetta Arslan (id `p5`, shown as "Annetta"); women's doubles for a woman, mixed for a man.
+- Experience: Play mode by default (title → create player → quick setup → full-screen match with a limited coach box for the visitor's team only); full panel optional as Studio. Match defaults: Blitz Americano (9 points; Quick, One set, Best of 3 and Americano 21 points are the other formats), Classic Blue, Day, 1×; the title screen plays a live match behind it. Visitor teams up with Annetta Arslan (id `p5`, shown as "Annetta"); women's doubles for a woman, mixed for a man.
 - Coach: Play mode has six tactics, middle-ball choice, one timeout, two challenges per set; Studio has the full set (all presets, serve/return direction, aim-click, focus opponent). Eagle-Eye-style challenge with replay.
 - Audio and speech commentary are off by default with a visible sound toggle.
-- Device tier is auto-detected (reduced mobile mode; pixel size is 2 on every device); the slider overrides. Phones start on the TV follow camera, never the whole-club camera.
+- Device tier is auto-detected (reduced mobile mode; pixel size is 2 on every device, no slider). Phones start on the TV follow camera, never the whole-club camera.
 - Fonts: Google Fonts when online, system fallbacks offline. Pixel art stays in the canvas; UI text is not pixelated.
 - Persistence: visitor players in IndexedDB only; no `localStorage`.
 - Annetta in-world: sponsor board (annetta.dev), mascot spectator sprite (new art, embedded as a data URI; do NOT reuse her original sprite art), "A✦" on the LED screen.

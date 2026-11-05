@@ -59,3 +59,10 @@ Saved players are stored in IndexedDB database `littleworld-padel`, object store
 ## Test
 
 `node tools/features_browser.js` drives the real journey in headless Chrome against the offline build: title → create (focus, empty-name validation) → setup → kick off (coach bar, ring/label, camera) → reload (saved player restored, "Continue as") → man → mixed match; plus the orthographic-court check and a 390×844 phone render with no horizontal scroll.
+
+## Formats, how to play, calmer HUD (5 Nov 2026 playtest pass)
+- Format picker on the setup screen: **Blitz** (default, 9 points, about 3 minutes), **Americano** (21 points), Quick, One set, Best of 3. Blitz and Americano count every point as 1; 5 of 9 or 11 of 21 clinches the match but play goes on to the full total (CONTRACT 8.1). Scoring (Golden Point / Advantage) is hidden for them.
+- A new player's first match is the guided **tutorial** (docs/TUTORIAL.md): Annetta pauses the game and walks through Strategy, Aim and a practice swipe. The pause menu has a Tutorial button to replay it, and the title screen has a four-card How to play link.
+- The top-right icons are Pause, Camera and Sound. Speed (1x/2x/4x) and Studio controls are in the pause menu. Pausing during a replay skips the replay.
+- The strategy tag above the dock lists what is switched on ("Your strategy: Pressure · Break the net x4"); a plan-driven shot flashes "Your plan: ..." at most every 7 s and bumps the counter.
+- Setting a mindset, plan or shot style toasts what it does.

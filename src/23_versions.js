@@ -2,7 +2,7 @@
 // Version = build date (YYYY.MM.DD), plus .N when more than one version ships the same day.
 (function (HPO) {
   'use strict';
-  const VERSIONS = ['2026.11.05.5', '2026.11.05.4', '2026.11.05.3', '2026.11.05.2', '2026.11.05.1', '2026.11.03', '2026.11.02'];
+  const VERSIONS = ['2026.11.05.8', '2026.11.05.7', '2026.11.05.6', '2026.11.05.5', '2026.11.05.4', '2026.11.05.3', '2026.11.05.2', '2026.11.05.1', '2026.11.03', '2026.11.02'];
   const foot = document.getElementById('foot');
   if (!foot) return;
   const date = v => {

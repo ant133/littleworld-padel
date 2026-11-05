@@ -115,6 +115,8 @@ Coach dock (5 Nov 2026): 9 matches per setting, team A ordered through `ai.setOr
 
 QTE (5 Nov 2026): `tools/qte_tests.js` stubs the module and checks the sim side (a good swipe lands 1.7 m from the target against 3.9 m for a sloppy one; a missed swipe plays the soft shot; a target on the player's own half falls back to the AI shot). The overlay, camera and swipes were checked in headless Chrome with forced triggers (`qte.force`, `qte.durScale`) and synthetic pointer events: attack, defence (glass and drive gestures) and a timeout. The full regression suites and the browser journey were not re-run after the QTE and the dock restyle (by request); the last full pass is the one above.
 
+Points formats (5 Nov 2026): `tools/americano_tests.js` checks the serve rotation (2 or 5 serves per player in the order A1 B1 A2 B2, deuce first, tie-break by A1), clinching, side changes (every 4 / 6 points) and a full simulated Blitz match (about 2.9 sim minutes against 8-10 for Quick; Americano about 6).
+
 ## Not verified / known gaps
 
 - A real Android phone (device pixel ratio, pinch zoom at the new 18× limit, the native dropdown pickers); the stripes fix is verified only at an emulated 2.625 ratio.

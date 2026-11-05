@@ -10,3 +10,5 @@
 - [ ] Check the coach dock on a real phone (sheet height covers the court while open)
 - [ ] Full regression suites and features_browser before the next release (skipped after the QTE and dock restyle by request)
 - [ ] QTE: defence dive (extra reach) not built; real-phone feel of the swipe and the 2.8 s window; audio sting is a simple synth tone
+- [ ] QTE telegraph cue before the freeze; more OST tracks; bigger trophy ceremony; clearer Play/Studio switch (playtest feedback)
+- [ ] Full regression suites and features_browser before release (skipped by request); check Americano on a real phone

@@ -294,7 +294,7 @@
   function applyMusic() {
     if (!A.buses || !A.buses.music) return;
     const t = A.ac.currentTime, want = A.musicOn && A.unlocked && hasMusic();
-    A.buses.music.gain.setTargetAtTime(want ? cfgVol.music : 0, t, want ? 0.6 : 0.25);
+    A.buses.music.gain.setTargetAtTime(want ? cfgVol.music * 0.4 : 0, t, want ? 0.6 : 0.25); // x0.4: the track is mastered hot, at the 50% default it covered the effects
     clearTimeout(MU.stopT);
     if (want) {
       if (!MU.buf) { loadMusic().then(function (b) { if (b && A.musicOn) applyMusic(); }); return; }

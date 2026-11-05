@@ -23,12 +23,12 @@ Smart hint: every 1.5 s the UI samples the opponents. It suggests a plan when (a
 
 Style: annetta.dev cards (cream, ink hairline, hard offset shadow, square corners); buttons are cream with an ink outline, a hard shadow and one coloured lip per function, and push in when pressed; the chosen plan, step or style goes ink. The hint is a yellow sticker.
 
-Collapsed layout (under 1100 px wide or under 640 px tall): the sheet is closed by default and the moment row shows a **Strategy** button with a chevron above the label that opens and closes it. Desktop shows the sheet always.
+Collapsed layout (under 1180 px wide or under 640 px tall): the sheet is closed by default and the moment row shows a **Strategy** button with a chevron above the label that opens and closes it. Desktop shows the sheet always.
 
 ## 2. QTE: shared rules
 
 - Play mode only, for the visitor's player (`G.player`); never in headless tests.
-- Setting: QTE shots On / Occasional / Off (default Occasional).
+- Setting (pause menu): Off / No timer / Timed / Timed, often. The default is **No timer** (`relaxed`): occasional frequency, the swipe waits for you, and a "Let it play" button hands the shot back to the AI with no penalty. Playtesters found the timed freeze a jump scare.
 - One shared budget for attack and defence QTEs: about 1 per game, at least 3 points between them. The dock's **Go for it** moment (added with the QTE) arms the next attack chance on demand.
 - The sim freezes while the QTE is open, at the moment the shot would be committed (0.34 s before contact). The window is 4.2 s of real time for an attack and 3.6 s for a defence. The AI's shot decision still happens afterwards: the QTE only writes an order (`qte.take()`, read by `ai.decideShot`) that the decision honours if the solver says it can fly it.
 - Camera: a `qte` camera mode behind the player, facing the opponent, about 60 degrees elevation, zoomed to the whole court; restored afterwards with the replay camera save/restore.

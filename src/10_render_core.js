@@ -15,8 +15,8 @@
   // ---------- time-of-day presets ----------
   const TOD = {
     day:    { night: 0,    lamps: 0,   indoor: false, skyTop: 0x4cc3ee, skyBottom: 0xdff3ff, fog: 0xcdeeff, sun: 0xfff2d0, sunI: 0.78, amb: 0xdbe9ff, ground: 0xa89878, ambI: 0.62, sunDir: [-0.5, 1.0, 0.6] },
-    dusk:   { night: 0.45, lamps: 0.7, indoor: false, skyTop: 0x3a2468, skyMid: 0xd84a70, skyBottom: 0xff9e6b, fog: 0xe0a07c, sun: 0xff9a58, sunI: 0.72, amb: 0xc8a8d8, ground: 0x6a4a50, ambI: 0.5,  sunDir: [-1.0, 0.5, 0.4] },
-    night:  { night: 1,    lamps: 1,   indoor: false, skyTop: 0x050a1c, skyBottom: 0x1a2f63, fog: 0x14244e, sun: 0x6f90ff, sunI: 0.26, amb: 0x3f58a8, ground: 0x151c3c, ambI: 0.34,  sunDir: [-0.3, 1.0, 0.2] },
+    dusk:   { night: 0.45, lamps: 0.7, indoor: false, skyTop: 0x3a2468, skyMid: 0xd84a70, skyBottom: 0xff9e6b, fog: 0xe0a07c, sun: 0xff9a58, sunI: 0.72, amb: 0xd8b8e8, ground: 0x8a6a70, ambI: 0.66,  sunDir: [-1.0, 0.5, 0.4] },
+    night:  { night: 1,    lamps: 1,   indoor: false, skyTop: 0x050a1c, skyBottom: 0x1a2f63, fog: 0x14244e, sun: 0x6f90ff, sunI: 0.3, amb: 0x6a82d0, ground: 0x2a3560, ambI: 0.5,  sunDir: [-0.3, 1.0, 0.2] },
     indoor: { night: 0.2,  lamps: 1,   indoor: true,  skyTop: 0x1c2a3c, skyBottom: 0x36485e, fog: 0x2c3a50, sun: 0xfff0dd, sunI: 0.5,  amb: 0xfff0dd, ground: 0x8a7a60, ambI: 0.85, sunDir: [0.0, 1.0, 0.1] }
   };
   const TOD_TWEEN = 3.0; // seconds
@@ -597,7 +597,7 @@
       const top = mode === 'top';
       // yaw / elevation targets
       if (mode !== 'free') v.yawT = (top ? 0 : YAW0) + v.yawK * Math.PI / 2;
-      v.elT = top ? 89 * Math.PI / 180 : EL;
+      v.elT = top ? 74 * Math.PI / 180 : EL;   // not 89: straight down the net is edge-on and disappears
       let baseHalf, kT = 4;
       const f = R._fitOut || (R._fitOut = { half: 1, cx: 0, cy: 0 });
       if (mode === 'club') { R._fit(pts.club, v.yawT, v.elT, 1.02, f); baseHalf = f.half; v.tTarget.copy(t.right).multiplyScalar(f.cx).addScaledVector(t.up, f.cy); }
@@ -631,7 +631,7 @@
     _bindInput() {
       const cv = R.renderer.domElement, ptrs = new Map(); let orbited = false, pinch = 0, moved = false, tdown = 0, startX = 0, startY = 0, multi = false;
       cv.addEventListener('contextmenu', function (e) { e.preventDefault(); });
-      cv.addEventListener('wheel', function (e) { e.preventDefault(); R.zoom(-Math.sign(e.deltaY) * Math.min(3, Math.abs(e.deltaY) / 100 + 0.5)); }, { passive: false });
+      cv.addEventListener('wheel', function (e) { e.preventDefault(); R.zoom(-U.clamp(e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 100 : 1) / 120, -3, 3)); }, { passive: false });
       function mpp() { return 2 * R.view.half / (cv.clientHeight || 1); }
       function panPx(dx, dy) {
         R._toFree(); const v = R.view, t = R._tmp, m = mpp();

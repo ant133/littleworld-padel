@@ -2,7 +2,8 @@
 (function (HPO) {
   'use strict';
   const M = HPO.mod.rules = {};
-  const FORMATS = { quick: { G: 4, sets: 1 }, oneSet: { G: 6, sets: 1 }, bo3: { G: 6, sets: 2 } };
+  // pts = points format (Americano): total points played, run = serves in a row per player, flip = points between changes of ends (CONTRACT 8.1)
+  const FORMATS = { quick: { G: 4, sets: 1 }, oneSet: { G: 6, sets: 1 }, bo3: { G: 6, sets: 2 }, blitz: { pts: 9, run: 2, flip: 4 }, americano: { pts: 21, run: 5, flip: 6 } };
   const SL = 6.95, HALF_W = 5, HALF_L = 10;
   const TEAMS = ['A', 'B'];
   const other = t => t === 'A' ? 'B' : 'A';
@@ -35,16 +36,24 @@
   const teamOfIdx = (s, i) => i % 2 === 0 ? s.config.firstServeTeam : other(s.config.firstServeTeam);
 
   function serverFor(s) {
+    if (s._r.pts) { const p = s.pointNo - 1; return { team: teamOfIdx(s, p === s._r.pts - 1 ? 0 : Math.floor(p / s._r.run) % 4), playerId: s.serveOrder[p === s._r.pts - 1 ? 0 : Math.floor(p / s._r.run) % 4] }; }
     let idx = s._gi % 4;
     if (s.inTiebreak) idx = (s._gi + (s._tbN === 0 ? 0 : Math.floor((s._tbN + 1) / 2))) % 4;
     return { team: teamOfIdx(s, idx), playerId: s.serveOrder[idx] };
   }
   function serveSideOf(s) {
+    if (s._r.pts) return (s.pointNo - 1) % s._r.run % 2 === 0 ? 'deuce' : 'ad';
     if (s.goldenPoint && s.goldenReceiverSide) return s.goldenReceiverSide;
     return s._pg % 2 === 0 ? 'deuce' : 'ad';
   }
   function flags(s) {
     const f = { matchPoint: null, setPoint: null, breakPoint: null };
+    if (s._r.pts) { // Americano: one point short of the majority, or already past it
+      const win = Math.floor(s._r.pts / 2) + 1; f.clinched = null;
+      TEAMS.forEach(function (t) { if (s.points[t] >= win) f.clinched = t; });
+      if (!s.over && !f.clinched) TEAMS.forEach(function (t) { if (s.points[t] === win - 1) f.matchPoint = f.matchPoint || t; });
+      return f;
+    }
     if (s.over) return f;
     TEAMS.forEach(function (t) {
       const c = { games: c2(s.games), points: c2(s.points), inTiebreak: s.inTiebreak, setsWon: c2(s.setsWon) };
@@ -56,6 +65,7 @@
     return f;
   }
   function refresh(s) {
+    if (s._r.pts) s.inTiebreak = !s.over && s.points.A + s.points.B === s._r.pts - 1;   // the last point is the tie-break
     s.goldenPoint = s._r.golden && !s.inTiebreak && s.points.A === 3 && s.points.B === 3;
     if (!s.goldenPoint) s.goldenReceiverSide = null;
     s.server = serverFor(s);
@@ -83,7 +93,7 @@
       serveSide: 'deuce', gameNo: 1, pointNo: 1, faultCount: 0, sides: { A: sideA, B: -sideA },
       flags: null, challenges: { A: c.challengesPerSet, B: c.challengesPerSet }, timeouts: { A: c.timeoutsPerMatch, B: c.timeoutsPerMatch },
       receivers: {}, over: false, winner: null, stats: { pointsWon: { A: 0, B: 0 } }, log: [], last: null,
-      _r: { G: F.G, sets: F.sets, golden: c.scoring === 'golden' }, _gi: 0, _pg: 0, _tbN: 0, _flips: 0, _emit: !!(opts && opts.emit)
+      _r: { G: F.G, sets: F.sets, golden: !F.pts && c.scoring === 'golden', pts: F.pts || 0, run: F.run || 0, flip: F.flip || 0 }, _gi: 0, _pg: 0, _tbN: 0, _flips: 0, _emit: !!(opts && opts.emit)
     };
     [0, 1, 2, 3].forEach(function (i) {
       const t = teamOfIdx(s, i), r = s.receivers[t] || (s.receivers[t] = {});
@@ -98,6 +108,7 @@
     if (s.over) throw new Error('rules: match over');
     if (team !== 'A' && team !== 'B') throw new Error('rules: bad team ' + team);
     rec = rec || {};
+    if (s._r.pts) return pointWonPts(s, team, rec);
     const wasTb = s.inTiebreak, pre = c2(s.points), prevFlags = s._emit ? JSON.stringify(s.flags) : '', prevGolden = s.goldenPoint;
     pre[team]++;
     s.log.push({
@@ -138,6 +149,28 @@
     }
     return s;
   }
+  // Americano: every point counts 1; the match runs to the full total and the team with more points wins
+  function pointWonPts(s, team, rec) {
+    const R = s._r, last = s.last = { winner: team, game: false, set: false, match: false, sidesChanged: false }, ev = [];
+    s.log.push({
+      pointNo: s.pointNo, gameNo: 1, set: 1, server: s.server.playerId, serverTeam: s.server.team, serveSide: s.serveSide, winner: team,
+      reason: rec.reason || 'point', kind: rec.kind || 'winner', rallyLen: rec.rallyLen | 0, hitter: rec.hitter || null, tb: s.inTiebreak
+    });
+    s.stats.pointsWon[team]++; s.points[team]++; s.pointNo++; s._pg++; s.faultCount = 0;
+    const total = s.points.A + s.points.B, prevFlags = s._emit ? JSON.stringify(s.flags) : '';
+    if (total >= R.pts) {
+      s.over = true; s.winner = s.points.A > s.points.B ? 'A' : 'B'; last.match = true;
+      s.sets = [c2(s.points)]; s.setsWon[s.winner] = 1;
+      ev.push(['match:end', { winner: s.winner, sets: s.sets, stats: s.stats }]);
+    } else if (total % R.flip === 0) flip(s, last);
+    refresh(s);
+    if (s._emit) {
+      ev.forEach(function (e) { HPO.BUS.emit(e[0], e[1]); });
+      if (prevFlags !== JSON.stringify(s.flags)) HPO.BUS.emit('flag:update', flagPayload(s));
+      HPO.BUS.emit('score:change', { state: s });
+    }
+    return s;
+  }
   const flagPayload = s => ({ matchPoint: s.flags.matchPoint, setPoint: s.flags.setPoint, breakPoint: s.flags.breakPoint, golden: s.goldenPoint });
 
   function setGoldenSide(s, side) {
@@ -150,6 +183,14 @@
   function useTimeout(s, team) { if (s.timeouts[team] <= 0) return false; s.timeouts[team]--; return true; }
 
   function describe(s, names) {
+    if (s._r.pts) {
+      const f = s.flags, tot = s.points.A + s.points.B;
+      return {
+        pointsText: { A: String(s.points.A), B: String(s.points.B) }, setsText: s.over ? s.points.A + '-' + s.points.B : '', setsList: s.over ? [s.points.A + '-' + s.points.B] : [], gamesText: '',
+        setsWonText: s.setsWon.A + '-' + s.setsWon.B, serverName: names && names[s.server.playerId] || s.server.playerId, serverTeam: s.server.team, serveSide: s.serveSide, tiebreak: s.inTiebreak,
+        pointsMode: true, target: s._r.pts, remaining: s._r.pts - tot, banner: s.over ? 'MATCH OVER' : s.inTiebreak ? 'TIE-BREAKER' : f.clinched ? 'CLINCHED' : f.matchPoint ? 'MATCH POINT' : ''
+      };
+    }
     const pt = t => {
       const p = s.points, o = other(t);
       if (s.inTiebreak) return String(p[t]);
@@ -169,6 +210,14 @@
   function checkState(s) {
     const bad = [], R = s._r, G = R.G, e = m => bad.push(m);
     if (Math.abs(s.sides.A) !== 1 || s.sides.A + s.sides.B !== 0) e('sides');
+    if (R.pts) {
+      const tot = s.points.A + s.points.B;
+      if (tot !== s.log.length || s.pointNo !== tot + 1 || s.stats.pointsWon.A + s.stats.pointsWon.B !== tot) e('points/log');
+      if (s.over !== (tot >= R.pts) || tot > R.pts) e('over flag');
+      if (s.over && s.winner !== (s.points.A > s.points.B ? 'A' : 'B')) e('winner');
+      if (!s.over) { const sv = serverFor(s); if (sv.playerId !== s.server.playerId || s.serveSide !== serveSideOf(s)) e('server/side'); }
+      return bad;
+    }
     let wa = 0, wb = 0, gSum = 0;
     s.sets.forEach(function (x, i) {
       if (!setDone(G, x.A, x.B)) e('set ' + i + ' invalid ' + x.A + '-' + x.B);
@@ -217,6 +266,13 @@
     return s;
   }
 
+  // one plain-English line on how a format is scored (tutorial and How to play)
+  M.describeFormat = function (format, scoring) {
+    const F = FORMATS[format]; if (!F) return '';
+    if (F.pts) return F.pts + ' points. Every point counts 1, and ' + (Math.floor(F.pts / 2) + 1) + ' clinches the match.';
+    const pts = 'Points go 15, 30, 40, then the game. ' + (scoring === 'advantage' ? 'At 40-40 you need two points in a row.' : 'At 40-40 one golden point decides the game.');
+    return (format === 'quick' ? 'First to 4 games, with a tie-break at 4-4. ' : format === 'oneSet' ? 'First to 6 games, with a tie-break at 6-6. ' : 'Win two sets; a set is first to 6 games. ') + pts;
+  };
   M.score = { createMatch, pointWon, flags, describe, checkState, assertState, rebuild, serverFor, setGoldenSide, consumeChallenge, useTimeout, step, formats: FORMATS };
   M.createMatch = createMatch; M.pointWon = pointWon; M.flags = flags; M.describe = describe;
   M.checkState = checkState; M.assertState = assertState; M.rebuild = rebuild;

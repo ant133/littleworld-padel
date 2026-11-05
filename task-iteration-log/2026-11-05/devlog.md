@@ -29,3 +29,13 @@
 - **Done (later):** QTE built (`src/24_qte.js`, camera mode `qte`, attack and defence, mishit on failure, 2.8 s / 2.4 s windows, Go for it, Off/Occasional/On setting); dock restyled to the annetta.dev card style, closed by default behind a Strategy toggle on small screens; CLAUDE.md and AGENTS.md now say not to run the full suites or the browser journey after each change. Not run by request: full regression suites, features_browser. Version 2026.11.05.5. Uncommitted.
 - **Files (added):** `src/24_qte.js`, `tools/qte_tests.js`, `tools/browser.js`
 - **Later still:** QTE windows 4.2 s / 3.6 s (+50%); Middle balls (Auto / You / Annetta) is now the fourth group of the Strategy sheet instead of a hidden `...` menu; the dock is wider and folds behind Strategy under 1100 px.
+
+## 19:00 · Playtest feedback pass: Americano formats and fixes · claude · padel@main
+- **Status:** done
+- **Prompt:** Nine playtesters' feedback: strategy changes not felt, confusing/too many buttons/no tutorial, QTE jump scare, matches too long, gender preview, camera and audio issues. Agreed plan A-E plus two new formats: Blitz Americano (9 points) and Americano (21 points).
+- **Done:** Points formats in `rules` (CONTRACT 8.1) with TV/LED scoreboards, Play setup picker (Blitz default); QTE Relaxed mode (no timer) and Let it play; strategy effect toasts, plan tag and plan-shot labels; first-run How to play; calmer HUD (speed and studio moved to pause menu); gender-coded hair, proportional wheel zoom, top-down camera 74 degrees, music x0.4, brighter dusk/night, no pixel slider, pause skips a replay. Version 2026.11.05.6.
+- **Files:** `src/08_rules.js`, `src/13_world_club.js`, `src/17_audio.js`, `src/19_ui.js`, `src/21_game.js`, `src/24_qte.js`, `src/07_ai.js`, `src/10_render_core.js`, `src/06_players.js`, `src/shell.css`, `tools/americano_tests.js`, docs, CLAUDE.md
+- **Decisions:** none
+- **Follow-ups:** QTE telegraph cue before the freeze (needs an earlier lookahead); more OST; bigger ceremony; Studio/Play switch clarity; real-phone checks
+- **Links:** none (uncommitted)
+- **Later:** interactive tutorial (`src/25_tutorial.js`, docs/TUTORIAL.md) replaces the first-run card set as the first match; version 2026.11.05.7.

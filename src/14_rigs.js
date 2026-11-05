@@ -51,6 +51,7 @@
     const prim = (look.outfit && look.outfit[0]) || 0x1e6bd6, sec = (look.outfit && look.outfit[1]) || 0xffffff;
     const hair = look.hair === undefined ? 0x2a1d14 : look.hair, hs = look.hairStyle || 'short';
     const bottom = look.bottom || (female ? 'skirt' : 'shorts');
+    const mas = !!look.mascot;   // Annetta: drawn after the annetta.dev mascot (white polo, blue skirt, fringe, blush, star on the chest)
     const G = {};
     // pelvis (origin = hip joint height)
     let b = new Bx(s);
@@ -70,11 +71,13 @@
       for (let r = 0; r < 5; r++) for (let c = 0; c < 3; c++) if (g[r * 3 + c] === '1') b.add(-0.1135, 0.30 - r * px, ox + c * px, 0.004, px, px, dcol);
       ox += 4 * px;
     }
+    if (mas) { const sp = 0.012, star = ['00100', '00100', '11111', '00100', '00100']; for (let r = 0; r < 5; r++) for (let c = 0; c < 5; c++) if (star[r][c] === '1') b.add(0.1145, 0.34 - r * sp, 0.09 + (c - 2) * sp, 0.004, sp, sp, prim); }
     G.torso = b.geo();
     // head (origin = neck pivot; centre of head box at y=0.15)
     b = new Bx(s);
     b.add(0, 0.15, 0, 0.25, 0.27, 0.25, skin);
     b.add(0.1265, 0.17, 0.055, 0.012, 0.045, 0.04, 0x22232e).add(0.1265, 0.17, -0.055, 0.012, 0.045, 0.04, 0x22232e);
+    if (mas) b.add(0.127, 0.112, 0.092, 0.006, 0.026, 0.04, 0xf4a39a).add(0.127, 0.112, -0.092, 0.006, 0.026, 0.04, 0xf4a39a);   // blush
     b.add(0.126, 0.22, 0.055, 0.008, 0.014, 0.05, shade(hair, 0.8)).add(0.126, 0.22, -0.055, 0.008, 0.014, 0.05, shade(hair, 0.8));
     b.add(0.14, 0.12, 0, 0.03, 0.04, 0.035, shade(skin, 0.92)).add(0.1265, 0.075, 0, 0.008, 0.014, 0.06, shade(skin, 0.62));
     b.add(0, 0.15, 0.1265, 0.03, 0.07, 0.016, shade(skin, 0.95)).add(0, 0.15, -0.1265, 0.03, 0.07, 0.016, shade(skin, 0.95));
@@ -93,6 +96,7 @@
       b.add(0, 0.23, 0.1325, 0.27, 0.11, 0.012, hair).add(0, 0.23, -0.1325, 0.27, 0.11, 0.012, hair).add(-0.1325, 0.19, 0, 0.012, 0.19, 0.27, hair);
     }
     if (hs === 'long') b.add(-0.15, 0.06, 0, 0.05, 0.36, 0.27, hair).add(-0.04, 0.07, 0.1325, 0.2, 0.2, 0.012, hair).add(-0.04, 0.07, -0.1325, 0.2, 0.2, 0.012, hair);
+    if (mas && capHex === undefined) b.add(0.1325, 0.245, 0, 0.012, 0.08, 0.27, hair);   // full fringe
     if (hs === 'bob') b.add(-0.15, 0.1, 0, 0.05, 0.2, 0.27, hair).add(-0.04, 0.115, 0.1325, 0.2, 0.15, 0.012, hair).add(-0.04, 0.115, -0.1325, 0.2, 0.15, 0.012, hair);
     if (hs === 'ponytail') b.add(-0.15, 0.24, 0, 0.05, 0.06, 0.06, sec).add(-0.19, 0.12, 0, 0.07, 0.25, 0.07, hair).add(-0.19, 0.0, 0, 0.05, 0.06, 0.05, hl);
     if (hs === 'bun') b.add(-0.07, 0.37, 0, 0.13, 0.1, 0.13, hair).add(-0.07, 0.425, 0, 0.09, 0.02, 0.09, hl);
@@ -108,10 +112,11 @@
     if (bottom !== 'skirt') b.add(0, -0.14, 0, 0.15, female ? 0.2 : 0.28, 0.15, sec).add(0, -0.01, 0, 0.152, 0.025, 0.152, prim);
     G.thigh = b.geo();
     b = new Bx(s); b.add(0, -0.19, 0, 0.115, 0.38, 0.115, skin).add(0, -0.29, 0, 0.125, 0.13, 0.125, 0xfafafa)
-      .add(0.05, -0.40, 0, 0.27, 0.1, 0.13, 0xf4f4f4).add(0.05, -0.44, 0, 0.27, 0.02, 0.132, 0x2a2a33).add(0.175, -0.395, 0, 0.04, 0.07, 0.136, prim);
+      .add(0.05, -0.40, 0, 0.27, 0.1, 0.13, 0xf4f4f4).add(0.05, -0.44, 0, 0.27, 0.02, 0.132, mas ? 0x1a2b6b : 0x2a2a33).add(0.175, -0.395, 0, 0.04, 0.07, 0.136, mas ? sec : prim);
+    if (mas) b.add(0, -0.335, 0, 0.128, 0.02, 0.128, sec);   // blue sock stripe
     G.shin = b.geo();
     // racket (unscaled; origin at hand, head along -Y, face normal +-Z)
-    const rc = look.racket === undefined ? 0x14b8a6 : look.racket, rim = shade(rc, 0.65), hole = lum(rc) > 0.3 ? 0x1b2230 : 0x9aa3b3;
+    const rc = look.racket === undefined ? 0x14b8a6 : look.racket, rim = shade(rc, 0.65), hole = mas ? 0x3a9be8 : lum(rc) > 0.3 ? 0x1b2230 : 0x9aa3b3;
     b = new Bx(1);
     b.add(0, -0.03, 0, 0.04, 0.18, 0.032, 0x2b2f3a).add(0, 0.06, 0, 0.05, 0.03, 0.036, 0xdddddd).add(0, -0.145, 0, 0.034, 0.05, 0.03, 0xc7ccd6);
     const lay = [[-0.17, -0.22, 0.12], [-0.22, -0.27, 0.19], [-0.27, -0.32, 0.23], [-0.32, -0.40, 0.25], [-0.40, -0.46, 0.23], [-0.46, -0.50, 0.18], [-0.50, -0.53, 0.10]];
@@ -122,7 +127,7 @@
     return G;
   }
   function partsFor(look, female, number) {
-    const key = [female ? 1 : 0, look.skin, look.hair, look.hairStyle, look.outfit && look.outfit[0], look.outfit && look.outfit[1], look.racket, look.headband, look.cap, look.bottom, number].join('|');
+    const key = [female ? 1 : 0, look.skin, look.hair, look.hairStyle, look.outfit && look.outfit[0], look.outfit && look.outfit[1], look.racket, look.headband, look.cap, look.bottom, look.mascot, number].join('|');
     return geoCache[key] || (geoCache[key] = buildParts(look, female, number));
   }
   let propGeo = null;
