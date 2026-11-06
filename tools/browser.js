@@ -52,16 +52,16 @@ async function run(o) {
       return { value: r.result && r.result.result ? r.result.result.value : undefined };
     };
     for (const e of o.evals) out.results.push(await ev(e));
-    const shotsAt = async (file) => {
-      const r = await send('Page.captureScreenshot', { format: 'png' });
+    const shotsAt = async (file, clip) => {
+      const r = await send('Page.captureScreenshot', Object.assign({ format: 'png' }, clip ? { clip: Object.assign({ scale: 1 }, clip) } : {}));
       fs.mkdirSync(path.dirname(path.resolve(file)), { recursive: true });
       fs.writeFileSync(file, Buffer.from(r.result.data, 'base64')); out.shots.push(file);
     };
-    // steps: [{eval:'...'}, {wait:ms}, {shot:'file.png'}, {key:'q'}, {click:[x,y]}]
+    // steps: [{eval:'...'}, {wait:ms}, {shot:'file.png', clip:{x,y,width,height,scale}}, {key:'q'}, {click:[x,y]}]
     for (const s of o.steps) {
       if (s.eval) out.results.push(await ev(s.eval));
       else if (s.wait) await sleep(s.wait);
-      else if (s.shot) await shotsAt(s.shot);
+      else if (s.shot) await shotsAt(s.shot, s.clip);
       else if (s.key) { for (const t of ['keyDown', 'keyUp']) await send('Input.dispatchKeyEvent', { type: t, key: s.key, text: s.key, code: 'Key' + s.key.toUpperCase() }); }
       else if (s.click) { for (const t of ['mousePressed', 'mouseReleased']) await send('Input.dispatchMouseEvent', { type: t, x: s.click[0], y: s.click[1], button: 'left', clickCount: 1 }); }
     }

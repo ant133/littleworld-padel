@@ -14,7 +14,6 @@
       cfg = Object.assign({ format: 'quick', scoring: 'advantage', type: 'M', venue: 'classicBlue', seed: 1, fast: false, teamA: null, teamB: null, autoCeremony: true }, cfg || {});
       S.stopAll();
       HPO.reseed(cfg.seed);
-      HPO.cfg.RULES.lineErrorCm = cfg.lineErrorCm === undefined ? 2.0 : cfg.lineErrorCm;
       HPO.mod.court.setVenue(cfg.venue);
       HPO.mod.court.sides = { A: -1, B: 1 };
       const roster = P().roster();
@@ -48,7 +47,7 @@
         const drive = ids.find(id => P().get(id).def.side === 'drive') || ids[0];
         R().setReceivers(t, drive);
       });
-      P().place();
+      P().place(); HPO.mod.mind.reset(cfg.format);
       M.stats = newStats();
       M.skip = false; M.streak = null; M.retrieving = false;
       M.pt = null; M.ended = false; M.simTime = 0; M.acc = 0; M.paused = false; M.result = null;
@@ -157,9 +156,6 @@
       const nxt = pt.strokes[i + 1];
       if (winner === s.team || (nxt && nxt.kind !== 'smashFlat' && nxt.kind !== 'smashKick')) q.stats.lobsSuccess++;
     });
-    // confidence + rest
-    P_.list.forEach(function (q) { q.confidence = U.clamp(q.confidence + (q.team === winner ? 0.012 : -0.012), 0.05, 0.98); });
-    if (h && (e.kind === 'unforced')) h.confidence = U.clamp(h.confidence - 0.03, 0.05, 0.98);
     st.points.push({ n: st.pointsPlayed, winner: winner, kind: e.kind, reason: e.reason, rallyLen: rl, shots: e.shotKinds.slice(0, 40) });
   });
   BUS.on('match:end', function (e) { M.result = e; });
@@ -334,22 +330,11 @@
     yield* review();
   }
 
-  // Eagle Eye window after each point: AI teams (not the human-coached one) challenge close calls; tactical timeouts for AI teams on a bad run
+  // after each point: tactical timeouts for AI teams on a bad run
   function* review() {
     const rl = R(), st = rl.state;
     if (st.over || !st.last) return;
     const loser = st.last.winner === 'A' ? 'B' : 'A';
-    if (M.coachTeam !== loser && rl.canChallenge && rl.canChallenge(loser, 0)) {
-      const b = rl.lastBounces().slice(-1)[0];
-      if (b && b.marginCm <= 6 && HPO.streams.ai.chance(0.6)) {
-        const res = rl.challenge(loser, 0);
-        if (res) {
-          BUS.emit('speak', { text: res.overturned ? _('Challenge from Team {team}. The call is overturned.', { team: loser }) : _('Challenge from Team {team}. The call stands.', { team: loser }), voice: 'umpire', priority: 2 });
-          const rp = HPO.mod.replay;
-          if (rp && rp.play && !M.cfg.fast) { rp.play({ kind: 'challenge', speed: 0.3 }); yield S.until(() => !rp.active, 14); } else yield wait(1);
-        }
-      }
-    }
     // AI timeout when the opponent has won 4 straight points
     M.streak = M.streak || { team: null, n: 0 };
     if (M.streak.team === st.last.winner) M.streak.n++; else M.streak = { team: st.last.winner, n: 1 };
@@ -363,7 +348,7 @@
     BUS.emit('speak', { text: _('Tactical timeout, Team {team}.', { team: team }), voice: 'umpire', priority: 2, kind: 'timeout' });
     P().list.forEach(function (p) { p.intent = { type: 'move', x: HPO.court.sides[p.team] * 1.4, z: (p.slot ? -1 : 1) * 4.2, cap: 0.5 }; });
     yield wait(8);
-    P().rest(0.04);
+    HPO.mod.mind.timeout(team); P().rest(0.04);
     BUS.emit('changeover:end', { kind: 'timeout', team: team });
   };
   // UI entry: a human-requested timeout between points

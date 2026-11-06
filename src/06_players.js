@@ -78,6 +78,7 @@
           };
           P.list.push(p); P.byId[p.id] = p;
         });
+        P.list.forEach(q => { if (q.team === pair[0] && HPO.mod.mind) HPO.mod.mind.init(q); });
         // home lane (+1 = the team's right, -1 = left) is fixed for the match: drive plays right, reves left; ties and 'either' keep slot order
         const pair2 = P.list.filter(q => q.team === pair[0]);
         pair2.forEach(q => { q.homeLane = q.def.side === 'drive' ? 1 : q.def.side === 'reves' ? -1 : 0; });
@@ -103,7 +104,7 @@
     setIntent(id, intent) { const p = P.byId[id]; if (p) p.intent = intent; },
     vmax(p) {
       const venue = HPO.mod.court && HPO.mod.court.def ? (HPO.mod.court.def.speedMult || 1) : 1;
-      return (4.5 + 1.8 * lvl(p.attrs.coverage)) * (1 - 0.18 * p.fatigue) * venue * (HPO.cfg.TUNE.speed || 1);
+      return (4.5 + 1.8 * lvl(p.attrs.coverage)) * (1 - 0.18 * p.fatigue) * venue * (HPO.cfg.TUNE.speed || 1) * (HPO.mod.mind ? HPO.mod.mind.speedMul(p) : 1);
     },
     accel(p) { return 9 + 4 * lvl(p.attrs.reflexes); },
     reactDelay(p) { return 0.26 - 0.14 * lvl(p.attrs.reflexes); },
@@ -114,7 +115,8 @@
       const fast = U.clamp((sp - 12) / 16, 0, 1), close = U.clamp(1 - gap / 9, 0, 1);
       const smash = e.shot === 'smashFlat' || e.shot === 'smashKick' ? 1 : 0;
       const sr = (HPO.cfg.TUNE.smashRead === undefined ? 0.2 : HPO.cfg.TUNE.smashRead) * smashDepthRead(hitter);
-      return T * (0.12 * fast + 0.12 * close + sr * smash) * (1.35 - 0.7 * lvl(q.attrs.reflexes));
+      const mind = HPO.mod.mind;
+      return T * (0.12 * fast + 0.12 * close + sr * smash) * (1.35 - 0.7 * lvl(q.attrs.reflexes)) * (mind ? mind.readMul(q) * mind.tell(hitter) : 1);
     },
     // only the quickest players try to save a ball that has flown out of the court (see candidates)
     canSalvage(p) {
@@ -180,6 +182,7 @@
     // ---- main update (60 Hz) ----
     update(dt) {
       P.now += dt;
+      if (HPO.mod.mind) HPO.mod.mind.tick();
       const bs = HPO.mod.ball.state;
       P.list.forEach(function (p) { stepPlayer(p, dt, bs); });
       // teammate separation + net/bounds
@@ -216,7 +219,8 @@
       p.anim = { clip: 'serveHit', t: 0, rate: 1 };
       const bp = { x: B.state.p.x, y: B.state.p.y, z: B.state.p.z };
       const nom = HPO.mod.shots.nominal(bp, 'serve', target, { effort: effort === undefined ? 0.5 : effort });
-      const ex = HPO.mod.shots.execute(nom, execCtx(p, 0.3, 0.15 + 0.15 * (attempt - 1), 0));
+      const scx = execCtx(p, 0.3, 0.15 + 0.15 * (attempt - 1), 0); if (HPO.mod.mind) scx.errMul *= HPO.mod.mind.serveMul(p);
+      const ex = HPO.mod.shots.execute(nom, scx);
       B.launch({ p: bp, v: ex.v, w: ex.w, hitter: id, team: p.team, serve: true });
       p.stats.shots++;
       BUS.emit('serve:hit', { playerId: id, attempt: attempt, y: bp.y });
@@ -226,7 +230,8 @@
     },
 
     adjustConfidence(id, d) { const p = P.byId[id]; if (p) p.confidence = U.clamp(p.confidence + d, 0.05, 0.98); },
-    rest(amount) { P.list.forEach(p => { p.fatigue = Math.max(0, p.fatigue - amount); }); },
+    // a break cools heads and clears the mind; energy is not given back (see 06b_mind.js)
+    rest(amount) { if (HPO.mod.mind) HPO.mod.mind.rest(amount); },
     setAnim(id, clip, rate) { const p = P.byId[id]; if (p) p.anim = { clip: clip, t: 0, rate: rate || 1 }; },
     reset() { P.list.forEach(p => { p.swing = null; p.plan = null; p.intent = { type: 'idle' }; p.vel = { x: 0, z: 0 }; }); invalidate(); }
   };
@@ -273,7 +278,8 @@
   function execCtx(p, difficulty, pressure, stretch) {
     const tune = HPO.cfg.TUNE.rally || { from: 10, per: 0.1 };
     const fat = p.fatigue + Math.max(0, rallyN - tune.from) * tune.per + Math.max(0, rallyN - 20) * 0.25 + Math.max(0, rallyN - 24) * 0.6; // very long rallies always crack (the 45 s point watchdog is about 34 strokes)
-    return { accuracy: p.attrs.accuracy, difficulty: difficulty, pressure: pressure, fatigue: fat, confidence: p.confidence, stretch: stretch };
+    const mind = HPO.mod.mind;
+    return { accuracy: p.attrs.accuracy, difficulty: difficulty, pressure: pressure, fatigue: fat, confidence: mind ? mind.focus(p) : p.confidence, stretch: stretch, errMul: mind ? mind.errMul(p, difficulty, pressure) : 1 };
   }
 
   function stepPlayer(p, dt, bs) {
@@ -337,7 +343,7 @@
     // fatigue and distance
     const step = p.speed * dt;
     p.stats.distance += step;
-    p.fatigue = Math.min(1, p.fatigue + step * 0.00012 * (1.2 - 0.7 * lvl(p.attrs.stamina)));
+    p.fatigue = Math.min(1, p.fatigue + step * 0.00012 * (1.2 - 0.7 * lvl(p.attrs.stamina)) * (HPO.mod.mind ? HPO.mod.mind.drainOf(p) : 1));
 
     // heading
     const face = P.facing(p.team);
@@ -444,7 +450,7 @@
     const pressure = sw.warm ? 0.05 : U.clamp(0.75 * (1 - tmargin) + 0.5 * aftermath + 0.02 * Math.max(0, speed - 12) + (sw.info.afterWall ? 0.08 : 0), 0, 1);
     let nom = HPO.mod.shots.nominal(bp, sw.kind, sw.target, { effort: sw.effort, spinScale: sw.spin, netMargin: sw.netMargin });
     if (!nom.feasible && !sw.warm) nom = rescueShot(p, sw, bp, nom);
-    const cx = execCtx(p, diff, pressure, stretch); cx.errMul = sw.errMul;
+    const cx = execCtx(p, diff, pressure, stretch); cx.errMul *= sw.errMul || 1;
     const ex = HPO.mod.shots.execute(nom, cx);
     B.launch({ p: bp, v: ex.v, w: ex.w, hitter: p.id, team: p.team });
     p.stats.shots++;

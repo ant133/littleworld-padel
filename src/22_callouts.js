@@ -5,7 +5,7 @@
   const BUS = HPO.BUS, _ = HPO.t;
   const mod = n => HPO.mod[n];
 
-  const SHOT = { smashFlat: 'smash', smashKick: 'smash', lobDef: 'lob', lobOff: 'lob', bandeja: 'bandeja', bajada: 'bajada', chiquita: 'chiquita', dejada: 'dropshot' };
+  const SHOT = { smashFlat: 'smash', smashKick: 'smash', lobDef: 'lob', lobOff: 'lob', bandeja: 'bandeja', vibora: 'vibora', bajada: 'bajada', chiquita: 'chiquita', dejada: 'dropshot' };
   // big = call on the whole point (centre of the screen); otherwise anchored above the player who hit the ball.
   // pri decides which burst wins when two arrive together; shake rattles the canvas (1 = knock, 2 = slam).
   const KIND = {
@@ -17,15 +17,17 @@
     smash:   { text: 'SMASH!',        col: '#ff4d2e', pri: 3, shake: 1, rot: -7 },
     lob:     { text: 'LOB!',          col: '#27a9e1', pri: 2, rot: 5 },
     bandeja: { text: 'BANDEJA!',      col: '#8e5bd9', pri: 2, rot: -4 },
+    vibora:  { text: 'VIBORA!',       col: '#3b5bdb', pri: 3, shake: 1, rot: 5 },
     bajada:  { text: 'BAJADA!',       col: '#2fb26b', pri: 3, rot: 4 },
     chiquita: { text: 'CHIQUITA!',    col: '#d6409f', pri: 2, rot: -5 },
-    dropshot: { text: 'DROP SHOT!',   col: '#14a89a', pri: 3, rot: 5 }
+    dropshot: { text: 'DROP SHOT!',   col: '#14a89a', pri: 3, rot: 5 },
+    mixBoth: { text: 'MINE!',        col: '#ff8a1f', pri: 4, rot: -5 },
+    mixNone: { text: 'YOURS?!',      col: '#8e5bd9', pri: 4, rot: 5 }
   };
   // reason on point:end -> callout
   const END = { out: 'out', wallFirst: 'out', ceiling: 'out', net: 'net', doubleFault: 'double' };
   const STATE = {
-    intro: ['MATCH INTRO', 'Welcome to the club'], walkon: ['WALK-ON', 'The teams take the court'],
-    introductions: ['MEET THE PLAYERS', 'Introductions'], toss: ['COIN TOSS', 'Who serves first?'], warmup: ['WARM-UP', 'Get ready']
+    walkon: ['WALK-ON', 'The teams take the court'], warmup: ['WARM-UP', 'Get ready']
   };
   const LIFE_MS = 1500, SOFT_GAP_MS = 2200;
 

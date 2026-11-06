@@ -45,7 +45,7 @@
   const SKIN = ['#f7d9c0', '#efc29a', '#c98f62', '#8d5a3b'];
   const FORMAT_NAMES = { quick: 'Quick', oneSet: 'One Set', bo3: 'Best of 3', blitz: 'Blitz Americano', americano: 'Americano' };
   const PHASE_NAMES = { intro: 'Welcome', walkon: 'Walk-on', introductions: 'Introductions', toss: 'Coin toss', warmup: 'Warm-up', changeover: 'Changeover', setBreak: 'Set break', matchEnd: 'Match over', handshake: 'Handshake', ceremony: 'Ceremony', results: 'Final' };
-  const KEYS = [['Space', 'Pause / resume'], ['N', 'New match'], ['Q / E', 'Rotate camera'], ['1 - 5', 'Camera mode'], ['+ / -', 'Zoom'], ['R', 'Reset view'], ['C', 'Challenge'], ['A', 'Aim next shot, then click the court'], ['S', 'Sound on / off'], ['M', 'Mute'], ['`', 'Debug overlay'], ['?', 'This sheet']];
+  const KEYS = [['Space', 'Pause / resume'], ['N', 'New match'], ['Q / E', 'Rotate camera (Studio)'], ['1 - 5', 'Camera mode (Studio)'], ['+ / -', 'Zoom'], ['R', 'Reset view (Studio)'], ['\u2190 / \u2192', 'Rotate camera (Play mode)'], ['C', 'Next camera (Play mode)'], ['0', 'Reset view (Play mode)'], ['A', 'Aim next shot, then click the court'], ['1 - 5', 'Play mode: mindset, fortress to all-in'], ['Q W E R T Y', 'Play mode: plans (wear down, hunt, take net, break net, glass, down the middle)'], ['P', 'Play mode: shots (spin, mix, flat)'], ['V', 'Play mode: middle balls (auto, you, Annetta)'], ['F', 'Play mode: go for it'], ['O', 'Play mode: timeout'], ['S', 'Sound on / off'], ['M', 'Mute'], ['`', 'Debug overlay'], ['K', 'This sheet'], ['?', 'Game instructions']];
 
   // ---------- state ----------
   const S = {
@@ -137,7 +137,8 @@
     buildScoreboard();
     buildPanel();
     loadSavedPlayers();
-    const help = document.getElementById('btn-help'); if (help) { help.addEventListener('click', showKeys); help.title = _('Keyboard shortcuts (?)'); help.setAttribute('aria-label', _('Keyboard shortcuts')); }
+    const help = document.getElementById('btn-help'); if (help) { help.addEventListener('click', () => { const g = mod('guide'); if (g) g.toggle(); }); help.title = _('Game instructions (?)'); help.setAttribute('aria-label', _('Game instructions')); }
+    const kb = document.getElementById('btn-keys'); if (kb) { kb.addEventListener('click', showKeys); kb.title = _('Keyboard shortcuts (K)'); kb.setAttribute('aria-label', _('Keyboard shortcuts')); }
     // events
     bindBus();
     document.addEventListener('keydown', onKey);
@@ -153,8 +154,8 @@
     sync();
     ui.api = { S: S, EL: EL, h: h, add: add, safe: safe, toast: toast, feed: feed, drawPortrait: drawPortrait, flagEl: flagEl, mbar: mbar, teamName: teamName, teamIds: teamIds, rdef: rdef, roster: roster,
       contribution: contribution, teamSum: teamSum, newMatch: newMatch, applyVenueVisuals: applyVenueVisuals, applyTod: applyTod, applyDefaults: applyDefaults, refillPickers: refillPickers,
-      renderTab: renderTab, setSpeed: setSpeed, togglePause: togglePause, setMusic: setMusic, setVolume: setVolume, setCallouts: setCallouts, skipCeremony: skipCeremony, doChallenge: doChallenge, callTimeout: callTimeout, setCam: setCam, setSound: setSound, toggleAim: toggleAim, orders: orders,
-      claimCoach: claimCoach, closeModal: closeModal, fmtClock: fmtClock, M_clock: M_clock, savePlayerDef: savePlayerDef, openStudioPanel: null, ARCH: ARCH, ATTRS: ATTRS, FORMAT_NAMES: FORMAT_NAMES,
+      renderTab: renderTab, setSpeed: setSpeed, togglePause: togglePause, setMusic: setMusic, setVolume: setVolume, setCallouts: setCallouts, skipCeremony: skipCeremony, callTimeout: callTimeout, setCam: setCam, setSound: setSound, toggleAim: toggleAim, orders: orders,
+      claimCoach: claimCoach, showKeys: showKeys, closeModal: closeModal, fmtClock: fmtClock, M_clock: M_clock, savePlayerDef: savePlayerDef, openStudioPanel: null, ARCH: ARCH, ATTRS: ATTRS, FORMAT_NAMES: FORMAT_NAMES,
       PHASE_NAMES: PHASE_NAMES, VENUES: VENUES, CAMS: CAMS, showKeys: showKeys, setScore: setScore, shortName: shortName, other: other, hex: hex,
       isBusy: () => !!tmo, resultsReset: () => { resultsShown = false; } };
     const G = mod('game'); if (G && G.init) safe(() => G.init(ctx, ui.api), 'game.init');
@@ -275,7 +276,15 @@
     while (EL.toasts.children.length >= 3) EL.toasts.removeChild(EL.toasts.firstChild);
     const t = h('div', { class: 'toast ' + (opts.kind || 'info') }, text);
     EL.toasts.appendChild(t);
-    setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 400); }, opts.ms || 3600);
+    // the clock stands still while a replay runs (the toasts are hidden then), so a message from the end of a point is still there afterwards
+    let left = opts.ms || 3600;
+    const tick = () => {
+      const rp = mod('replay');
+      if (!(rp && rp.active)) left -= 200;
+      if (left > 0) return setTimeout(tick, 200);
+      t.classList.add('out'); setTimeout(() => t.remove(), 400);
+    };
+    setTimeout(tick, 200);
   }
   function banner(html, actions) {
     if (!html) { EL.banner.hidden = true; return; }
@@ -554,8 +563,7 @@
     b.push(h('div', { class: 'sub' }, _('In the moment')));
     EL.btnAim = h('button', { class: 'btn', type: 'button', id: 'btn-aim', onclick: toggleAim, title: _('Aim next shot (A)') }, h('span', null, _('Aim next shot') + ' '), h('span', { class: 'keycap' }, 'A'));
     EL.btnTmo = h('button', { class: 'btn', type: 'button', id: 'btn-timeout', onclick: callTimeout }, _('Call timeout'));
-    EL.btnChal = h('button', { class: 'btn', type: 'button', id: 'btn-challenge', onclick: doChallenge, title: _('Challenge the last line call (C)') }, h('span', null, 'Challenge '), h('span', { class: 'keycap' }, 'C'));
-    b.push(h('div', { class: 'grid3' }, EL.btnAim, EL.btnTmo, EL.btnChal));
+    b.push(h('div', { class: 'grid2' }, EL.btnAim, EL.btnTmo));
     EL.coachInfo = h('p', { class: 'hint' }, '');
     b.push(EL.coachInfo);
     return section('03', 'Coach', 'Coach box', window.innerWidth >= 900, b, 'sec-coach');
@@ -629,18 +637,6 @@
     sync();
   }
   function endRest() { const M = mod('match'); if (tmo && tmo.resumeMatch && M) M.pause(false); tmo = null; banner(null); sync(); }
-  function doChallenge() {
-    const Rl = mod('rules'); if (!Rl || !Rl.canChallenge) return;
-    claimCoach();
-    const t = S.coachTeam;
-    BUS.emit('challenge:request', { team: t });
-    if (!Rl.canChallenge(t, 0)) {
-      const left = Rl.state && Rl.state.challenges ? Rl.state.challenges[t] : 0;
-      toast(left > 0 ? _('No close call to challenge right now.') : _('No challenges left this set.'), { kind: 'warn' }); return;
-    }
-    const res = Rl.challenge(t, 0);
-    if (!res) toast(_('Too late to challenge that one.'), { kind: 'warn' });
-  }
 
   // ----- Camera -----
   function buildCameraSec() {
@@ -754,7 +750,6 @@
       line('Sets', (d.setsText || '-') + '  (' + d.setsWonText + ')'),
       line('Games', d.gamesText), line(_('Points'), d.pointsText.A + ' - ' + d.pointsText.B),
       line(_('Serving'), d.serverName + (d.serveSide ? ' · ' + d.serveSide : '')),
-      line(_('Challenges left'), 'A ' + st.challenges.A + ' · B ' + st.challenges.B),
       line(_('Timeouts left'), 'A ' + st.timeouts.A + ' · B ' + st.timeouts.B),
       line(_('Court'), _((VENUES.find(v => v[0] === cfg.venue) || [0, cfg.venue || '-'])[1])),
       line(_('Seed'), String(cfg.seed != null ? cfg.seed : '-')));
@@ -865,7 +860,7 @@
       const d = p.def, cv = h('canvas', { width: 24, height: 24 });
       drawPortrait(cv, d);
       const bars = h('div', { class: 'bars' }, ATTRS.map(a => mbar(_(a[1]), d.attrs[a[0]], '')));
-      const live = h('div', { class: 'bars' }, h('div', { class: 'mbar live', 'data-k': 'conf' }, h('span', null, _('CONF')), h('div', { class: 't' }, h('i')), h('b', null, '')), h('div', { class: 'mbar fat', 'data-k': 'fat' }, h('span', null, _('FATIG')), h('div', { class: 't' }, h('i')), h('b', null, '')));
+      const live = h('div', { class: 'bars' }, h('div', { class: 'mbar live', 'data-k': 'conf' }, h('span', null, _('FOCUS')), h('div', { class: 't' }, h('i')), h('b', null, '')), h('div', { class: 'mbar en', 'data-k': 'fat' }, h('span', null, _('ENERGY')), h('div', { class: 't' }, h('i')), h('b', null, '')));
       const mini = h('div', { class: 'mini' });
       const card = h('div', { class: 'pcard ' + (p.team === 'A' ? 'a' : 'b'), 'data-id': p.id },
         cv,
@@ -886,8 +881,8 @@
     document.querySelectorAll('#pcards .pcard').forEach(card => {
       const p = P.byId[card._pid]; if (!p) return;
       const set = (k, v) => { const m = card._live.querySelector('[data-k=' + k + ']'); m.querySelector('i').style.width = Math.round(U.clamp(v, 0, 1) * 100) + '%'; m.querySelector('b').textContent = Math.round(v * 100); };
-      set('conf', p.confidence); set('fat', p.fatigue);
-      card._mini.textContent = 'Winners ' + p.stats.winners + ' · Unforced ' + p.stats.unforced + ' · Aces ' + p.stats.aces + ' · ' + (p.stats.distance / 1000).toFixed(2) + ' km';
+      const Mi = mod('mind'); set('conf', Mi ? Mi.focus(p) : p.confidence); set('fat', Mi ? Mi.energy(p) : 1 - p.fatigue);
+      card._mini.textContent = (Mi && p.mood && p.mood.id ? Mi.label(p.mood.id) + ' · ' : '') + 'Winners ' + p.stats.winners + ' · Unforced ' + p.stats.unforced + ' · Aces ' + p.stats.aces + ' · ' + (p.stats.distance / 1000).toFixed(2) + ' km';
     });
   }
 
@@ -985,6 +980,7 @@
     if (G && G.blocking && G.blocking()) return;
     if (tn === 'SELECT' && k !== '`' && k !== '?') return;
     const lk = k.length === 1 ? k.toLowerCase() : k;
+    if (G && G.hotkey && G.hotkey(lk, e)) { e.preventDefault(); return; }
     let used = true;
     switch (lk) {
       case ' ': case 'Spacebar': togglePause(); break;
@@ -994,13 +990,17 @@
       case '+': case '=': zoomBy(1); break;
       case '-': case '_': zoomBy(-1); break;
       case 'r': resetView(); break;
-      case 'c': doChallenge(); break;
+      case '0': resetView(); break;
+      case 'ArrowLeft': if (tn === 'INPUT') { used = false; break; } rot(-1); break;
+      case 'ArrowRight': if (tn === 'INPUT') { used = false; break; } rot(1); break;
+      case 'c': if (G && G.cycleCam && G.mode === 'play') G.cycleCam(); break;
       case 'a': toggleAim(); break;
       case 'n': newMatch(); break;
       case 's': setSound(!S.soundOn); break;
       case 'm': S.muted = !S.muted; if (S.muted === false && !S.soundOn) { /* stays off */ } applyAudio(); sync(); toast(S.muted ? _('Muted') : (S.soundOn ? _('Sound on') : _('Sound is off (press S)')), { ms: 1500 }); break;
       case '`': toggleDebug(); break;
-      case '?': showKeys(); break;
+      case 'k': showKeys(); break;
+      case '?': { const g = mod('guide'); if (g) g.toggle(); break; }
       default: used = false;
     }
     if (used) { e.preventDefault(); }
@@ -1125,15 +1125,6 @@
       feed({ src: 'ui', icon: '⇅', text: (e.kind === 'timeout' ? _('Timeout, Team {team}', { team: e.team }) : e.kind === 'set' ? _('Set changeover') : 'Changeover') + '.', key: e.kind === 'timeout' });
     });
     BUS.on('changeover:end', function (e) { if (e.kind === 'timeout') banner(null); });
-    BUS.on('challenge:result', function (e) {
-      const fin = e.overturned ? (e.call === 'in' ? 'OUT' : 'IN') : (e.call || '').toUpperCase();
-      const txt = e.overturned ? _('Eagle Eye: {call} — call overturned', { call: fin }) : _('Eagle Eye: {call} — call stands', { call: fin });
-      toast(_('{text} (Team {team})', { text: txt, team: e.team }), { kind: e.overturned ? 'good' : 'warn', ms: 4500 });
-      feed({ src: 'ui', icon: '◎', text: _('{text}, challenge by Team {team}.', { text: txt, team: e.team }), key: true });
-      const rp = mod('replay'); const M = mod('match');
-      // the match flow plays the replay for AI challenges; a coach challenge plays it here
-      if (rp && rp.play && !rp.active && S.coachClaimed && e.team === S.coachTeam && !(M && M.cfg && M.cfg.fast)) safe(() => rp.play({ kind: 'challenge' }), 'replay');
-    });
     BUS.on('ball:contact', function (e) { lastSurf = e.surf; lastSurfAt = performance.now(); });
     BUS.on('cam:mode', function (e) { S.cam = e.mode; sync(); });
     BUS.on('ui:setting', function (e) {
@@ -1220,12 +1211,8 @@
       if (Rl && Rl.state && EL.btnTmo) {
         const t = S.coachTeam, st = Rl.state;
         EL.btnTmo.textContent = 'Timeout (' + (st.timeouts ? st.timeouts[t] : 0) + ')';
-        const can = Rl.canChallenge ? Rl.canChallenge(t, 0) : false;
-        EL.btnChal.firstChild.textContent = 'Challenge (' + (st.challenges ? st.challenges[t] : 0) + ') ';
-        EL.btnChal.classList.toggle('primary', can);
         EL.btnTmo.setAttribute('aria-disabled', st.timeouts && st.timeouts[t] > 0 ? 'false' : 'true');
-        EL.btnChal.setAttribute('aria-disabled', can ? 'false' : 'true');
-        EL.coachInfo.textContent = _('Coaching Team {team} ({name}).', { team: t, name: teamName(t) }) + ' ' + (can ? _('Eagle Eye available: press C.') : '');
+        EL.coachInfo.textContent = _('Coaching Team {team} ({name}).', { team: t, name: teamName(t) });
       }
       if (S.tab === 'players') updatePlayerCards();
       if (S.tab === 'score') renderScoreTab();

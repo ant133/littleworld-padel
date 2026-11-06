@@ -1,4 +1,4 @@
-// Replay (ring buffer + ghost playback for Eagle Eye challenges and highlights) and Ceremony (choreographed match phases).
+// Replay (ring buffer + ghost playback for highlights) and Ceremony (choreographed match phases).
 // Registers HPO.mod.replay and HPO.mod.ceremony. Presentation only: never writes sim state except scripted player intents/anim during ceremony phases.
 (function (HPO) {
   'use strict';
@@ -28,25 +28,26 @@
     const ui = HPO.mod.ui; if (ui && ui.feed) { try { ui.feed({ text: text, icon: voice === 'commentator' ? 'mic' : 'whistle', key: true, kind: 'umpire' }); } catch (e) { /* optional */ } }
   }
 
-  // ---------------------------------------------------------------- DOM overlays (banner / replay badge / verdict)
-  const DOM = { root: null, banner: null, badge: null, verdict: null, bars: null, bt: 0 };
+  // ---------------------------------------------------------------- DOM overlays (banner / replay badge)
+  const DOM = { root: null, banner: null, badge: null, bars: null, bt: 0 };
   function domInit() {
     if (DOM.root || typeof document === 'undefined') return;
     const r = RN(), cont = (r && r.container) || document.getElementById('stage'); if (!cont) return;
     const root = DOM.root = document.createElement('div');
     root.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:6;overflow:hidden;font-family:Manrope,system-ui,sans-serif';
     const mk = (css, parent) => { const d = document.createElement('div'); d.style.cssText = css; d.hidden = true; (parent || root).appendChild(d); return d; };
-    DOM.banner = mk('position:absolute;left:50%;top:14%;transform:translateX(-50%);background:#fffaf0;color:#123954;border:2px solid #123954;box-shadow:6px 7px 0 #1264992e;padding:10px 22px;text-align:center;font-weight:800;letter-spacing:-.03em;font-size:clamp(16px,3.2vw,30px);max-width:86%');
+    DOM.banner = mk('background:#fffaf0;color:#123954;border:2px solid #123954;box-shadow:6px 7px 0 #1264992e;padding:10px 22px;text-align:center;font-weight:800;letter-spacing:-.03em;font-size:clamp(16px,3.2vw,30px);max-width:86%');
+    DOM.banner.className = 'hpo-banner'; // placed in shell.css: top centre, or the lower third while the players are on show
     DOM.badge = mk(''); DOM.badge.className = 'hpo-replay'; // large flashing label, styled in shell.css
-    DOM.verdict = mk('position:absolute;left:50%;top:22%;transform:translateX(-50%);color:#fff;font-weight:800;font-size:clamp(40px,9vw,92px);letter-spacing:-.04em;text-shadow:4px 5px 0 #123954;padding:0 18px');
     DOM.bars = mk('position:absolute;inset:0;box-shadow:inset 0 0 0 9999px transparent');
     DOM.bars.style.cssText = 'position:absolute;left:0;right:0;top:0;height:5%;background:#0b1a2a;opacity:.85';
     DOM.bars2 = mk('position:absolute;left:0;right:0;bottom:0;height:5%;background:#0b1a2a;opacity:.85');
+    DOM.bars.className = DOM.bars2.className = 'hpo-bar';   // letterbox bars: hidden in Play mode (shell.css), where they cut into the scoreboard and the dock
     cont.appendChild(root);
   }
-  function banner(text, sub, ms, low) { // low: the intro cards sit under the state ribbon, clear of the scoreboard; CHAMPIONS keeps the top
+  function banner(text, sub, ms, low) { // low: the intro cards sit in the lower third so the players stay visible; CHAMPIONS keeps the top
     domInit(); if (!DOM.banner) return;
-    DOM.banner.style.top = low ? '58%' : '14%';
+    DOM.banner.classList.toggle('lt', !!low);
     DOM.banner.innerHTML = ''; const a = document.createElement('div'); a.textContent = text; DOM.banner.appendChild(a);
     if (sub) { const b = document.createElement('div'); b.textContent = sub; b.style.cssText = 'font-size:.45em;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#177dc5;margin-top:4px'; DOM.banner.appendChild(b); }
     DOM.banner.hidden = false; DOM.bt = ms ? ms / 1000 : 0;
@@ -73,8 +74,8 @@
   // =====================================================================================
   const STRIDE = 45, NF = 1200;
   const RB = { buf: new Float32Array(STRIDE * NF), head: 0, count: 0, lastT: -1, ids: [], clips: ['idle'], wrapped: false };
-  const RS = { init: false, hooked: false, ghostGroup: null, ghosts: null, gball: null, gshadow: null, trail: null, marker: null, line: null, label: null, pulse: null, active: null, lastHL: -999, clock: 0, t: -1,
-    lastChallenge: null, pointStartT: 0, wallStreak: 0, maxWall: 0, wrapTick: false };
+  const RS = { init: false, hooked: false, ghostGroup: null, ghosts: null, gball: null, gshadow: null, trail: null, active: null, lastHL: -999, clock: 0, t: -1,
+    pointStartT: 0, wallStreak: 0, maxWall: 0, wrapTick: false };
   function clipId(n) { let i = RB.clips.indexOf(n); if (i < 0) { RB.clips.push(n); i = RB.clips.length - 1; } return i; }
   function frameT(k) { return RB.buf[((RB.head - RB.count + k + NF) % NF) * STRIDE]; }
 
@@ -113,12 +114,6 @@
     const sg = new T3.CircleGeometry(1, 12); sg.rotateX(-Math.PI / 2);
     RS.gshadow = new T3.Mesh(sg, noAlpha(new T3.MeshBasicMaterial({ color: 0x000000, opacity: 0.4 }))); RS.gshadow.renderOrder = 2; G.add(RS.gshadow);
     RS.trail = new T3.InstancedMesh(new T3.SphereGeometry(0.05, 5, 4), new T3.MeshBasicMaterial({ color: 0xeaf59a }), 24); RS.trail.frustumCulled = false; G.add(RS.trail);
-    // challenge markers
-    RS.marker = new T3.Mesh(new T3.RingGeometry(0.2, 0.3, 24), noAlpha(new T3.MeshBasicMaterial({ color: 0x2fb26b, opacity: 0.95, side: T3.DoubleSide }))); RS.marker.rotation.x = -Math.PI / 2; RS.marker.position.y = 0.04; RS.marker.visible = false; RS.marker.renderOrder = 5; G.add(RS.marker);
-    RS.pulse = new T3.Mesh(new T3.SphereGeometry(0.1, 10, 8), noAlpha(new T3.MeshBasicMaterial({ color: 0xfff4b3, opacity: 0.75 }))); RS.pulse.visible = false; RS.pulse.renderOrder = 6; G.add(RS.pulse);
-    RS.line = new T3.Mesh(new T3.BoxGeometry(1, 0.03, 0.16), noAlpha(new T3.MeshBasicMaterial({ color: 0xfff4b3, opacity: 0.85 }))); RS.line.visible = false; RS.line.renderOrder = 4; G.add(RS.line);
-    const lt = canvasTex(160, 56, function (g, w, h) { g.clearRect(0, 0, w, h); }); lt.needsUpdate = true;
-    RS.label = new T3.Sprite(new T3.SpriteMaterial({ map: lt, transparent: true, depthTest: false })); RS.label.scale.set(3.2, 1.12, 1); RS.label.visible = false; RS.label.renderOrder = 30; G.add(RS.label);
     RS.ghosts = [];
   }
   function makeFallbackFigure(look) {
@@ -135,32 +130,6 @@
     RS.ghostGroup.add(rig.root);
     const g = { rig: rig, px: p.pos.x, pz: p.pos.z, act: null, lastClip: null }; RS.ghosts[i] = g; return g;
   }
-  const NEAR_LINES = (function () {
-    const L = [];
-    [-5, 5].forEach(z => L.push({ x0: -10, x1: 10, z0: z, z1: z, name: 'side line' }));
-    [-10, 10].forEach(x => L.push({ x0: x, x1: x, z0: -5, z1: 5, name: 'back line' }));
-    [-6.95, 6.95].forEach(x => L.push({ x0: x, x1: x, z0: -5, z1: 5, name: 'service line' }));
-    L.push({ x0: -6.95, x1: 6.95, z0: 0, z1: 0, name: 'centre line' });
-    return L;
-  })();
-  function nearestLine(p) {
-    let best = null, bd = 1e9;
-    NEAR_LINES.forEach(function (l) {
-      const dx = l.x1 - l.x0, dz = l.z1 - l.z0, L2 = dx * dx + dz * dz, t = clamp(((p.x - l.x0) * dx + (p.z - l.z0) * dz) / L2, 0, 1);
-      const d = Math.hypot(p.x - (l.x0 + dx * t), p.z - (l.z0 + dz * t)); if (d < bd) { bd = d; best = l; }
-    });
-    return best ? { line: best, dist: bd } : null;
-  }
-  function labelTex(text, verdict) {
-    const tex = canvasTex(160, 56, function (g, w, h) {
-      g.fillStyle = '#fffaf0'; g.fillRect(0, 0, w, h); g.strokeStyle = '#123954'; g.lineWidth = 4; g.strokeRect(2, 2, w - 4, h - 4);
-      g.fillStyle = verdict === 'OUT' ? '#e5484d' : '#2fb26b'; g.fillRect(6, 6, 52, h - 12);
-      g.fillStyle = '#fff'; g.font = 'bold 22px Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(verdict, 32, h / 2 + 1);
-      g.fillStyle = '#123954'; g.font = 'bold 24px Arial, sans-serif'; g.fillText(text, 110, h / 2 + 1);
-    });
-    tex.needsUpdate = true; return tex;
-  }
-
   const replay = HPO.mod.replay = {
     active: false, enabled: true, kind: null,
     init(ctx) {
@@ -186,57 +155,20 @@
   };
 
   function startReplay(o) {
-    const P = PL(), m = MT(), r = RN(), kind = o.kind === 'highlight' ? 'highlight' : 'challenge';
+    const P = PL(), m = MT(), r = RN(), kind = 'highlight';
     ensureGhosts();
     const tEnd = frameT(RB.count - 1), tStart = frameT(0);
-    let from, to, tb = null, info = null;
-    if (kind === 'challenge') {
-      const lc = RS.lastChallenge && RS.clock - RS.lastChallenge.at < 6 ? RS.lastChallenge : null;
-      let p = lc ? lc.p : null, call = lc ? lc.call : null, over = lc ? lc.overturned : false;
-      const rl = HPO.mod.rules, lb = rl && rl.lastBounces ? rl.lastBounces() : [];
-      if (!p && lb.length) { p = lb[lb.length - 1].p; call = lb[lb.length - 1].call; }
-      if (o.close && o.close.x !== undefined) p = { x: o.close.x, z: o.close.z };
-      if (!p) return false;
-      // bounce time = frame where the ball is nearest the floor point
-      let bk = -1, bd = 1e9;
-      for (let k = Math.max(0, RB.count - 600); k < RB.count; k++) {
-        const q = ((RB.head - RB.count + k + NF) % NF) * STRIDE, d = Math.hypot(RB.buf[q + 1] - p.x, RB.buf[q + 3] - p.z) + Math.max(0, RB.buf[q + 2] - 0.15) * 2;
-        if (d < bd) { bd = d; bk = k; }
-      }
-      if (bk < 0) return false;
-      tb = frameT(bk); from = Math.max(tStart, tb - 2.0); to = Math.min(tEnd, tb + 0.9);
-      const fin = call ? (over ? (call === 'in' ? 'out' : 'in') : call) : null;
-      let margin = null;
-      for (let i = 0; i < lb.length; i++) if (lb[i].p && Math.hypot(lb[i].p.x - p.x, lb[i].p.z - p.z) < 0.35 && lb[i].marginCm !== undefined) margin = lb[i].marginCm;
-      const nl = nearestLine(p); if (margin === null && nl) margin = Math.max(0, nl.dist * 100 - 2.5);
-      info = { p: p, verdict: fin ? fin.toUpperCase() : (nl && nl.dist < 0.03 ? 'IN' : 'OUT'), margin: margin, nl: nl, overturned: over, call: call };
-    } else {
-      to = tEnd; from = Math.max(tStart, to - clamp(o.span || (to - RS.pointStartT) + 0.5, 3, 9));
-      if (o.from !== undefined) from = Math.max(tStart, o.from); if (o.to !== undefined) to = Math.min(tEnd, o.to);
-      tb = to - 0.5;
-    }
-    const act = RS.active = { kind: kind, from: from, to: to, tp: from, tb: tb, info: info, slow: o.speed > 0 ? o.speed : (kind === 'challenge' ? 0.22 : 0.35), real: 0, hold: 0, phase: 'play', pausedBy: false, prevActors: true, trailRing: [], lastTrail: -9 };
+    const to0 = tEnd; let from = Math.max(tStart, to0 - clamp(o.span || (to0 - RS.pointStartT) + 0.5, 3, 9)), to = to0;
+    if (o.from !== undefined) from = Math.max(tStart, o.from); if (o.to !== undefined) to = Math.min(tEnd, o.to);
+    const act = RS.active = { kind: kind, from: from, to: to, tp: from, slow: o.speed > 0 ? o.speed : 0.35, real: 0, hold: 0, phase: 'play', pausedBy: false, prevActors: true, trailRing: [], lastTrail: -9 };
     replay.active = true; replay.kind = kind;
     if (m && !m.paused) { m.pause(true); act.pausedBy = true; }
     const ag = grp('actors'); if (ag) { act.prevActors = ag.visible; ag.visible = false; }
     RS.ghostGroup.visible = true;
     P.list.forEach(function (p, i) { const g = ghostFor(i); g.rig.root.visible = true; g.lastClip = null; g.act = null; });
-    domInit(); if (DOM.badge) { DOM.badge.textContent = kind === 'challenge' ? 'EAGLE EYE REPLAY' : 'REPLAY'; DOM.badge.hidden = false; DOM.bars.hidden = false; DOM.bars2.hidden = false; }
+    domInit(); if (DOM.badge) { DOM.badge.textContent = 'REPLAY'; DOM.badge.hidden = false; DOM.bars.hidden = false; DOM.bars2.hidden = false; }
     camSave();
-    if (kind === 'challenge' && info) {
-      camFocus(info.p.x, info.p.z, 4.8, 0.5);
-      const ok = info.verdict === 'IN', col = ok ? 0x2fb26b : 0xe5484d;
-      RS.marker.material.color.setHex(col); RS.marker.position.set(info.p.x, 0.04, info.p.z); RS.marker.visible = false;
-      RS.pulse.position.set(info.p.x, 0.1, info.p.z); RS.pulse.visible = false;
-      if (info.nl) {
-        const l = info.nl.line; RS.line.position.set((l.x0 + l.x1) / 2, 0.05, (l.z0 + l.z1) / 2); RS.line.scale.set(Math.max(0.16, Math.abs(l.x1 - l.x0)) , 1, l.x1 === l.x0 ? 1 : 1);
-        RS.line.rotation.y = l.x1 === l.x0 ? Math.PI / 2 : 0; RS.line.scale.x = Math.max(Math.abs(l.x1 - l.x0), Math.abs(l.z1 - l.z0));
-        RS.line.visible = false;
-      }
-      if (RS.label.material.map) RS.label.material.map.dispose();
-      RS.label.material.map = labelTex(info.margin !== null ? info.margin.toFixed(1) + ' cm' : '', info.verdict); RS.label.material.needsUpdate = true;
-      RS.label.position.set(info.p.x, 1.6, info.p.z); RS.label.visible = false;
-    } else if (r) tvFollow(r);
+    if (r) tvFollow(r);
     BUS.emit('replay:start', { kind: kind });
     stepReplay(0);
     return true;
@@ -252,22 +184,13 @@
   function stepReplay(dt) {
     const A = RS.active; if (!A) return;
     A.real += dt;
-    const fast = 1.0;
     if (A.phase === 'play') {
-      const near = Math.abs(A.tp - A.tb);
-      let spd = A.kind === 'challenge' ? (near < 0.45 ? A.slow : near < 0.9 ? A.slow + (fast - A.slow) * (near - 0.45) / 0.45 : 0.8) : (A.tp > A.to - 1.6 ? A.slow : 0.9);
+      const spd = A.tp > A.to - 1.6 ? A.slow : 0.9;
       A.spd = spd; A.tp += dt * spd;
       if (A.tp >= A.to) { A.tp = A.to; A.phase = 'hold'; A.hold = 0; }
     } else { A.hold += dt; A.spd = 0; }
-    const showAfter = A.kind === 'challenge' && A.info && (A.phase === 'hold' || A.tp >= A.tb - 0.15);
     renderGhosts(A, dt);
-    if (A.kind === 'challenge' && A.info) {
-      const pul = 1 + 0.25 * Math.sin(A.real * 9);
-      RS.marker.visible = showAfter; RS.pulse.visible = showAfter; RS.line.visible = showAfter; RS.label.visible = showAfter;
-      RS.marker.scale.setScalar(pul * 1.1); RS.pulse.scale.setScalar(pul); RS.line.material.opacity = 0.55 + 0.35 * Math.sin(A.real * 7);
-      if (showAfter && DOM.verdict && DOM.verdict.hidden) { DOM.verdict.textContent = A.info.verdict; DOM.verdict.style.background = A.info.verdict === 'IN' ? '#2fb26b' : '#e5484d'; DOM.verdict.hidden = false; }
-    }
-    const holdMax = A.kind === 'challenge' ? 2.4 : 0.5;
+    const holdMax = 0.5;
     if ((A.phase === 'hold' && A.hold > holdMax) || A.real > 22) endReplay(false);
   }
   function renderGhosts(A, dt) {
@@ -321,8 +244,7 @@
     const m = MT(), ag = grp('actors');
     if (ag) ag.visible = true;
     if (RS.ghostGroup) RS.ghostGroup.visible = false;
-    [RS.marker, RS.pulse, RS.line, RS.label].forEach(o => { if (o) o.visible = false; });
-    if (DOM.badge) { DOM.badge.hidden = true; DOM.verdict.hidden = true; DOM.bars.hidden = true; DOM.bars2.hidden = true; }
+    if (DOM.badge) { DOM.badge.hidden = true; DOM.bars.hidden = true; DOM.bars2.hidden = true; }
     camRestore();
     if (A.pausedBy && m) m.pause(false);
     if (A.kind === 'highlight') RS.lastHL = RS.clock;
@@ -335,7 +257,6 @@
     BUS.on('match:new', function () { RB.head = 0; RB.count = 0; RB.lastT = -1; if (RS.active) endReplay(true); RS.lastHL = -999; });
     BUS.on('point:start', function (e) { if (e && e.retry) return; const P = PL(); RS.pointStartT = P ? P.now : 0; RS.wallStreak = 0; RS.maxWall = 0; });
     BUS.on('shot:hit', function (e) { if (!e) return; if (e.afterWall && e.shot !== 'serve') { RS.wallStreak++; if (RS.wallStreak > RS.maxWall) RS.maxWall = RS.wallStreak; } else RS.wallStreak = 0; });
-    BUS.on('challenge:result', function (e) { RS.lastChallenge = { p: e && e.p, call: e && e.call, overturned: !!(e && e.overturned), team: e && e.team, at: RS.clock }; });
     BUS.on('point:end', function (e) {
       if (!e || !replay.enabled || replay.active) return;
       const m = MT(); if (!m || !m.cfg || m.cfg.fast || m.speed > 2 || m.phase !== 'play') return;

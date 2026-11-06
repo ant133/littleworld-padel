@@ -2,7 +2,7 @@
 
 A physics-driven, real-time 3D pixel-art **doubles padel final** on a floating island, built as a web toy for [annetta.dev](https://annetta.dev). The tournament title always carries the current year (`Littleworld Jakarta Padel Cup 2026`, `2027`, …), taken from the visitor's clock at runtime.
 
-You make a player, team up with **Annetta Arslan**, and coach your pair from the coach box while the match plays out: walk-on, toss, warm-up, rallies off the glass and mesh, line-call challenges with replay, changeovers, handshake and trophy ceremony.
+You make a player, team up with **Annetta Arslan**, and coach your pair from the coach box while the match plays out: walk-on, toss, warm-up, rallies off the glass and mesh, changeovers, handshake and trophy ceremony.
 
 - Play: https://ant133.github.io/littleworld-padel/ (GitHub Pages). The intended address is https://padel.annetta.dev; the custom domain still has to be set up, see [docs/GITHUB_PAGES.md](docs/GITHUB_PAGES.md)
 - Repository: https://github.com/ant133/littleworld-padel
@@ -24,7 +24,6 @@ In the match the court fills the screen. Your pair is ringed and labelled **YOU*
 | Coach dropdown: Balanced · Attack · Safe · Net · Lobs · Smash | Team tactic |
 | Middle ball dropdown: Auto / You / Annetta | Who takes the middle ball |
 | Timeout | Rest and re-set (one per match) |
-| Challenge | Eagle-Eye style line review with replay (two per set) |
 
 Top-right icons: pause, speed (1×/2×/4×), camera cycle, a sliders button that opens the sound and music on/off buttons, volume sliders and the callouts switch, and Studio (`S` still toggles sound). The scoreboard stays put; the chevron on its left edge opens the full match centre (score, stats, players, feed) under it. Calls and signature shots (out, fault, double fault, net/let, smash, lob, bandeja, bajada, chiquita, drop shot) pop up as small comic bursts; the callouts switch turns them off if they get in the way. `Esc` opens the pause menu. Sound and speech are **off** until you turn them on.
 
@@ -38,7 +37,7 @@ The original full control panel is still there, optional: the **Studio controls*
 
 ### Keys
 
-`Space` pause · `Q`/`E` rotate · `1`–`5` cameras · `+`/`-` zoom · `R` reset view · `C` challenge · `A` aim-click · `N` new match · `S` sound · `M` mute · `` ` `` debug · `?` all shortcuts.
+`Space` pause · `Q`/`E` rotate · `1`–`5` cameras · `+`/`-` zoom · `R` reset view · `A` aim-click · `N` new match · `S` sound · `M` mute · `` ` `` debug · `?` all shortcuts. In Play mode `1`–`5` set the mindset (fortress to all-in), `Q` `W` `E` `R` `T` `Y` pick the plan (wear them down … down the middle), `P` shots, `V` middle balls, `F` go for it (your next ball is a swipe shot), `O` timeout; the camera moves to `←` `→` rotate, `C` next camera, `0` reset.
 
 Dragging orbits the camera and, on release, snaps to the nearest true isometric quarter turn so the court never looks skewed.
 
@@ -57,7 +56,7 @@ Dragging orbits the camera and, on release, snaps to the nearest true isometric 
 ## What is in the box
 
 - **Real physics:** swept-sphere ball with drag, Magnus and spin; per-surface restitution and friction for floor, 3 m glass, mesh, net and posts; open entrance at the net that a ball can leave through. Wall rebounds are physics, not decoration.
-- **Doubles AI:** formations, claim tokens for the middle, lobs, bandejas, víboras, smashes and kick smashes, wall play, fatigue, reaction delay, tactical timeouts and challenges for the AI teams.
+- **Doubles AI:** formations, claim tokens for the middle, lobs, bandejas, víboras, smashes and kick smashes, wall play, fatigue, reaction delay, tactical timeouts for the AI teams.
 - **Rules:** advantage and golden-point scoring, quick/one-set/best-of-3, tie-breaks, serve rotation, faults and lets, out-of-court retrieval, review.
 - **Look:** low-resolution render with depth outline, 90-colour OKLab palette snap and Bayer dither; 4 courts × day/dusk/night plus indoor; cutaway for stands and buildings; floodlights go transparent when they block the court.
 - **Show:** crowd, confetti, replays, ceremony, WebAudio synth, commentary (optional speech).

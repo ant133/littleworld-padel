@@ -146,7 +146,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
 .mbar .t{height:6px;background:#12395414}
 .mbar .t i{display:block;height:100%;background:var(--blue)}
 .mbar.live .t i{background:var(--good)}
-.mbar.fat .t i{background:var(--coral)}
+.mbar.en .t i{background:var(--blue)}
 .pcard .mini{grid-column:1/-1;font-size:11.5px;display:flex;gap:12px;flex-wrap:wrap;opacity:.9}
 .feedbar{display:flex;gap:6px;margin-bottom:8px}
 .feed{max-height:340px;overflow:auto;border:1px solid var(--hair);background:#fff;scrollbar-width:thin}
@@ -159,9 +159,10 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
 
 /* ---------- TV scoreboard overlay ---------- */
 #sb{position:absolute;left:12px;top:12px;z-index:6;max-width:calc(100% - 24px);pointer-events:none;font-family:var(--head)}
-.sb-card{position:relative;display:inline-block;min-width:210px;background:#fffaf0f2;border:1px solid var(--ink);box-shadow:5px 6px 0 #1264992e}
+.sb-card{position:relative;display:inline-block;min-width:210px;max-width:100%;background:#fffaf0f2;border:1px solid var(--ink);box-shadow:5px 6px 0 #1264992e}
 .sb-top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:3px 8px;background:var(--ink);color:var(--cream);font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;white-space:nowrap}
 .sb-top .ph{color:var(--hl)}
+.sb-top .ph{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .sb-row{position:relative;display:flex;align-items:stretch;border-top:1px solid var(--hair);min-height:40px}
 .sb-row:first-of-type{border-top:0}
 .sb-row::before{content:'';flex:none;width:5px;background:var(--blue)}
@@ -206,7 +207,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
 .sb-row .stk .sticker{position:static}
 
 /* floating stage bits */
-#toasts{position:absolute;right:12px;top:12px;z-index:8;display:grid;gap:6px;justify-items:end;pointer-events:none;max-width:min(320px,calc(100% - 24px))}
+#toasts{position:absolute;right:12px;top:12px;z-index:8;display:grid;gap:6px;justify-items:start;pointer-events:none;max-width:min(320px,calc(100% - 24px))}
 .toast{padding:7px 11px;border:1px solid var(--ink);background:var(--cream);box-shadow:3px 4px 0 #1264992e;font-size:12.5px;font-weight:600;animation:toastin .3s ease-out;line-height:1.3}
 .toast.good{border-left:6px solid var(--good)}.toast.warn{border-left:6px solid var(--coral)}.toast.info{border-left:6px solid var(--blue)}
 .toast.out{opacity:0;transform:translateX(12px);transition:.35s}
@@ -339,9 +340,9 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
 .gm-ib.txt{font-size:14px}.gm-ib.sm{font-size:10px;letter-spacing:.12em}
 .gm-ib.snd svg{display:block}
 .gm-ib.snd.off{color:#12395488}
-.gm-ticker{position:absolute;left:50%;bottom:92px;transform:translateX(-50%);max-width:min(640px,calc(100% - 24px));padding:6px 14px;background:#123954e8;color:var(--cream);font-size:13.5px;font-weight:600;text-align:center;line-height:1.3;transition:opacity .5s}
+.gm-ticker{position:absolute;left:50%;bottom:var(--dock-h,92px);transform:translateX(-50%);max-width:min(640px,calc(100% - 24px));padding:6px 14px;background:#123954e8;color:var(--cream);font-size:13.5px;font-weight:600;text-align:center;line-height:1.3;transition:opacity .5s}
 .gm-ticker.fade{opacity:0}
-.gm-skip{position:absolute;right:10px;bottom:98px;pointer-events:auto;background:var(--hl);min-height:36px}
+.gm-skip{position:absolute;right:10px;bottom:calc(var(--dock-h,92px) + var(--tick-h,0px) + 6px);pointer-events:auto;background:var(--hl);min-height:36px}
 .gm-watchbar{position:absolute;left:50%;bottom:14px;transform:translateX(-50%)}
 .gm-watchbar .btn{min-height:46px;font-size:15px;padding:8px 18px}
 .gm-labels{position:absolute;inset:0;overflow:hidden;pointer-events:none}
@@ -354,7 +355,8 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   .gm-card{box-shadow:6px 8px 0 #1264992e;padding:16px 16px}
   .mode-play #title{display:none}
   .mode-play #topbar{justify-content:space-between}
-  .mode-play #toasts{top:auto;bottom:128px;right:10px;left:10px;justify-items:center}
+  .mode-play #toasts{top:auto;bottom:calc(var(--dock-h,92px) + var(--tick-h,0px) + 6px);right:10px;left:10px;justify-items:start}
+  .mode-play #sb{max-width:calc(100% - 72px)}
   .gm-icons{flex-direction:column;top:10px;right:8px;gap:5px}
   .gm-ib{width:44px;height:44px}
   .gm-select{min-height:44px;font-size:13px;padding-right:22px;background-position:right 7px center}
@@ -366,7 +368,6 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   .gm-h{font-size:26px}
   .gm-ib{width:36px;height:36px}
   .gm-select{min-height:36px}
-  .gm-ticker{bottom:64px}
   .sb-card{transform:scale(.85);transform-origin:top left}
   .mode-play #toasts{display:none}
 }
@@ -379,7 +380,6 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
 @media (max-width:899px){.gm-skip{min-height:44px}}
 @media (max-height:520px){.gm-ib{width:40px;height:40px}.gm-select{min-height:40px}}
 
-@media (max-height:520px){.gm-skip{right:58px;top:10px;bottom:auto}}
 
 /* Coach dock (Play mode, docs/QTE.md): annetta.dev cards (cream, ink hairline, hard offset shadow, square corners) with chunky pressable buttons; one coloured lip per function */
 .gm-dock{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);width:min(1240px,calc(100% - 20px));display:flex;flex-direction:column;gap:10px;pointer-events:none}
@@ -396,7 +396,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
 .gm-planrow{display:flex;gap:7px}
 .gm-sty-row{display:flex;gap:5px;height:42px;align-items:center}
 /* the shared button: cream face, ink outline, hard shadow, coloured lip; it pushes in when pressed, and a chosen one goes ink */
-.gm-plan,.gm-mo,.gm-sty,.gm-step,  box-shadow:inset 0 -5px 0 var(--c),3px 3px 0 var(--ink);transition:transform .08s,box-shadow .08s,background .12s}
+.gm-plan,.gm-mo,.gm-sty,.gm-step{position:relative;border:2px solid var(--ink);background:var(--cream);color:var(--ink);cursor:pointer;padding:0;font-family:var(--head);box-shadow:inset 0 -5px 0 var(--c),3px 3px 0 var(--ink);transition:transform .08s,box-shadow .08s,background .12s}
 .gm-plan:hover,.gm-mo:hover,.gm-sty:hover,.gm-step:hover{background:var(--hl)}
 .gm-plan:active,.gm-mo:active,.gm-sty:active,.gm-step:active{transform:translate(2px,2px);box-shadow:inset 0 -5px 0 var(--c),1px 1px 0 var(--ink)}
 .gm-plan[aria-pressed=true],.gm-mo[aria-pressed=true],.gm-sty[aria-pressed=true],.gm-step[aria-pressed=true]{background:var(--ink);color:var(--cream)}   /* chosen = ink; it stays put so rows line up (only a finger press moves a button) */
@@ -409,7 +409,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
 .gm-sty{height:32px;padding:0 10px 3px;font:800 12.5px var(--head);letter-spacing:-.01em}
 .gm-mid[data-mid=""]{--c:#8aa3b5}.gm-mid[data-mid="0"]{--c:var(--blue)}.gm-mid[data-mid="1"]{--c:var(--coral)}
 .gm-sty[data-style=spin]{--c:var(--blue)}.gm-sty[data-style=mix]{--c:#8aa3b5}.gm-sty[data-style=flat]{--c:#ff9a3c}
-.gm-mo[id=gm-go]{--c:#e8c800}.gm-mo[id=gm-aim]{--c:var(--blue)}.gm-mo[id=gm-timeout]{--c:#ff9a3c}.gm-mo[id=gm-challenge]{--c:var(--coral)}
+.gm-mo[id=gm-go]{--c:#e8c800}.gm-mo[id=gm-aim]{--c:var(--blue)}.gm-mo[id=gm-timeout]{--c:#ff9a3c}
 .gm-mo:disabled{opacity:.45;cursor:not-allowed;box-shadow:inset 0 -5px 0 #12395433,3px 3px 0 #12395455}
 .gm-mo.ready{animation:pulse 1.2s ease-in-out infinite}
 .gm-badge{position:absolute;right:-7px;top:-8px;min-width:18px;height:18px;padding:0 4px;background:var(--ink);color:var(--cream);font:800 11px/18px var(--head);text-align:center}
@@ -424,8 +424,16 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
 .gm-hint-go{min-height:32px;padding:0 14px;border:2px solid var(--ink);background:var(--ink);color:var(--cream);font:800 12px var(--head);letter-spacing:.14em;text-transform:uppercase;cursor:pointer;box-shadow:2px 2px 0 var(--blue)}
 .gm-hint-go:active{transform:translate(1px,1px);box-shadow:1px 1px 0 var(--blue)}
 .gm-hint-x{width:28px;height:30px;border:0;background:none;font-size:20px;line-height:1;cursor:pointer;color:var(--ink)}
+/* the dock tooltip: name, what it does, and its key; drawn above the button */
+.gm-tip{position:absolute;z-index:12;display:grid;gap:2px;max-width:min(260px,calc(100% - 12px));padding:7px 10px 8px;background:var(--cream);border:2px solid var(--ink);box-shadow:4px 5px 0 #1264992e;pointer-events:none;font-size:12.5px;line-height:1.35;color:var(--ink)}
+.gm-tip[hidden]{display:none}
+.gm-tip b{font:800 13px var(--head);letter-spacing:-.02em}
+.gm-tip .keycap{justify-self:start;margin-top:3px}
+/* the key on each icon button, for people with a keyboard */
+@media (hover:hover) and (pointer:fine){
+  .gm-plan[data-kb]::after,.gm-mo[data-kb]::after{content:attr(data-kb);position:absolute;left:2px;top:1px;font:700 9px/1 var(--mono);opacity:.6;pointer-events:none}
+}
 @keyframes hint-in{0%{transform:translateY(12px) rotate(-1.5deg) scale(.85);opacity:0}100%{transform:rotate(-1.5deg);opacity:1}}
-#gm-hud.hinting .gm-ticker{bottom:140px}
 /* small screens (phones, tablets, short windows): the sheet folds away behind the Strategy button */
 @media (max-width:1179px),(max-height:640px){
   .gm-dock{bottom:8px;width:calc(100% - 16px);gap:8px}
@@ -435,9 +443,8 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   .gm-moments{justify-content:space-between;gap:8px;padding:8px 10px}
   .gm-fab{display:flex;flex:1;height:46px}
   .gm-plan,.gm-mo{width:42px;height:42px}
-  .gm-ticker{bottom:84px;font-size:12.5px}
-  #gm-hud.hinting .gm-ticker{bottom:128px}
-  .gm-skip{bottom:90px;right:8px}
+  .gm-ticker{font-size:12.5px}
+  .gm-skip{right:8px}
 }
 /* the middle-ball picker */
 .gm-select{appearance:none;-webkit-appearance:none;width:100%;min-height:40px;padding:6px 24px 6px 9px;border:1px solid var(--ink);border-radius:0;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23123954' stroke-width='2'/%3E%3C/svg%3E") no-repeat right 9px center;color:var(--ink);font:800 14px var(--head);letter-spacing:-.03em;cursor:pointer;text-overflow:ellipsis}
@@ -478,25 +485,36 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
 @keyframes hpo-state-in{from{opacity:0;transform:translateX(-50%) scale(.7)}}
 @keyframes hpo-live{to{box-shadow:0 0 0 .22em #e5484d00}}
 
+/* ceremony cards: the intro, introductions and coin toss cards (and the walk-on / warm-up ribbon in Play mode) take the lower third, above the commentary line and the dock, so the players are never covered */
+.hpo-banner{position:absolute;left:50%;top:14%;transform:translateX(-50%)}
+.hpo-banner.lt{left:12px;top:auto;bottom:calc(var(--dock-h,92px) + var(--tick-h,0px) + 6px);transform:none;text-align:left!important;max-width:min(440px,calc(100% - 24px));padding:7px 14px!important;font-size:clamp(15px,1.9vw,22px)!important;line-height:1.15}
+.mode-play .hpo-state{left:12px;top:auto;bottom:calc(var(--dock-h,92px) + var(--tick-h,0px) + 6px);transform:none;padding:.25em .7em .28em}
+.mode-play .hpo-state .dot{font-size:clamp(15px,1.9vw,22px)}
+.mode-play .hpo-state b{font-size:clamp(15px,1.9vw,22px)}
+.mode-play .hpo-state small{font-size:clamp(9px,1.1vw,11px)}
+.mode-play .hpo-state.in{animation:hpo-lt-in .35s cubic-bezier(.2,.9,.3,1) both}
+@keyframes hpo-lt-in{from{opacity:0;transform:translateX(-18px)}}
+.mode-play .hpo-bar{display:none}
+.gm-replaying .gm-ticker,.gm-replaying #toasts,.gm-replaying .gm-tag,.gm-replaying .gm-hint,.gm-replaying #banner{visibility:hidden}   /* a replay shows the court and its badge, nothing else */
+.mode-play .hpo-replay{bottom:auto;top:64px;font-size:clamp(22px,3.4vw,40px);border-width:2px;box-shadow:4px 5px 0 #1264992e;text-shadow:2px 2px 0 var(--ink)}
+@media (max-width:899px){.mode-play .hpo-replay{top:auto;bottom:calc(var(--dock-h,92px) + var(--tick-h,0px) + 6px);font-size:clamp(20px,7vw,30px)}.hpo-banner.lt,.mode-play .hpo-state{max-width:calc(100% - 150px)}}
 .hpo-replay{position:absolute;left:50%;bottom:15%;transform:translateX(-50%) skewX(-8deg);padding:.12em .55em .14em;background:#e5484d;border:3px solid var(--ink);box-shadow:6px 7px 0 #1264992e;color:#fff;font:900 clamp(30px,10.5vw,72px)/1 var(--head);letter-spacing:-.04em;font-style:italic;white-space:nowrap;text-shadow:3px 3px 0 var(--ink);animation:hpo-flash .9s steps(1,end) infinite}
 @keyframes hpo-flash{0%{opacity:1;background:#e5484d;color:#fff}50%{opacity:.18;background:#fff4b3;color:#e5484d}}
 .gm-covered .hpo-callouts{visibility:hidden}
 
-/* Match centre toggle (Play mode) */
-.mode-play #sb{left:30px;transition:transform .28s cubic-bezier(.3,.8,.3,1)}
-.gm-sbtab{position:absolute;left:0;top:12px;width:26px;height:56px;padding:0;display:grid;place-items:center;border:1px solid var(--ink);border-left:0;background:var(--cream);color:var(--ink);box-shadow:3px 3px 0 #12399433;cursor:pointer}
-.gm-sbtab:hover{background:var(--hl)}
-.gm-sbtab svg{transition:transform .28s}
-.gm-sbtab svg{transform:rotate(180deg)}
-.gm-sb-open .gm-sbtab svg{transform:none}
-.gm-drawer{position:absolute;left:30px;bottom:132px;width:min(340px,calc(100% - 44px));overflow-y:auto;background:#fffaf0f5;border:1px solid var(--ink);box-shadow:6px 8px 0 #1264992e;padding:0 12px 10px;z-index:7;pointer-events:auto;overscroll-behavior:contain}
+/* Match centre (Play mode): an expand icon in the scoreboard's bottom-right corner opens the full match centre under it */
+.gm-sbx{display:none;position:absolute;right:0;bottom:0;width:30px;height:24px;padding:0;place-items:center;border:0;border-left:1px solid var(--ink);border-top:1px solid var(--ink);background:var(--cream);color:var(--ink);cursor:pointer;pointer-events:auto}
+.gm-sbx:hover{background:var(--hl)}
+.gm-sbx svg{display:block}
+.mode-play.gm-hud-on .gm-sbx{display:grid}
+.mode-play.gm-hud-on .sb-info{padding-right:36px;min-height:24px}
+.gm-drawer{position:absolute;left:12px;bottom:132px;width:min(340px,calc(100% - 24px));overflow-y:auto;background:#fffaf0f5;border:1px solid var(--ink);box-shadow:6px 8px 0 #1264992e;padding:0 12px 10px;z-index:7;pointer-events:auto;overscroll-behavior:contain}
 .gm-drawer[hidden]{display:none}
 .gm-drawer .sec{border:0;margin:0;box-shadow:none;background:none}
 .gm-drawer .sec>summary{display:none}
 .gm-drawer .sec .body{padding:0;display:block}
 .gm-drawer .tabs{margin-top:8px}
-@media (max-width:520px){.gm-drawer{left:8px;width:calc(100% - 66px);bottom:150px}}
-@media (max-height:520px){.gm-sbtab{height:44px}}
+@media (max-width:520px){.gm-drawer{left:8px;width:calc(100% - 16px);bottom:150px}}
 
 /* Sound + Music choices on the title, setup and pause screens */
 
@@ -584,6 +602,53 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
 .aimzone polygon{fill:#fff4b3;stroke:#fff4b3;stroke-width:4;stroke-linejoin:round;animation:aimflash .7s ease-in-out infinite alternate}
 @keyframes aimflash{from{fill-opacity:.12;stroke-opacity:.45}to{fill-opacity:.42;stroke-opacity:1}}
 
+/* player meters: energy bar, concentration bar and the mood buff with its countdown ring (src/26_moodui.js) */
+.mu-layer{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:7}
+.mu{position:absolute;left:0;top:0;display:flex;align-items:center;gap:3px;will-change:transform}
+.mu-bars{width:44px;padding:2px;display:flex;flex-direction:column;gap:2px;background:#123954d9;border:1px solid #fffaf0}
+.mu-bars i{display:block;background:#fffaf033}
+.mu-en{height:7px}.mu-fo{height:3px}
+.mu-bars b{display:block;height:100%;width:100%;transition:width .3s}
+.mu-en b{background:var(--good)}.mu[data-lv=mid] .mu-en b{background:#e0a800}.mu[data-lv=lo] .mu-en b{background:var(--coral)}
+.mu-fo b{background:#7cc4ff}
+.mu-buff{--p:100;--tone:#e0a800;position:relative;flex:none;width:32px;height:32px;padding:3px;border-radius:50%;background:conic-gradient(var(--tone) calc(var(--p)*1%),#12395466 0);box-shadow:0 1px 0 #1239544d}
+.mu-buff[data-tone=good]{--tone:#2fb26b}.mu-buff[data-tone=bad]{--tone:#e5484d}
+.mu-ico{display:block;width:100%;height:100%;border-radius:50%;background:var(--cream) var(--spr) center/24px 24px no-repeat;image-rendering:pixelated}
+.mu-buff::after{content:'';position:absolute;inset:3px;border-radius:50%;pointer-events:none;background:conic-gradient(#0000 calc(var(--p)*1%),#1239548c 0)}   /* cooldown sweep on top of the face: the dark part is the time already used */
+.mu-buff.blink{animation:mu-flash .7s ease-in-out infinite}.mu-buff.blink2{animation:mu-flash .3s ease-in-out infinite}
+@keyframes mu-flash{50%{opacity:.2}}
+.mu-ico[data-mood=angry_partner],.mu-ico[data-mood=irritated]{animation:mu-shake .5s linear infinite}
+.mu-ico[data-mood=nervous]{animation:mu-shake .22s linear infinite}
+.mu-ico[data-mood=fired_up],.mu-ico[data-mood=vengeful]{animation:mu-pulse .8s ease-in-out infinite}
+.mu-ico[data-mood=flow],.mu-ico[data-mood=supportive],.mu-ico[data-mood=cocky]{animation:mu-bob 1.4s ease-in-out infinite}
+.mu-ico[data-mood=self_blame],.mu-ico[data-mood=defeated]{animation:mu-sag 2s ease-in-out infinite}
+@keyframes mu-shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-1.5px) rotate(-6deg)}75%{transform:translateX(1.5px) rotate(6deg)}}
+@keyframes mu-pulse{50%{transform:scale(1.22)}}
+@keyframes mu-bob{50%{transform:translateY(-1.5px)}}
+@keyframes mu-sag{50%{transform:translateY(1.5px) rotate(-8deg)}}
+@media (prefers-reduced-motion:reduce){.mu-ico{animation:none!important}}
+@media (max-width:600px){.mu-bars{width:34px}.mu-buff{width:30px;height:30px}}
+.mu-toast{display:grid;gap:3px}.mu-toast b{font-weight:800}
+.mu-tags{display:flex;flex-wrap:wrap;gap:2px 8px;font:800 11px var(--head);letter-spacing:.08em}
+.mu-tags .up{color:#1b8a4b}.mu-tags .dn{color:#c9262f}
+
+/* game instructions sheet (src/27_guide.js) */
+.modal .card.guide{width:min(660px,100%)}
+.guide .acts{margin:10px 0 0}
+.gd-sec h3{margin:18px 0 6px;padding-top:10px;border-top:1px solid var(--hair);font:700 10px var(--head);letter-spacing:.2em;text-transform:uppercase;color:var(--tag)}
+.guide p{font-size:13px;line-height:1.45;margin:4px 0}
+.gd-how{margin:6px 0}.gd-how b{font:800 14px var(--head);letter-spacing:-.03em}
+.gd-stats{display:grid;grid-template-columns:auto 1fr;gap:5px 12px;margin:8px 0;font-size:13px;line-height:1.4}
+.gd-stats dt{font:800 11px var(--head);letter-spacing:.08em;padding-top:2px;color:var(--ink)}
+.gd-stats dd{margin:0}
+.gd-moods{display:grid;gap:12px;margin-top:10px}
+.gd-mood{display:grid;grid-template-columns:44px 1fr;gap:12px;align-items:start}
+.gd-mood b{font:800 14px var(--head);letter-spacing:-.03em}.gd-mood p{margin:2px 0 4px}.gd-mood i{opacity:.75}
+.gd-ico{--tone:#e0a800;width:44px;height:44px;border:3px solid var(--tone);border-radius:50%;background:var(--cream) var(--spr) center/36px 36px no-repeat;image-rendering:pixelated}
+.gd-ico[data-tone=good]{--tone:#2fb26b}.gd-ico[data-tone=bad]{--tone:#e5484d}
+.icon-btn svg{display:block;margin:auto}
+@media (max-width:600px){.modal .card.guide{padding:14px}}
+
 </style></head><body>
 <div id="app">
   <header id="topbar">
@@ -592,7 +657,8 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     <div class="top-actions">
       <span id="top-status" class="chip" hidden></span>
       <button id="btn-mode" type="button" class="btn small" title="Switch between Play and Studio">&#9881;&#xFE0E; Studio</button>
-      <button id="btn-help" type="button" class="icon-btn" title="Keyboard shortcuts (?)" aria-label="Keyboard shortcuts">?</button>
+      <button id="btn-keys" type="button" class="icon-btn" title="Keyboard shortcuts (K)" aria-label="Keyboard shortcuts"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="1" y="3.5" width="14" height="9"/><path d="M4 6.5h1M7.5 6.5h1M11 6.5h1M4.5 9.5h7" stroke-linecap="square"/></svg></button>
+      <button id="btn-help" type="button" class="icon-btn" title="Game instructions (?)" aria-label="Game instructions" aria-haspopup="dialog">?</button>
     </div>
   </header>
   <main id="layout">
@@ -632,7 +698,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     TITLE() { return 'Littleworld Jakarta Padel Cup ' + new Date().getFullYear(); },
     PHYS_DT: 1 / 240, SIM_DT: 1 / 60, MAX_SUBSTEPS: 16,
     BALL: { R: 0.0335, M: 0.0565, CD: 0.55, RHO: 1.2, MAGNUS: 0.00055, G: 9.81 },
-    RULES: { outOfCourtRetrieval: true, challengesPerSet: 2 },
+    RULES: { outOfCourtRetrieval: true },
     PIXEL: { size: 2, palette: 90 },
     TUNE: {} // filled by modules (ai/shots) with their tunables
   };
@@ -680,7 +746,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   HPO.reseed = function (seed) {
     HPO.rng = makeRng(seed);
     HPO.streams = {};
-    ['ai', 'exec', 'ball', 'rules', 'crowd'].forEach(function (k) { HPO.streams[k] = makeRng(seed).fork(k); });
+    ['ai', 'exec', 'ball', 'rules', 'crowd', 'mind'].forEach(function (k) { HPO.streams[k] = makeRng(seed).fork(k); });
     return HPO.rng;
   };
   HPO.reseed(1);
@@ -864,8 +930,6 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     'num.nineteen': 'sembilan belas', 'num.twenty': 'dua puluh',
     'ord.first': 'pertama', 'ord.second': 'kedua', 'ord.third': 'ketiga', 'ord.fourth': 'keempat', 'ord.fifth': 'kelima',
 
-    'Challenge from Team {team}. The call is overturned.': 'Challenge dari Team {team}. Keputusan dibatalkan.',
-    'Challenge from Team {team}. The call stands.': 'Challenge dari Team {team}. Keputusan tetap.',
     'Tactical timeout, Team {team}.': 'Timeout taktik, Team {team}.',
     'Choose four different players eligible for this match type.': 'Pilih empat pemain berbeda yang sesuai dengan jenis pertandingan ini.',
     'Mixed teams require one woman and one man.': 'Tim campuran harus terdiri dari satu perempuan dan satu laki-laki.',
@@ -919,17 +983,27 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     'Invalid player seed.': 'Seed pemain tidak valid.',
     'Invalid saved player.': 'Data pemain tersimpan tidak valid.',
 
+    'Tap this corner icon to open the match centre: full score, stats, players and the live feed. Tap it again to close.': 'Tap ikon sudut ini untuk membuka pusat match: skor lengkap, statistik, pemain, dan feed langsung. Tap lagi untuk menutup.',
+    'Mindset: the shield plays it safe, the sword goes for it. Tap one to try it. Keys: 1 to 5.': 'Mindset: shield main aman, sword main menyerang. Tap salah satu untuk mencoba. Tombol: 1 sampai 5.',
+    'Now pick one plan to switch it on. Tap it again to switch it off.': 'Sekarang pilih satu rencana untuk menyalakannya. Tap lagi untuk mematikan.',
+    'Shots sets the spin and pace: spin is safer, flat is faster and riskier. Key: P cycles through them.': 'Pukulan mengatur putaran dan kecepatan: spin lebih aman, flat lebih cepat tapi berisiko. Tombol P berganti antar pilihan.',
+    'Middle balls says who takes the ones down the middle: you, me, or whoever is closer. Key: V cycles through them.': 'Bola tengah menentukan siapa yang mengambil bola di tengah: kamu, aku, atau yang lebih dekat. Tombol V berganti antar pilihan.',
+    'Tap it.': 'Coba tap.',
+    'Let us look around. Drag with two fingers to turn the view.': 'Yuk lihat-lihat. Geser dengan dua jari untuk memutar tampilan.',
+    'Let us look around. Drag on the court to turn the view, or press the left and right arrow keys.': 'Yuk lihat-lihat. Seret di lapangan untuk memutar tampilan, atau tekan tombol panah kiri dan kanan.',
+    'Pinch to zoom in and out.': 'Cubit untuk memperbesar dan memperkecil.',
+    'Scroll to zoom in and out, or press + and -.': 'Scroll untuk memperbesar dan memperkecil, atau tekan + dan -.',
+    'Drag with one finger to slide the view along the court.': 'Geser dengan satu jari untuk menggeser tampilan di lapangan.',
+    'Hold the right mouse button (or Shift) and drag to slide the view along the court.': 'Tahan klik kanan (atau Shift) lalu seret untuk menggeser tampilan di lapangan.',
+    'Tap CAM (or press C until you see the court from above). Top-down is the best view for reading the whole court.': 'Tap CAM (atau tekan C sampai lapangan terlihat dari atas). Tampilan dari atas paling enak untuk membaca seluruh lapangan.',
+    'That is the camera. I put it back where it was. Press 0 any time to reset the view.': 'Itu kameranya. Sudah aku kembalikan seperti semula. Tekan 0 kapan saja untuk mengatur ulang tampilan.',
+    'Key: {key}.': 'Tombol: {key}.',
     "Hi, I'm Annetta. We play by ourselves, so you are the coach. Let me show you around. It takes a minute.": 'Hai, aku Annetta. Di game ini kami main sendiri, kamu yang jadi coach. Aku tunjukkan dulu cara mainnya ya.',
     'Show me': 'Tunjukkan',
     'This is the scoreboard. {format}': 'Ini papan skor. {format}',
     'This is Strategy. Tap it to open your coaching panel.': 'Ini Strategi. Tap untuk membuka panel coaching kamu.',
-    'Mindset: the shield plays it safe, the sword goes for it. Tap one to try it.': 'Mindset: shield main aman, sword main menyerang. Tap salah satu untuk mencoba.',
-    'Then pick one plan. Try "Break the net": lobs over players who crowd the net.': 'Lalu pilih satu rencana. Coba "Tembus net": lob melewati pemain yang menempel di net.',
-    'Shots sets the spin and pace. Middle balls says who takes the ones down the middle: you, me, or whoever is closer.': 'Pukulan mengatur spin dan tempo. Bola tengah menentukan siapa yang mengambil bola di tengah: kamu, aku, atau siapa pun yang lebih dekat.',
     'Your choices are listed here, and your plan calls out when it works.': 'Pilihanmu tercatat di sini, dan kamu bisa lihat hasilnya.',
-    'Aim lets you place your next shot yourself. Tap it.': 'Pilih aim untuk mengarahkan pukulan berikutnya. Coba kamu tap.',
     'The other side of the court is flashing. Tap anywhere on it and your next shot goes there if it can.': 'Sisi lapangan lawan berkedip. Tap di mana saja, dan pukulan berikutnya mengarah ke sana kalau memungkinkan.',
-    'Go for it: your next winning chance becomes a swipe shot. Timeout and Challenge are what they sound like.': 'Go for it: peluang menang berikutnya bisa kamu arahkan. Timeout dan Challenge artinya persis seperti namanya.',
     'Winning chances freeze time. Let me find you one. When the ring flashes, swipe from it toward their court. Longer and faster swipes hit harder.': 'Peluang menang menghentikan waktu. Aku carikan satu ya. Saat ring berkedip, swipe dari situ ke arah lapangan lawan. Swipe yang lebih panjang dan cepat memukul lebih keras!',
     "That's everything. The rest is playing. Good luck!": 'Itu saja. Sisanya tinggal main. Semoga beruntung!',
     "Let's play": 'Ayo main',
@@ -1000,7 +1074,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     'Set the strategy': 'Atur strategi',
     'Open Strategy at the bottom. Pick a mindset (shield is safe, sword is attack), one plan, the kind of shots, and who takes the middle balls. A small tag shows what is switched on, and your plan announces itself when it works.': 'Buka Strategi di bagian bawah. Pilih mindset (shield itu aman, sword itu menyerang), satu rencana, jenis pukulan, dan siapa yang mengambil bola tengah. Label kecil menunjukkan apa yang aktif, dan kamu akan lihat hasil dari rencanamu.',
     'Winning chances': 'Peluang menang',
-    'When your player gets a winning chance, or a hard smash is coming at you, time freezes. Swipe from the glowing ring to aim the shot. No time? Tap "Let it play". Aim lets you place your next shot yourself; Timeout and Challenge are what they sound like.': 'Saat pemainmu dapat peluang menang, atau ada smash keras mengarah ke kamu, waktu berhenti. Swipe dari ring yang menyala untuk mengarahkan pukulan. Tidak sempat? Tap "Biarkan jalan". Aim membiarkan kamu menempatkan pukulan berikutnya sendiri; Timeout dan Challenge artinya persis seperti namanya.',
+    'When your player gets a winning chance, or a hard smash is coming at you, time freezes. Swipe from the glowing ring to aim the shot. No time? Tap "Let it play". Aim lets you place your next shot yourself; Timeout is a breather.': 'Saat pemainmu dapat peluang menang, atau ada smash keras mengarah ke kamu, waktu berhenti. Swipe dari ring yang menyala untuk mengarahkan pukulan. Tidak sempat? Tap "Biarkan jalan". Aim membiarkan kamu menempatkan pukulan berikutnya sendiri; Timeout adalah jeda napas.',
     'Padel in 20 seconds': 'Padel dalam 20 detik',
     'Two against two. Serve underhand into the diagonal box. The ball may bounce once on your side, and it may also hit the glass walls and stay in play. {format}': 'Dua lawan dua. Serve dari bawah ke kotak diagonal. Bola boleh memantul sekali di sisimu, dan boleh juga mengenai dinding kaca lalu tetap hidup. {format}',
 
@@ -1012,14 +1086,18 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     'Plan cleared': 'Rencana dihapus', 'Plan: {name}: {desc}': 'Rencana: {name}: {desc}',
     'Middle balls: {who}': 'Bola tengah: {who}', 'middle: {who}': 'tengah: {who}',
     'Your strategy: {list}': 'Strategimu: {list}',
-    'Go for it: your next winning chance becomes a swipe shot (QTE)': 'Go for it: peluang menang berikutnya jadi pukulan swipe (QTE)',
-    'Go for it: you take the next winning chance': 'Go for it: kamu yang ambil peluang menang berikutnya',
+    'Go for it: you take the next ball you get': 'Go for it: kamu yang ambil bola berikutnya yang datang ke kamu',
     'QTE shots are off (pause menu)': 'Pukulan QTE mati (menu pause)',
     'Go for it cancelled': 'Go for it dibatalkan',
-    'Aim your next shot': 'Arahkan pukulan berikutnya',
-    'Timeout': 'Timeout', 'Challenge (Eagle Eye)': 'Challenge (Eagle Eye)',
+    'Go for it': 'Go for it', 'The next ball you get becomes a swipe shot': 'Bola berikutnya yang kamu dapat jadi pukulan swipe',
+    'Aim': 'Aim', 'Place your next shot yourself': 'Tempatkan pukulan berikutnya sendiri',
+    'A breather after this point to rethink your strategy. One per match': 'Jeda setelah poin ini untuk memikirkan ulang strategi. Satu kali per match',
+    'Shots: {name}': 'Pukulan: {name}',
+    'Whoever is closer takes it': 'Yang lebih dekat yang ambil', 'You take every ball down the middle': 'Kamu ambil semua bola di tengah', 'Annetta takes every ball down the middle': 'Annetta ambil semua bola di tengah',
+    'Coming soon': 'Segera hadir', 'Other formats are coming soon.': 'Format lain segera hadir.',
+    'Timeout': 'Timeout',
     'Strategy': 'Strategi', 'Apply': 'Terapkan', 'Dismiss hint': 'Tutup petunjuk',
-    'Skip intro ▸': 'Lewati intro ▸',
+    'Skip intro ▸': 'Lewati intro ▸', 'Skip replay ▸': 'Lewati replay ▸',
     'YOU': 'KAMU', 'ANNETTA': 'ANNETTA',
     'Open match centre': 'Buka pusat match', 'Close match centre': 'Tutup pusat match', 'Match centre': 'Pusat match',
     'Over the net pair': 'Melewati pasangan di net', 'Wearing them down': 'Bikin lawan capek', 'At {name}': 'Ke {name}',
@@ -1041,7 +1119,43 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     'Winners': 'Winner', 'Aces': 'Ace', 'Longest rally': 'Rally terpanjang', 'Distance': 'Jarak',
     'MVP: ': 'MVP: ', ' · {w} winners, {u} unforced': ' · {w} winner, {u} unforced',
     'Play again': 'Main lagi', 'Change setup': 'Ubah pengaturan',
-    'Switching language restarts the match. Continue?': 'Ganti bahasa akan memulai ulang match. Lanjut?'
+    'Switching language restarts the match. Continue?': 'Ganti bahasa akan memulai ulang match. Lanjut?',
+    '{name}: {mood}': '{name}: {mood}',
+    'Fuming at partner': 'Kesal pada partner', 'Blaming self': 'Menyalahkan diri', 'Fired up': 'Semangat membara', 'Cocky': 'Jumawa', 'Nervous': 'Gugup',
+    'In the flow': 'Lagi flow', 'Defeated': 'Menyerah', 'Out for revenge': 'Ingin balas dendam', 'Backing partner': 'Mendukung partner', 'Irritated': 'Jengkel',
+    'Game instructions (?)': 'Petunjuk game (?)', 'Game instructions': 'Petunjuk game', 'Keyboard shortcuts (K)': 'Keyboard shortcuts (K)',
+    'Watch the tutorial': 'Lihat tutorial', 'Close': 'Tutup', 'How it all works': 'Cara kerjanya',
+    'The tutorial starts with your next match.': 'Tutorial mulai di match berikutnya.',
+    'The tutorial runs in Play mode: switch to Play and start a match.': 'Tutorial jalan di mode Play: pindah ke Play dan mulai match.',
+    'How to play': 'Cara main', 'Player stats': 'Stat pemain', 'Energy and concentration': 'Energi dan konsentrasi', 'Moods': 'Mood',
+    'Every player has nine stats, from about 40 to 95. They show on the player cards in the match centre.': 'Tiap pemain punya sembilan stat, dari sekitar 40 sampai 95. Stat ini tampil di kartu pemain di match centre.',
+    'Energy': 'Energi', 'Concentration': 'Konsentrasi',
+    'The bar over each player. It only goes down: running and hard shots cost it, and nothing gives it back. A tired player is slower, less accurate, and smashes less.': 'Bar di atas tiap pemain. Cuma bisa turun: lari dan pukulan keras menguras energi, dan tidak ada yang mengembalikannya. Pemain capek jadi lebih lambat, kurang akurat, dan jarang smash.',
+    'The thin bar under it. It goes up with points won and down with errors, losing runs and big points. A timeout or a changeover settles it. Tired players cannot concentrate fully.': 'Bar tipis di bawahnya. Naik kalau menang poin, turun kalau salah, kalah beruntun, atau di poin besar. Timeout atau pindah sisi menenangkannya. Pemain capek tidak bisa fokus penuh.',
+    'A mood is a timed boost or setback next to the bars. The ring around the face is its timer: it empties, and flashes just before the mood ends. Green tags are stats that go up, red ones go down.': 'Mood adalah dorongan atau hambatan sementara di samping bar. Cincin di sekitar wajah adalah timernya: perlahan habis, lalu berkedip sebelum mood berakhir. Tag hijau berarti stat naik, merah berarti turun.',
+    'When: {why}': 'Pemicu: {why}',
+    'Over every player there are two bars. The big one is energy: it only goes down, and a tired player is slower and less accurate. The thin one is concentration: it goes up with good points and down with errors.': 'Di atas tiap pemain ada dua bar. Yang besar adalah energi: cuma bisa turun, dan pemain capek jadi lebih lambat dan kurang akurat. Yang tipis adalah konsentrasi: naik kalau main bagus, turun kalau salah.',
+    'The face next to the bars is a mood. It boosts some stats and hurts others, and its ring is a timer that flashes before it ends. A timeout settles a bad mood. The ? button at the top lists every mood.': 'Wajah di samping bar adalah mood. Ia menaikkan sebagian stat dan menurunkan yang lain, dan cincinnya adalah timer yang berkedip sebelum habis. Timeout menenangkan mood buruk. Tombol ? di atas menampilkan semua mood.',
+    'Power': 'Tenaga', 'Accuracy': 'Akurasi', 'Reflexes': 'Refleks', 'Coverage': 'Jangkauan', 'Stamina': 'Stamina', 'Net': 'Net', 'Defense': 'Defense', 'Wall read': 'Baca kaca', 'Tactics': 'Taktik',
+    'How hard the ball is hit.': 'Seberapa keras bola dipukul.',
+    'How close shots land to where they were aimed. Low accuracy means wider misses.': 'Seberapa dekat pukulan jatuh ke arah bidikan. Akurasi rendah berarti meleset lebih jauh.',
+    'How quickly a player reads the ball and reacts.': 'Seberapa cepat pemain membaca bola dan bereaksi.',
+    'Running speed and how much of the court they reach.': 'Kecepatan lari dan seberapa luas lapangan yang terjangkau.',
+    'How slowly energy drains.': 'Seberapa lambat energi terkuras.',
+    'Calm, sharp volleys and smashes near the net.': 'Volley dan smash yang tenang dan tajam di dekat net.',
+    'Digging out hard balls, lobs and resets.': 'Menahan bola keras, lob, dan menenangkan reli.',
+    'Judging how the ball comes off the glass.': 'Menebak arah bola setelah kena kaca.',
+    'Shot choice and aim, and a cool head: fewer mood swings.': 'Pilihan pukulan dan bidikan, plus kepala dingin: mood lebih jarang berubah.',
+    'Their partner keeps making errors.': 'Partnernya terus membuat kesalahan.', "Grabs balls, even the partner's. Both may go for the same one.": 'Menyambar bola, termasuk milik partner. Keduanya bisa mengejar bola yang sama.',
+    'They keep making errors themselves.': 'Dia sendiri terus membuat kesalahan.', 'Plays safe and leaves balls to the partner. Both may leave one.': 'Main aman dan menyerahkan bola ke partner. Keduanya bisa sama-sama membiarkan bola.',
+    'A big winner (smash or ace) or three points in a row.': 'Winner besar (smash atau ace) atau tiga poin beruntun.', 'Hits harder and runs faster, but burns energy.': 'Memukul lebih keras dan lari lebih cepat, tapi energi cepat habis.',
+    'They are well ahead.': 'Dia unggul jauh.', 'Tries drop shots and slips on easy balls.': 'Mencoba drop shot dan terpeleset di bola mudah.',
+    'Break, set or match point.': 'Break, set, atau match point.', 'Shaky serve, safer shots, slower to react.': 'Serve goyah, pukulan lebih aman, reaksi lebih lambat.',
+    'Several clean points in a row, with energy to spare.': 'Beberapa poin bersih beruntun, energi masih banyak.', 'Sharper and quicker to react.': 'Lebih tajam dan cepat bereaksi.',
+    'They are far behind, late in the match.': 'Dia tertinggal jauh di akhir match.', 'Slower and gives up on far balls, but spends less energy.': 'Lebih lambat dan menyerah di bola jauh, tapi hemat energi.',
+    'They were beaten by a smash or an ace.': 'Dia kalah oleh smash atau ace.', 'Aims at whoever hurt them, which makes them easier to read.': 'Membidik lawan yang menyakitinya, jadi lebih mudah dibaca.',
+    'Their partner erred and they stay calm.': 'Partnernya salah dan dia tetap tenang.', 'Calms the partner and avoids mix-ups.': 'Menenangkan partner dan menghindari salah paham.',
+    'A close line call went against them.': 'Keputusan garis tipis merugikannya.', 'Hits harder and wilder for a moment.': 'Memukul lebih keras dan liar untuk sesaat.'
   }, 'id-ID');
 })(HPO);
 
@@ -1166,10 +1280,6 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     'commentary.changeoverSet': [
       'Set break: saatnya menyusun ulang dan mengatur ulang.', 'Para pemain istirahat lebih lama di antara set.', 'Napas sejenak antar set, pelatih pasti punya banyak yang disampaikan.',
       'Set break, kesempatan untuk memulihkan tenaga.'],
-    'commentary.challengeStands': [
-      'Eagle Eye... keputusan bertahan!', 'Eagle Eye mengonfirmasi, keputusan tetap.', 'Eagle Eye sudah bicara: keputusan awal benar.', 'Replay menunjukkan keputusannya benar, tetap berlaku.'],
-    'commentary.challengeOver': [
-      'Eagle Eye... keputusan dibatalkan!', 'Eagle Eye membatalkannya! Bolanya ternyata {S}.', 'Challenge berpihak pada mereka, keputusan dibatalkan!', 'Dibatalkan! Eagle Eye menunjukkan bolanya {S}.'],
     'commentary.phIntro': [
       'Selamat datang di Littleworld Jakarta Padel Cup!', 'Halo semuanya, dan selamat datang di Littleworld Jakarta Padel Cup.',
       'Kita siaran langsung dari Littleworld Jakarta Padel Cup, kacanya berkilau dan penonton sudah siap.', 'Halo dan selamat datang, kita punya pertandingan ganda yang seru.'],
@@ -1332,9 +1442,13 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     'In the moment': 'Saat bermain',
     'Aim next shot (A)': 'Bidik pukulan berikutnya (A)',
     'Aim next shot': 'Bidik pukulan berikutnya',
+    'Play mode: mindset, fortress to all-in': 'Mode Play: mindset, dari benteng sampai all-in',
+    'Play mode: plans (wear down, hunt, take net, break net, glass, down the middle)': 'Mode Play: rencana (capekkan, buru, kuasai net, tembus net, kaca, tengah)',
+    'Play mode: shots (spin, mix, flat)': 'Mode Play: pukulan (spin, mix, flat)',
+    'Play mode: middle balls (auto, you, Annetta)': 'Mode Play: bola tengah (auto, kamu, Annetta)',
+    'Play mode: go for it': 'Mode Play: go for it',
+    'Play mode: timeout': 'Mode Play: timeout',
     'Call timeout': 'Minta timeout',
-    'Challenge': 'Challenge',
-    'Challenge the last line call (C)': 'Challenge keputusan garis terakhir (C)',
     'Aiming needs the 3D view.': 'Membidik butuh tampilan 3D.',
     "Tap the opponent's side of the court.": 'Tap sisi lapangan lawan.',
     'Aim inside the court lines.': 'Bidik di dalam garis lapangan.',
@@ -1347,14 +1461,10 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     'Timeout not available now.': 'Timeout belum bisa dipakai sekarang.',
     'Timeout, Team {team}': 'Timeout, Team {team}',
     '{label} ({secs} s). Coaching time.': '{label} ({secs} dtk). Waktunya kasih arahan.',
-    'No close call to challenge right now.': 'Belum ada keputusan tipis untuk di-challenge.',
-    'No challenges left this set.': 'Challenge di set ini sudah habis.',
-    'Too late to challenge that one.': 'Terlambat untuk challenge yang itu.',
     'Aim used or expired.': 'Bidikan terpakai atau kedaluwarsa.',
     '{n} s · adjust tactics, then resume': '{n} dtk · atur taktik, lalu resume',
     'Resume now': 'Resume sekarang',
     'Coaching Team {team} ({name}).': 'Melatih Team {team} ({name}).',
-    'Eagle Eye available: press C.': 'Eagle Eye tersedia: tekan C.',
 
     'Key {n}': 'Tombol {n}',
     'TV Follow': 'Ikuti ala TV',
@@ -1400,7 +1510,6 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     'Waiting for the first serve.': 'Menunggu serve pertama.',
     'Points': 'Poin',
     'Serving': 'Yang serve',
-    'Challenges left': 'Sisa challenge',
     'Timeouts left': 'Sisa timeout',
     'Stats appear once the match is on.': 'Statistik muncul setelah match mulai.',
     'First serve in': 'Serve pertama masuk',
@@ -1426,8 +1535,8 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     'DEF': 'DEF',
     'WAL': 'WAL',
     'TAC': 'TAC',
-    'CONF': 'CONF',
-    'FATIG': 'FATIG',
+    'FOCUS': 'FOKUS',
+    'ENERGY': 'ENERGI',
     'World #{rank} · {arch} · {hand} · Team {team}': 'World #{rank} · {arch} · {hand} · Team {team}',
     'left-handed': 'kidal',
     'right-handed': 'tangan kanan',
@@ -1455,6 +1564,8 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     'New match': 'Match baru',
     'Rotate camera': 'Putar kamera',
     'Camera mode': 'Mode kamera',
+    'Rotate camera (Studio)': 'Putar kamera (Studio)', 'Camera mode (Studio)': 'Mode kamera (Studio)', 'Reset view (Studio)': 'Reset tampilan (Studio)',
+    'Rotate camera (Play mode)': 'Putar kamera (mode Play)', 'Next camera (Play mode)': 'Kamera berikutnya (mode Play)', 'Reset view (Play mode)': 'Reset tampilan (mode Play)',
     'Zoom': 'Zoom',
     'Aim next shot, then click the court': 'Bidik pukulan berikutnya, lalu klik lapangan',
     'Sound on / off': 'Suara nyala / mati',
@@ -1488,10 +1599,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     'Adjust the tactics in the coach box': 'Atur taktik di kotak coach',
     'Changeover. A good moment for new orders.': 'Changeover. Saatnya kasih instruksi baru.',
     'Set changeover': 'Changeover antar set',
-    'Eagle Eye: {call} — call overturned': 'Eagle Eye: {call} — keputusan dibatalkan',
-    'Eagle Eye: {call} — call stands': 'Eagle Eye: {call} — keputusan tetap',
     '{text} (Team {team})': '{text} (Team {team})',
-    '{text}, challenge by Team {team}.': '{text}, challenge dari Team {team}.',
     'New match: {a} vs {b} · {format} · {type}.': 'Match baru: {a} vs {b} · {format} · {type}.',
     "men's": 'putra',
     "women's": 'putri',
@@ -2304,6 +2412,183 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   };
 })(HPO);
 
+/* 06_mind.js */
+(function (HPO) {
+  'use strict';
+  const U = HPO.util, BUS = HPO.BUS, _ = HPO.t;
+  const lvl = a => U.clamp((a - 30) / 65, 0.02, 1);
+  const T = HPO.cfg.TUNE.mind = Object.assign({ target: 0.45, drain: 1, mix: 0.35, mixDelay: 0.22 }, HPO.cfg.TUNE.mind || {});
+  const FMT = { blitz: [9, 0.0078], americano: [21, 0.0124], quick: [33, 0.0136], oneSet: [64, 0.0150], bo3: [110, 0.0150] };
+
+  const MOODS = {
+    angry_partner: { dur: 40, tone: 'bad',  fx: { err: 1.10, effort: 0.10, aggr: 1.2, safe: 0.85, claim: 0.9, drain: 1.15 } },
+    self_blame:    { dur: 40, tone: 'bad',  fx: { effort: -0.08, aggr: 0.7, safe: 1.25, claim: -0.6 } },
+    fired_up:      { dur: 25, tone: 'good',  fx: { err: 1.08, effort: 0.12, aggr: 1.3, speed: 1.04, drain: 1.35 } },
+    cocky:         { dur: 35, tone: 'mixed',  fx: { err: 1.12, aggr: 1.1, soft: 2.2, read: 1.08 } },
+    nervous:       { dur: 30, tone: 'bad', fx: { err: 1.15, serve: 1.25, effort: -0.10, aggr: 0.7, safe: 1.2, read: 1.1 } },
+    flow:          { dur: 45, tone: 'good', fx: { err: 0.90, read: 0.92, speed: 1.02 } },
+    defeated:      { dur: 60, tone: 'bad',  fx: { speed: 0.93, read: 1.12, aggr: 0.85, drain: 0.7, effort: -0.05 } },
+    vengeful:      { dur: 35, tone: 'mixed',  fx: { err: 1.05, aggr: 1.15, effort: 0.08, tell: 0.88 } },
+    supportive:    { dur: 35, tone: 'good',  fx: { err: 0.97, claim: 0.3 } },
+    irritated:     { dur: 20, tone: 'bad',  fx: { err: 1.10, effort: 0.12, aggr: 1.1 } }
+  };
+  const MUL = ['err', 'aggr', 'safe', 'soft', 'speed', 'read', 'drain', 'tell', 'serve'], ADD = ['effort', 'claim'];
+  const CLEARS_ON_TIMEOUT = { angry_partner: 1, self_blame: 1, nervous: 1, irritated: 1, fired_up: 1, cocky: 1 };
+  const ATTACK = { smashFlat: 1, smashKick: 1, vibora: 1, flatGround: 1, volleyFH: 1, volleyBH: 1 }, SAFE = { lobDef: 1, lobOff: 1, slice: 1, wallDef: 1, bajada: 1 }, TOUCH = { dejada: 1, chiquita: 1 };
+  const COST = { smashFlat: 0.0045, smashKick: 0.0045, vibora: 0.003, bandeja: 0.0015, lobDef: 0.0012, lobOff: 0.0012 }, COST0 = 0.0008;
+  const NONE = { id: '', k: 0 };
+
+  const st = { n: 0, pts: { A: 0, B: 0 }, streak: { team: null, n: 0 }, server: null, margin: 99, mix: { A: -1, B: -1 }, K: 1 };
+  const M = HPO.mod.mind = { MOODS: MOODS, st: st };
+  const P = () => HPO.mod.players, rg = () => HPO.streams.mind || HPO.streams.ai, other = t => t === 'A' ? 'B' : 'A';
+
+  M.init = function (p) {
+    p.temper = U.clamp(0.75 - 0.6 * lvl(p.attrs.tactics) + 0.3 * lvl(p.attrs.power), 0.1, 0.95);
+    p.baseFocus = U.clamp(0.5 + 0.2 * (lvl(p.attrs.tactics) - 0.65), 0.35, 0.65);
+    p.confidence = p.baseFocus; p.mood = { id: '', k: 0, t0: 0, dur: 0 }; p.mind = { errs: 0, clean: 0, revenge: null };
+  };
+  M.reset = function (format) {
+    st.n = 0; st.pts = { A: 0, B: 0 }; st.streak = { team: null, n: 0 }; st.server = null; st.margin = 99; st.mix = { A: -1, B: -1 };
+    const f = FMT[format] || FMT.quick; st.K = T.drain * T.target / (f[0] * f[1]);
+    P().list.forEach(M.init);
+  };
+
+  function fx(p) {
+    const m = p.mood || NONE, d = MOODS[m.id], s = 0.5 + 0.5 * m.k, o = { err: 1, aggr: 1, safe: 1, soft: 1, speed: 1, read: 1, drain: 1, tell: 1, serve: 1, effort: 0, claim: 0 };
+    if (d) { MUL.forEach(k => { if (d.fx[k] !== undefined) o[k] = 1 + (d.fx[k] - 1) * s; }); ADD.forEach(k => { if (d.fx[k] !== undefined) o[k] = d.fx[k] * s; }); }
+    return o;
+  }
+  const tire = p => U.clamp((p.fatigue - 0.25) / 0.75, 0, 1);   // tiredness only bites from a quarter of the energy gone
+  M.fx = fx;
+  M.energy = p => 1 - p.fatigue;
+  M.focus = p => Math.min(p.confidence, 0.6 + 0.4 * (1 - p.fatigue));   // a tired head cannot concentrate fully
+  M.drainOf = p => st.K * fx(p).drain;
+  M.speedMul = p => fx(p).speed;
+  M.serveMul = p => fx(p).serve;
+  M.tell = p => fx(p).tell;
+  M.readMul = p => fx(p).read * (1 + 0.6 * p.fatigue * p.fatigue) * U.clamp(1 + 0.5 * (0.5 - M.focus(p)), 0.9, 1.25);
+  M.errMul = (p, difficulty, pressure) => (p.mood && p.mood.id === 'cocky' && pressure > 0.3) ? 1 : fx(p).err;   // a cocky player only slips on the easy ball
+  M.effort = p => fx(p).effort - 0.2 * tire(p);
+  M.claim = p => { const m = p.mood || NONE, d = MOODS[m.id]; return d && d.fx.claim ? d.fx.claim * (0.5 + 0.5 * m.k) : 0; };
+  M.shotMul = function (p, kind) {
+    const f = fx(p), tr = tire(p);
+    if (ATTACK[kind]) return f.aggr * (kind.indexOf('smash') === 0 || kind === 'vibora' ? 1 - 0.5 * tr : 1);
+    if (SAFE[kind]) return f.safe * (1 + 0.5 * tr);
+    if (TOUCH[kind]) return f.soft;
+    return 1;
+  };
+  M.weak = q => (q.mood && (q.mood.id === 'nervous' || q.mood.id === 'defeated' || q.mood.id === 'self_blame' || q.mood.id === 'angry_partner') ? 0.15 : 0);   // opponents aim at a rattled player
+  const STAT = { err: ['Accuracy', 1, 0.04, 0.12, 'ACC'], effort: ['Power', 0, 0.05, 0.1, 'PWR'], aggr: ['Attack', 0, 0.08, 0.25, 'ATK'], safe: ['Safe shots', 0, 0.08, 0.25, 'SAFE'], soft: ['Touch', 0, 0.2, 1, 'TCH'],
+    speed: ['Speed', 0, 0.015, 0.05, 'SPD'], read: ['Reactions', 1, 0.05, 0.1, 'REA'], drain: ['Stamina', 1, 0.1, 0.3, 'STA'], tell: ['Disguise', 0, 0.05, 0.2, 'DSG'], serve: ['Serve', 1, 0.1, 0.2, 'SRV'], claim: ['Takes balls', 0, 0.2, 0.6, 'CALL'] };
+  M.effects = function (id) {
+    const d = MOODS[id], out = [];
+    if (d) Object.keys(d.fx).forEach(function (k) {
+      const c = STAT[k], v = d.fx[k] - (k === 'effort' || k === 'claim' ? 0 : 1), a = Math.abs(v);
+      if (a >= c[2]) out.push({ name: c[0], tag: c[4], dir: (v > 0 ? 1 : -1) * (c[1] ? -1 : 1), n: a >= c[3] ? 2 : 1, w: a / c[3] });
+    });
+    return out.sort((x, y) => y.w - x.w).slice(0, 4);
+  };
+  M.left = p => { const m = p.mood; return m && m.id ? Math.max(0, m.dur - (P().now - m.t0)) : 0; };
+  M.tick = function () { P().list.forEach(p => { if (p.mood.id && M.left(p) <= 0) setMood(p, '', 0); }); };
+  const strength = p => p.mood.id ? p.mood.k * M.left(p) / p.mood.dur : 0;   // a mood about to end gives way to a new one
+  M.label = id => MOODS[id] ? _(({ angry_partner: 'Fuming at partner', self_blame: 'Blaming self', fired_up: 'Fired up', cocky: 'Cocky', nervous: 'Nervous', flow: 'In the flow', defeated: 'Defeated', vengeful: 'Out for revenge', supportive: 'Backing partner', irritated: 'Irritated' })[id]) : '';
+
+  function setMood(p, id, k, quiet) {
+    const m = p.mood, was = m.id;
+    if (id === was) { m.k = Math.max(m.k, k); m.t0 = P().now; m.dur = MOODS[id].dur * (0.6 + 0.8 * m.k); return; }
+    m.id = id; m.k = id ? k : 0; m.t0 = P().now; m.dur = id ? MOODS[id].dur * (0.6 + 0.8 * k) : 0;
+    if (!quiet) BUS.emit('mood:change', { playerId: p.id, team: p.team, mood: id, was: was });
+  }
+  M.setMood = setMood;
+  const conf = (p, d) => { p.confidence = U.clamp(p.confidence + d, 0.05, 0.98); };
+  function spend(p, c) { p.fatigue = Math.min(1, p.fatigue + c * M.drainOf(p) * (1.2 - 0.7 * lvl(p.attrs.stamina))); }
+
+  M.contest = function (team, a, b, gap, hits) {
+    if (gap > 1.0) return;
+    const key = st.n * 100 + hits; if (st.mix[team] === key) return; st.mix[team] = key;
+    const ca = M.claim(a), cb = M.claim(b);
+    let kind = null;
+    if (ca > 0.3 || cb > 0.3) kind = 'both'; else if ((ca < -0.3 && cb < 0.1) || (cb < -0.3 && ca < 0.1)) kind = 'neither';
+    if (!kind) return;
+    let chance = T.mix * (1 + Math.abs(ca) + Math.abs(cb));
+    if ((a.mood.id === 'supportive') || (b.mood.id === 'supportive')) chance *= 0.3;   // they talk to each other
+    if (!rg().chance(chance)) return;
+    const until = P().now + T.mixDelay * rg().range(0.8, 1.3);
+    a.reactUntil = Math.max(a.reactUntil, until); b.reactUntil = Math.max(b.reactUntil, until);
+    BUS.emit('mood:mixup', { team: team, kind: kind, a: a.id, b: b.id, who: (ca >= cb ? a : b).id });
+  };
+
+  M.rest = function (amount) {
+    P().list.forEach(function (p) {
+      p.confidence += (p.baseFocus - p.confidence) * Math.min(1, amount * 10);
+      if (p.mood.id) { p.mood.t0 -= amount * 60; if (M.left(p) <= 0) setMood(p, '', 0); }
+    });
+  };
+  M.timeout = function (team) {
+    P().team(team).forEach(function (p) {
+      p.confidence = p.baseFocus;
+      if (CLEARS_ON_TIMEOUT[p.mood.id]) setMood(p, '', 0); else if (p.mood.id) p.mood.t0 -= 12;
+    });
+  };
+
+  BUS.on('shot:hit', function (e) {
+    if (e.warmup) return; const p = P().byId[e.playerId]; if (!p) return;
+    spend(p, (e.serve ? 0.0012 : COST[e.shot] || COST0) + (e.stretch > 0.5 ? 0.001 : 0));
+  });
+  BUS.on('ball:bounce', function (e) { st.margin = e.marginCm; });
+  BUS.on('point:start', function (e) {
+    if (e.retry) return;
+    st.server = e.server; st.margin = 99;
+    const R = HPO.mod.rules, s = R && R.state, f = s && s.flags;
+    if (!f || !(f.matchPoint || f.setPoint || f.breakPoint || s.goldenPoint)) return;
+    P().list.forEach(function (p) {
+      conf(p, -0.04);
+      if (rg().chance(0.08 + 0.4 * p.temper * (1.15 - lvl(p.attrs.tactics)))) setMood(p, 'nervous', 0.55);
+    });
+  });
+  BUS.on('point:end', function (e) {
+    const Pl = P(), win = e.winner, lose = other(win), byId = Pl.byId;
+    st.n++; st.pts[win]++;
+    st.streak = st.streak.team === win ? { team: win, n: st.streak.n + 1 } : { team: win, n: 1 };
+    const kinds = e.shotKinds || [], last = kinds[kinds.length - 1] || '';
+    const hitter = e.hitter ? byId[e.hitter] : null;
+    const erred = e.kind === 'doubleFault' ? (st.server ? byId[st.server] : null) : (e.kind === 'unforced' ? hitter : null);
+    const winnerShot = (e.kind === 'winner' || e.kind === 'ace') && hitter;
+    const bigShot = winnerShot && (e.kind === 'ace' || /^smash|^vibora/.test(last));
+    const tight = e.reason === 'out' && st.margin < 8;
+    Pl.list.forEach(function (p) { p.mind.errs = p.mind.errs * 0.55 + (erred === p ? 1 : 0); p.mind.clean = erred === p ? 0 : p.mind.clean + 1; });   // first for everybody: moods read the partner's count
+    Pl.list.forEach(function (p) {
+      const part = Pl.other(p), mine = p.team === win, m = p.mood, mi = p.mind, r = rg(), t = p.temper;
+      let d = mine ? 0.03 : -0.03;
+      if (mine && e.rallyLen >= 8) d += 0.015;
+      if (mine && hitter === p && winnerShot) d += 0.04;
+      if (erred === p) d -= e.kind === 'doubleFault' ? 0.08 : 0.06;
+      if (!mine && st.streak.n >= 3) d -= Math.min(0.06, 0.02 * (st.streak.n - 2));
+      if (!mine && bigShot) d -= 0.02;
+      if (!mine && tight && hitter && hitter.team === p.team) d -= 0.03;
+      if (part.mood.id === 'defeated') d -= 0.02;
+      if (part.mood.id === 'supportive') d += 0.02;
+      conf(p, d); conf(p, (p.baseFocus - p.confidence) * 0.1);
+      p.confidence = Math.min(p.confidence, M.focus(p));
+      if (m.id && part.mood.id === 'supportive' && (m.id === 'angry_partner' || m.id === 'self_blame')) m.t0 -= 8;
+      if (m.id && M.left(p) <= 0) setMood(p, '', 0);
+      const lead = st.pts[p.team] - st.pts[other(p.team)], pe = part.mind.errs;
+      let best = null; const add = (id, k) => { if (!best || k > best.k) best = { id: id, k: k }; };
+      if (erred === part && pe >= 1.5 && r.chance(0.25 + 0.7 * t)) add('angry_partner', 0.5 + 0.4 * t);
+      if (erred === p && (mi.errs >= 1.55 || tight) && r.chance(0.85 - 0.35 * t)) add('self_blame', 0.4 + 0.2 * mi.errs);
+      if (mine && ((hitter === p && bigShot) || st.streak.n >= 3) && r.chance(0.15 + 0.35 * t)) add('fired_up', 0.55);
+      if (lead >= 3 && lead / st.n >= 0.3 && p.confidence >= p.baseFocus && r.chance(0.3)) add('cocky', 0.5);
+      if (lead <= -4 && st.n >= 8 && lead / st.n <= -0.3 && r.chance(0.8 - 0.2 * t)) add('defeated', 0.6);
+      if (!mine && bigShot && hitter && r.chance(0.08 + 0.35 * t)) { add('vengeful', 0.55); mi.revenge = hitter.id; }
+      if (erred === part && t < 0.5 && p.confidence >= p.baseFocus - 0.05 && r.chance(0.7)) add('supportive', 0.5);
+      if (!mine && tight && hitter && hitter.team === p.team && r.chance(0.35 + 0.5 * t)) { add('irritated', 0.55); conf(p, -0.03); }
+      if (!m.id && !best && mi.clean >= 3 && p.confidence >= p.baseFocus + 0.08 && M.energy(p) >= 0.4) add('flow', 0.5);
+      if (best && (best.id === m.id || best.k > strength(p))) setMood(p, best.id, best.k);
+      if (p.mood.id !== 'vengeful') mi.revenge = null;
+    });
+  });
+})(HPO);
+
 /* 06_players.js */
 (function (HPO) {
   'use strict';
@@ -2381,6 +2666,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
           };
           P.list.push(p); P.byId[p.id] = p;
         });
+        P.list.forEach(q => { if (q.team === pair[0] && HPO.mod.mind) HPO.mod.mind.init(q); });
         const pair2 = P.list.filter(q => q.team === pair[0]);
         pair2.forEach(q => { q.homeLane = q.def.side === 'drive' ? 1 : q.def.side === 'reves' ? -1 : 0; });
         if (pair2.length === 2) {
@@ -2404,7 +2690,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     setIntent(id, intent) { const p = P.byId[id]; if (p) p.intent = intent; },
     vmax(p) {
       const venue = HPO.mod.court && HPO.mod.court.def ? (HPO.mod.court.def.speedMult || 1) : 1;
-      return (4.5 + 1.8 * lvl(p.attrs.coverage)) * (1 - 0.18 * p.fatigue) * venue * (HPO.cfg.TUNE.speed || 1);
+      return (4.5 + 1.8 * lvl(p.attrs.coverage)) * (1 - 0.18 * p.fatigue) * venue * (HPO.cfg.TUNE.speed || 1) * (HPO.mod.mind ? HPO.mod.mind.speedMul(p) : 1);
     },
     accel(p) { return 9 + 4 * lvl(p.attrs.reflexes); },
     reactDelay(p) { return 0.26 - 0.14 * lvl(p.attrs.reflexes); },
@@ -2414,7 +2700,8 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       const fast = U.clamp((sp - 12) / 16, 0, 1), close = U.clamp(1 - gap / 9, 0, 1);
       const smash = e.shot === 'smashFlat' || e.shot === 'smashKick' ? 1 : 0;
       const sr = (HPO.cfg.TUNE.smashRead === undefined ? 0.2 : HPO.cfg.TUNE.smashRead) * smashDepthRead(hitter);
-      return T * (0.12 * fast + 0.12 * close + sr * smash) * (1.35 - 0.7 * lvl(q.attrs.reflexes));
+      const mind = HPO.mod.mind;
+      return T * (0.12 * fast + 0.12 * close + sr * smash) * (1.35 - 0.7 * lvl(q.attrs.reflexes)) * (mind ? mind.readMul(q) * mind.tell(hitter) : 1);
     },
     canSalvage(p) {
       const T = HPO.cfg.TUNE.salvageSkill === undefined ? 80 : HPO.cfg.TUNE.salvageSkill;
@@ -2473,6 +2760,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
 
     update(dt) {
       P.now += dt;
+      if (HPO.mod.mind) HPO.mod.mind.tick();
       const bs = HPO.mod.ball.state;
       P.list.forEach(function (p) { stepPlayer(p, dt, bs); });
       for (let i = 0; i < P.list.length; i++) for (let j = i + 1; j < P.list.length; j++) {
@@ -2507,7 +2795,8 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       p.anim = { clip: 'serveHit', t: 0, rate: 1 };
       const bp = { x: B.state.p.x, y: B.state.p.y, z: B.state.p.z };
       const nom = HPO.mod.shots.nominal(bp, 'serve', target, { effort: effort === undefined ? 0.5 : effort });
-      const ex = HPO.mod.shots.execute(nom, execCtx(p, 0.3, 0.15 + 0.15 * (attempt - 1), 0));
+      const scx = execCtx(p, 0.3, 0.15 + 0.15 * (attempt - 1), 0); if (HPO.mod.mind) scx.errMul *= HPO.mod.mind.serveMul(p);
+      const ex = HPO.mod.shots.execute(nom, scx);
       B.launch({ p: bp, v: ex.v, w: ex.w, hitter: id, team: p.team, serve: true });
       p.stats.shots++;
       BUS.emit('serve:hit', { playerId: id, attempt: attempt, y: bp.y });
@@ -2517,7 +2806,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     },
 
     adjustConfidence(id, d) { const p = P.byId[id]; if (p) p.confidence = U.clamp(p.confidence + d, 0.05, 0.98); },
-    rest(amount) { P.list.forEach(p => { p.fatigue = Math.max(0, p.fatigue - amount); }); },
+    rest(amount) { if (HPO.mod.mind) HPO.mod.mind.rest(amount); },
     setAnim(id, clip, rate) { const p = P.byId[id]; if (p) p.anim = { clip: clip, t: 0, rate: rate || 1 }; },
     reset() { P.list.forEach(p => { p.swing = null; p.plan = null; p.intent = { type: 'idle' }; p.vel = { x: 0, z: 0 }; }); invalidate(); }
   };
@@ -2561,7 +2850,8 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   function execCtx(p, difficulty, pressure, stretch) {
     const tune = HPO.cfg.TUNE.rally || { from: 10, per: 0.1 };
     const fat = p.fatigue + Math.max(0, rallyN - tune.from) * tune.per + Math.max(0, rallyN - 20) * 0.25 + Math.max(0, rallyN - 24) * 0.6; // very long rallies always crack (the 45 s point watchdog is about 34 strokes)
-    return { accuracy: p.attrs.accuracy, difficulty: difficulty, pressure: pressure, fatigue: fat, confidence: p.confidence, stretch: stretch };
+    const mind = HPO.mod.mind;
+    return { accuracy: p.attrs.accuracy, difficulty: difficulty, pressure: pressure, fatigue: fat, confidence: mind ? mind.focus(p) : p.confidence, stretch: stretch, errMul: mind ? mind.errMul(p, difficulty, pressure) : 1 };
   }
 
   function stepPlayer(p, dt, bs) {
@@ -2618,7 +2908,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
 
     const step = p.speed * dt;
     p.stats.distance += step;
-    p.fatigue = Math.min(1, p.fatigue + step * 0.00012 * (1.2 - 0.7 * lvl(p.attrs.stamina)));
+    p.fatigue = Math.min(1, p.fatigue + step * 0.00012 * (1.2 - 0.7 * lvl(p.attrs.stamina)) * (HPO.mod.mind ? HPO.mod.mind.drainOf(p) : 1));
 
     const face = P.facing(p.team);
     let th = it.face !== undefined && typeof it.face === 'number' ? it.face : face;
@@ -2717,7 +3007,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     const pressure = sw.warm ? 0.05 : U.clamp(0.75 * (1 - tmargin) + 0.5 * aftermath + 0.02 * Math.max(0, speed - 12) + (sw.info.afterWall ? 0.08 : 0), 0, 1);
     let nom = HPO.mod.shots.nominal(bp, sw.kind, sw.target, { effort: sw.effort, spinScale: sw.spin, netMargin: sw.netMargin });
     if (!nom.feasible && !sw.warm) nom = rescueShot(p, sw, bp, nom);
-    const cx = execCtx(p, diff, pressure, stretch); cx.errMul = sw.errMul;
+    const cx = execCtx(p, diff, pressure, stretch); cx.errMul *= sw.errMul || 1;
     const ex = HPO.mod.shots.execute(nom, cx);
     B.launch({ p: bp, v: ex.v, w: ex.w, hitter: p.id, team: p.team });
     p.stats.shots++;
@@ -2829,7 +3119,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
         if (y >= 2.1 && y <= 2.95) s += (deepLob ? 4.0 : 1.8) * m.smash;
         if (c.ownBounces === 0) s += atNet ? 0.9 * T.volleyWilling * (1 + (m.netBias > 0 ? 0.3 : 0)) : -0.5; // volley when at the net
         if (c.outside) s -= 2.5;                                      // only when nothing inside the glass can be reached
-        if (c.afterWall) s += lvl(p.attrs.wallRead) * 0.6 - (atNet ? 0.5 : 0);   // wall specialists let it come back
+        if (c.afterWall) s += lvl(p.attrs.wallRead) * 0.6 * (0.75 + 0.5 * HPO.mod.mind.focus(p)) - (atNet ? 0.5 : 0);   // wall specialists let it come back
         if (c.ownBounces === 0 && c.dt < 0.25) s -= 0.5;              // too rushed
         if (d < 1.0) s -= 0.6;                                       // too close to net / body in the net
         if (c.reach > 0.9) s -= (c.reach - 0.9) * 1.5;
@@ -2906,6 +3196,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
         if (arch === 'smasher') { if (SMASH[k]) x *= 1.6; if (k === 'vibora') x *= 1.25; }
         if (arch === 'precision') { if (SOFT[k]) x *= 1.4; if (k === 'bandeja') x *= 1.15; }
         if (arch === 'counterpuncher') { if (k === 'counterDW') x *= 1.6; if (LOB[k]) x *= 1.2; }
+        x *= HPO.mod.mind.shotMul(p, k);
         const diff = S.difficulty(k, h, info.ballSpeed, 0);
         x *= S.heightFit(k, h) + 0.02;
         x *= (1 - U.clamp(diff - 0.3 * lvl(p.attrs.accuracy), 0, 1) * (0.5 + press * 0.5));
@@ -3022,7 +3313,8 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     const cands = [];
     const clampT = t => ({ x: U.clamp(t.x, ox * 0, ox * 99), z: t.z });
     const addAim = (dx, z, tag) => cands.push({ x: ox * dx, z: U.clamp(z, -5 + marginZ, 5 - marginZ), tag: tag });
-    const weak = ops.slice().sort((a, b) => m.tire ? b.fatigue - a.fatigue : weakness(b) - weakness(a))[0];
+    const vg = p.mood.id === 'vengeful' ? ops.find(q => q.id === p.mind.revenge) : null;
+    const weak = vg || ops.slice().sort((a, b) => m.tire ? b.fatigue - a.fatigue : weakness(b) - weakness(a))[0];
     let kindDepth;
     const effortBase = 0.35 + 0.3 * (m.flat - 0.8) + 0.2 * lvl(p.attrs.power);
     let effort = U.clamp(effortBase, 0.2, 0.9);
@@ -3094,6 +3386,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       const nomO = S.nominal(info.p, kind, { x: aimOrder.x, z: aimOrder.z }, { effort: effort });
       if (nomO.feasible && S.difficulty(kind, info.height, info.ballSpeed, 0) < 0.85) { target = { x: aimOrder.x, z: aimOrder.z }; tm.orders.aimPoint = null; }
     }
+    effort = U.clamp(effort + HPO.mod.mind.effort(p), 0.12, 0.98);
     const intent = LOB[kind] || kind === 'wallDef' ? 'defend' : (SMASH[kind] || kind === 'vibora' ? 'attack' : (SOFT[kind] ? 'finesse' : 'rally'));
     return { kind: kind, target: target, effort: effort, intent: intent, reason: best.tag, netMargin: SMASH[kind] ? U.clamp(0.3 + 0.1 * kEst, 0.32, 0.7) : U.clamp(T.netSafe * (0.12 + 0.07 * kEst), 0.12, 0.7) };
   }
@@ -3121,7 +3414,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     return { slack: best };
   }
 
-  function weakness(q) { return (1 - lvl(q.attrs.defense)) * 0.6 + q.fatigue * 0.5 + (1 - q.confidence) * 0.2; }
+  function weakness(q) { return (1 - lvl(q.attrs.defense)) * 0.6 + q.fatigue * 0.5 + (1 - q.confidence) * 0.2 + HPO.mod.mind.weak(q); }
 
   function tickTeam(team, dt) {
     const P = HPO.mod.players, B = HPO.mod.ball.state, tm = teams[team];
@@ -3159,7 +3452,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       return { p: p, c: c, first: c.length ? c[0] : null };
     });
     const bz = B.p.z;
-    let best = null, bs = -1e9;
+    let best = null, bs = -1e9, bs2 = -1e9;
     res.forEach(function (r) {
       let s;
       if (r.first) {
@@ -3169,6 +3462,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
         const lat = (r.first.p.x - r.p.pos.x) * rv.x + (r.first.p.z - r.p.pos.z) * rv.z;
         s += (r.p.hand === 'R' ? lat > 0 : lat < 0) ? 0.1 : 0;
         s += lvl(r.p.attrs.coverage) * 0.1;
+        s += HPO.mod.mind.claim(r.p);          // an angry player grabs the ball, a blaming one leaves it
         if (Math.abs(r.first.p.z) < 1.1) {
           const mp = tm.orders.middlePriority;
           if (mp !== undefined && P.team(team)[mp] === r.p) s += 0.35;
@@ -3180,8 +3474,9 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
         const e = ballEnd();
         s = -10 - Math.hypot(r.p.pos.x - e.x, r.p.pos.z - e.z) * 0.2;
       }
-      if (s > bs) { bs = s; best = r; }
+      if (s > bs) { bs2 = bs; bs = s; best = r; } else if (s > bs2) bs2 = s;
     });
+    if (res.length === 2 && res[0].first && res[1].first) HPO.mod.mind.contest(team, res[0].p, res[1].p, bs - bs2, B.hitsSinceServe);
     tm.claim = best.p.id;
     const e = ballEnd(); const sx = HPO.court.sides[team];
     return { interceptor: best.p, supporter: ps.find(q => q !== best.p), cands: best.first ? best.c : null, chase: { x: U.clamp(e.x, sx < 0 ? -9.4 : 0.8, sx < 0 ? -0.8 : 9.4), z: U.clamp(e.z, -4.4, 4.4) } };
@@ -3294,7 +3589,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
 (function (HPO) {
   'use strict';
   const M = HPO.mod.rules = {}, _ = HPO.t;
-  const FORMATS = { quick: { G: 4, sets: 1 }, oneSet: { G: 6, sets: 1 }, bo3: { G: 6, sets: 2 }, blitz: { pts: 9, run: 2, flip: 4 }, americano: { pts: 21, run: 5, flip: 6 } };
+  const FORMATS = { quick: { G: 4, sets: 1 }, oneSet: { G: 6, sets: 1 }, bo3: { G: 6, sets: 2 }, blitz: { pts: 9, run: 2, flip: 0 }, americano: { pts: 21, run: 5, flip: 0 } };
   const SL = 6.95, HALF_W = 5, HALF_L = 10;
   const TEAMS = ['A', 'B'];
   const other = t => t === 'A' ? 'B' : 'A';
@@ -3372,14 +3667,13 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     if (c.firstServeTeam !== 'A' && c.firstServeTeam !== 'B') throw new Error('rules: bad firstServeTeam');
     c.serveOrder = (c.serveOrder || ['A1', 'B1', 'A2', 'B2']).slice();
     if (c.serveOrder.length !== 4 || new Set(c.serveOrder).size !== 4) throw new Error('rules: serveOrder needs 4 distinct ids');
-    c.challengesPerSet = num(c.challengesPerSet, num(RC().challengesPerSet, 2));
     c.timeoutsPerMatch = num(c.timeoutsPerMatch, 1);
     const sideA = c.sideA === 1 ? 1 : -1;
     const s = {
       config: c, phase: 'play', sets: [], games: { A: 0, B: 0 }, points: { A: 0, B: 0 }, setsWon: { A: 0, B: 0 },
       inTiebreak: false, goldenPoint: false, goldenReceiverSide: null, server: null, serveOrder: c.serveOrder.slice(),
       serveSide: 'deuce', gameNo: 1, pointNo: 1, faultCount: 0, sides: { A: sideA, B: -sideA },
-      flags: null, challenges: { A: c.challengesPerSet, B: c.challengesPerSet }, timeouts: { A: c.timeoutsPerMatch, B: c.timeoutsPerMatch },
+      flags: null, timeouts: { A: c.timeoutsPerMatch, B: c.timeoutsPerMatch },
       receivers: {}, over: false, winner: null, stats: { pointsWon: { A: 0, B: 0 } }, log: [], last: null,
       _r: { G: F.G, sets: F.sets, golden: !F.pts && c.scoring === 'golden', pts: F.pts || 0, run: F.run || 0, flip: F.flip || 0 }, _gi: 0, _pg: 0, _tbN: 0, _flips: 0, _emit: !!(opts && opts.emit)
     };
@@ -3420,7 +3714,6 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
         const e = c2(s.games); if (wasTb) e.tb = pre;
         s.sets.push(e);
         s.games.A = s.games.B = 0;
-        s.challenges = { A: s.config.challengesPerSet, B: s.config.challengesPerSet };
         ev.push(['set:end', { winner: team, score: e, setNo: s.sets.length }]);
       }
       s.gameNo++; s._gi++; s._pg = 0; s._tbN = 0;
@@ -3449,7 +3742,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       s.over = true; s.winner = s.points.A > s.points.B ? 'A' : 'B'; last.match = true;
       s.sets = [c2(s.points)]; s.setsWon[s.winner] = 1;
       ev.push(['match:end', { winner: s.winner, sets: s.sets, stats: s.stats }]);
-    } else if (total % R.flip === 0) flip(s, last);
+    } else if (R.flip && total % R.flip === 0) flip(s, last);
     refresh(s);
     if (s._emit) {
       ev.forEach(function (e) { HPO.BUS.emit(e[0], e[1]); });
@@ -3466,7 +3759,6 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     s.goldenReceiverSide = side; s.serveSide = side;
     return true;
   }
-  function consumeChallenge(s, team) { if (s.challenges[team] <= 0) return false; s.challenges[team]--; return true; }
   function useTimeout(s, team) { if (s.timeouts[team] <= 0) return false; s.timeouts[team]--; return true; }
 
   function describe(s, names) {
@@ -3559,7 +3851,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     return [format === 'quick' ? _('First to 4 games, with a tie-break at 4-4.') : format === 'oneSet' ? _('First to 6 games, with a tie-break at 6-6.') : _('Win two sets; a set is first to 6 games.'),
       _('Points go 15, 30, 40, then the game.'), scoring === 'advantage' ? _('At 40-40 you need two points in a row.') : _('At 40-40 one golden point decides the game.')].join(' ');
   };
-  M.score = { createMatch, pointWon, flags, describe, checkState, assertState, rebuild, serverFor, setGoldenSide, consumeChallenge, useTimeout, step, formats: FORMATS };
+  M.score = { createMatch, pointWon, flags, describe, checkState, assertState, rebuild, serverFor, setGoldenSide, useTimeout, step, formats: FORMATS };
   M.createMatch = createMatch; M.pointWon = pointWon; M.flags = flags; M.describe = describe;
   M.checkState = checkState; M.assertState = assertState; M.rebuild = rebuild;
 
@@ -3570,8 +3862,8 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   const LEAVE = /out|left|exit|ground|over|enclos|bounds/i;
 
   function newPt() {
-    return { phase: 'idle', t: 0, strokes: 0, stroke: null, prev: null, bounces: [], shotKinds: [], retrieving: false, retT: 0,
-      netTouched: false, challengeOK: false, challenged: false, lastP: null, companion: false };
+    return { phase: 'idle', t: 0, strokes: 0, stroke: null, prev: null, shotKinds: [], retrieving: false, retT: 0,
+      netTouched: false, lastP: null, companion: false };
   }
   const live = () => S && !S.over && (pt.phase === 'tossed' || pt.phase === 'serveFlight' || pt.phase === 'serve' || pt.phase === 'rally');
 
@@ -3594,12 +3886,6 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     return { x: left ? [0, SL] : [-SL, 0], z: zs > 0 ? [0, HALF_W] : [-HALF_W, 0] };
   }
   const boxMargin = (b, p) => 100 * Math.min(p.x - b.x[0], b.x[1] - p.x, p.z - b.z[0], b.z[1] - p.z);
-  function lineCall(m) {
-    const sd = num(RC().lineErrorCm, 0);
-    if (!(sd > 0)) return m >= 0;
-    return m + (HPO.streams && HPO.streams.rules || HPO.rng).normal(0, sd) >= 0;
-  }
-  function pushBounce(b) { pt.bounces.push(b); if (pt.bounces.length > 3) pt.bounces.shift(); }
 
   M.newMatch = function (config) {
     S = M.state = createMatch(config, { emit: true });
@@ -3633,7 +3919,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   };
   function toServeWait() {
     Object.assign(pt, { phase: 'serveWait', stroke: null, prev: null, strokes: 0, shotKinds: [], netTouched: false, t: 0,
-      retrieving: false, challenged: false, challengeOK: true, companion: false });
+      retrieving: false, companion: false });
     emitStart(true);
   }
 
@@ -3648,7 +3934,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   function finish(winner, reason, kind) {
     const st = pt.stroke;
     kind = kind || classify(winner, reason);
-    pt.phase = 'ended'; pt.challengeOK = true; pt.challenged = false; pt.retrieving = false;
+    pt.phase = 'ended'; pt.retrieving = false;
     const rec = { reason: reason, kind: kind, hitter: st ? st.hitter : S.server.playerId, rallyLen: pt.strokes };
     E('point:end', { winner: winner, reason: reason, kind: kind, hitter: rec.hitter, rallyLen: rec.rallyLen, shotKinds: pt.shotKinds.slice() });
     pointWon(S, winner, rec);
@@ -3669,12 +3955,12 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
 
   function onToss() {
     if (!S || S.over || (pt.phase !== 'serveWait' && pt.phase !== 'tossed')) return;
-    pt.phase = 'tossed'; pt.t = 0; pt.challengeOK = false; pt.netTouched = false; pt.companion = false;
+    pt.phase = 'tossed'; pt.t = 0; pt.netTouched = false; pt.companion = false;
   }
   function onServeEvt(e) { if (onServeHit(e)) pt.companion = true; }
   function onServeHit(e) {
     if (!S || S.over || (pt.phase !== 'serveWait' && pt.phase !== 'tossed')) return false;
-    pt.phase = 'serveFlight'; pt.challengeOK = false; pt.netTouched = false;
+    pt.phase = 'serveFlight'; pt.netTouched = false;
     pt.strokes = 1; pt.prev = null; pt.shotKinds = ['serve'];
     pt.stroke = { n: 1, hitter: S.server.playerId, team: S.server.team, shot: 'serve', quality: num(e.quality, 0.5), pressure: 0,
       reached: true, isServe: true, bounced: false, cnt: { A: 0, B: 0 }, net: false };
@@ -3746,12 +4032,10 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   }
 
   function serveBounce(e, p, bt) {
-    const st = pt.stroke, attempt = S.faultCount + 1;
-    if (bt === st.team) { pushBounce({ team: bt, p: p, marginCm: num(e.marginCm, 100), call: false, truth: false, serve: true, attempt: attempt }); return serveFault('net'); }
+    const st = pt.stroke;
+    if (bt === st.team) return serveFault('net');
     const b = boxOf(st.team, S.serveSide), m = boxMargin(b, p), ic = inCourt(p);
-    const truth = ic && m >= 0, call = ic && lineCall(m);
-    pushBounce({ team: bt, p: p, marginCm: Math.abs(m), call: call, truth: truth, serve: true, attempt: attempt });
-    if (!call) {
+    if (!(ic && m >= 0)) {
       const dx = Math.min(p.x - b.x[0], b.x[1] - p.x), dz = Math.min(p.z - b.z[0], b.z[1] - p.z);
       return serveFault(!ic || dx < dz ? 'long' : 'wide');
     }
@@ -3766,7 +4050,6 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     const bt = teamAtX(p.x);
     if (pt.phase === 'serveFlight') return serveBounce(e, p, bt);
     const ic = inCourt(p);
-    pushBounce({ team: bt, p: p, marginCm: num(e.marginCm, 100), call: ic, truth: ic, serve: false });
     st.cnt[bt]++;
     if (!st.bounced) {
       if (bt === st.team) finish(other(st.team), st.net ? 'net' : 'ownSide');
@@ -3796,38 +4079,6 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     }
   };
 
-  M.canChallenge = function (team, back) {
-    if (!S || !pt.challengeOK || pt.challenged || !(S.challenges[team] > 0)) return false;
-    const b = pt.bounces[pt.bounces.length - 1 - (back | 0)];
-    return !!b && b.marginCm <= num(RC().challengeMarginCm, 8);
-  };
-  M.challenge = function (team, back) {
-    if (!M.canChallenge(team, back)) return null;
-    const b = pt.bounces[pt.bounces.length - 1 - (back | 0)], overturned = b.call !== b.truth;
-    pt.challenged = true;
-    if (!overturned) S.challenges[team]--;
-    const res = { overturned: overturned, call: b.call ? 'in' : 'out', final: b.truth ? 'in' : 'out', margin: b.marginCm };
-    E('challenge:result', { team: team, overturned: overturned, call: res.call, p: b.p });
-    if (overturned && b.serve) overturnServe(b);
-    return res;
-  };
-  function undoLast() {
-    const ns = rebuild(S.log.slice(0, -1), S.config, { emit: false });
-    ns.challenges = c2(S.challenges); ns.timeouts = c2(S.timeouts); ns._emit = S._emit; ns.receivers = S.receivers;
-    Object.keys(S).forEach(function (k) { delete S[k]; });
-    Object.assign(S, ns);
-    syncCourt(S);
-    E('flag:update', flagPayload(S));
-    E('score:change', { state: S });
-  }
-  function overturnServe(b) {
-    if (pt.phase === 'ended') undoLast();
-    if (b.truth) { S.faultCount = b.attempt - 1; toServeWait(); return; }
-    pt.stroke = null; pt.prev = null; pt.strokes = 0; pt.shotKinds = [];
-    S.faultCount = b.attempt - 1;
-    serveFault('long');
-  }
-
   const HANDLERS = [['serve:toss', onToss], ['serve:hit', onServeEvt], ['shot:hit', onShot], ['ball:contact', onContact],
     ['ball:bounce', onBounce], ['ball:dead', onDead]];
   let attached = false;
@@ -3843,7 +4094,6 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   };
   M.init = function () { M.attach(); };
   M.phase = () => pt.phase;
-  M.lastBounces = () => pt.bounces.slice();
 })(typeof window !== 'undefined' ? window.HPO : globalThis.HPO);
 
 /* 09_match.js */
@@ -3861,7 +4111,6 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       cfg = Object.assign({ format: 'quick', scoring: 'advantage', type: 'M', venue: 'classicBlue', seed: 1, fast: false, teamA: null, teamB: null, autoCeremony: true }, cfg || {});
       S.stopAll();
       HPO.reseed(cfg.seed);
-      HPO.cfg.RULES.lineErrorCm = cfg.lineErrorCm === undefined ? 2.0 : cfg.lineErrorCm;
       HPO.mod.court.setVenue(cfg.venue);
       HPO.mod.court.sides = { A: -1, B: 1 };
       const roster = P().roster();
@@ -3893,7 +4142,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
         const drive = ids.find(id => P().get(id).def.side === 'drive') || ids[0];
         R().setReceivers(t, drive);
       });
-      P().place();
+      P().place(); HPO.mod.mind.reset(cfg.format);
       M.stats = newStats();
       M.skip = false; M.streak = null; M.retrieving = false;
       M.pt = null; M.ended = false; M.simTime = 0; M.acc = 0; M.paused = false; M.result = null;
@@ -3994,8 +4243,6 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       const nxt = pt.strokes[i + 1];
       if (winner === s.team || (nxt && nxt.kind !== 'smashFlat' && nxt.kind !== 'smashKick')) q.stats.lobsSuccess++;
     });
-    P_.list.forEach(function (q) { q.confidence = U.clamp(q.confidence + (q.team === winner ? 0.012 : -0.012), 0.05, 0.98); });
-    if (h && (e.kind === 'unforced')) h.confidence = U.clamp(h.confidence - 0.03, 0.05, 0.98);
     st.points.push({ n: st.pointsPlayed, winner: winner, kind: e.kind, reason: e.reason, rallyLen: rl, shots: e.shotKinds.slice(0, 40) });
   });
   BUS.on('match:end', function (e) { M.result = e; });
@@ -4166,17 +4413,6 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     const rl = R(), st = rl.state;
     if (st.over || !st.last) return;
     const loser = st.last.winner === 'A' ? 'B' : 'A';
-    if (M.coachTeam !== loser && rl.canChallenge && rl.canChallenge(loser, 0)) {
-      const b = rl.lastBounces().slice(-1)[0];
-      if (b && b.marginCm <= 6 && HPO.streams.ai.chance(0.6)) {
-        const res = rl.challenge(loser, 0);
-        if (res) {
-          BUS.emit('speak', { text: res.overturned ? _('Challenge from Team {team}. The call is overturned.', { team: loser }) : _('Challenge from Team {team}. The call stands.', { team: loser }), voice: 'umpire', priority: 2 });
-          const rp = HPO.mod.replay;
-          if (rp && rp.play && !M.cfg.fast) { rp.play({ kind: 'challenge', speed: 0.3 }); yield S.until(() => !rp.active, 14); } else yield wait(1);
-        }
-      }
-    }
     M.streak = M.streak || { team: null, n: 0 };
     if (M.streak.team === st.last.winner) M.streak.n++; else M.streak = { team: st.last.winner, n: 1 };
     if (M.streak.n >= 4 && M.coachTeam !== loser && st.timeouts[loser] > 0 && HPO.streams.ai.chance(0.5) && rl.useTimeout(loser)) {
@@ -4189,7 +4425,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     BUS.emit('speak', { text: _('Tactical timeout, Team {team}.', { team: team }), voice: 'umpire', priority: 2, kind: 'timeout' });
     P().list.forEach(function (p) { p.intent = { type: 'move', x: HPO.court.sides[p.team] * 1.4, z: (p.slot ? -1 : 1) * 4.2, cap: 0.5 }; });
     yield wait(8);
-    P().rest(0.04);
+    HPO.mod.mind.timeout(team); P().rest(0.04);
     BUS.emit('changeover:end', { kind: 'timeout', team: team });
   };
   M.requestTimeout = function (team) {
@@ -4710,10 +4946,11 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       v.yawK += dir > 0 ? 1 : -1; R.yawIndex = ((v.yawK % 4) + 4) % 4;
       if (R.cameraMode === 'free') v.yawT = YAW0 + v.yawK * Math.PI / 2;
     },
-    camSnapshot() { const v = R.view; return { mode: R.cameraMode, zoom: v.zoom, followId: R.followId, followBall: R.followBall, freeBase: v.freeBase, t: { x: v.tTarget.x, y: v.tTarget.y, z: v.tTarget.z } }; },
+    camSnapshot() { const v = R.view; return { mode: R.cameraMode, zoom: v.zoom, yawT: v.yawT, yawK: v.yawK, followId: R.followId, followBall: R.followBall, freeBase: v.freeBase, t: { x: v.tTarget.x, y: v.tTarget.y, z: v.tTarget.z } }; },
     camRestore(s) { // a free camera cannot be restored through setCameraMode (same mode, no-op): put its target and zoom back by hand
       if (!s) return; const v = R.view;
-      if (s.mode === 'free') { R.setCameraMode('free'); if (s.freeBase) v.freeBase = s.freeBase; v.tTarget.set(s.t.x, s.t.y, s.t.z); if (s.zoom) v.zoom = s.zoom; }
+      if (s.yawK !== undefined) { v.yawK = s.yawK; R.yawIndex = ((s.yawK % 4) + 4) % 4; }   // the QTE camera turned the view; a free camera keeps its own yaw (below)
+      if (s.mode === 'free') { R.setCameraMode('free'); if (s.freeBase) v.freeBase = s.freeBase; v.tTarget.set(s.t.x, s.t.y, s.t.z); if (s.zoom) v.zoom = s.zoom; if (s.yawT !== undefined) v.yawT = s.yawT; }
       else { R.followId = s.followId || null; R.followBall = s.followBall !== false; R.setCameraMode(s.mode || 'club'); if (s.zoom) v.zoom = s.zoom; }
     },
     zoom(d) { R.view.zoom = U.clamp(R.view.zoom * Math.pow(1.12, d), 0.45, ZOOM_MAX); }, // delta > 0 zooms IN
@@ -9187,7 +9424,6 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       crowd.react(level, kind);
       if (level === 3 && CS.clock - CS.lastWave > 25) crowd.wave();
     });
-    BUS.on('challenge:result', function (e) { if (!e) return; if (e.overturned) crowd.react(2, 'cheer'); else crowd.react(1, 'groan'); });
     BUS.on('match:phase', function (e) {
       if (!e) return; const ph = e.phase;
       if (ph === 'intro' || ph === 'toss' || ph === 'introductions') crowd.setMood(1);
@@ -9250,24 +9486,25 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     const ui = HPO.mod.ui; if (ui && ui.feed) { try { ui.feed({ text: text, icon: voice === 'commentator' ? 'mic' : 'whistle', key: true, kind: 'umpire' }); } catch (e) { /* optional */ } }
   }
 
-  const DOM = { root: null, banner: null, badge: null, verdict: null, bars: null, bt: 0 };
+  const DOM = { root: null, banner: null, badge: null, bars: null, bt: 0 };
   function domInit() {
     if (DOM.root || typeof document === 'undefined') return;
     const r = RN(), cont = (r && r.container) || document.getElementById('stage'); if (!cont) return;
     const root = DOM.root = document.createElement('div');
     root.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:6;overflow:hidden;font-family:Manrope,system-ui,sans-serif';
     const mk = (css, parent) => { const d = document.createElement('div'); d.style.cssText = css; d.hidden = true; (parent || root).appendChild(d); return d; };
-    DOM.banner = mk('position:absolute;left:50%;top:14%;transform:translateX(-50%);background:#fffaf0;color:#123954;border:2px solid #123954;box-shadow:6px 7px 0 #1264992e;padding:10px 22px;text-align:center;font-weight:800;letter-spacing:-.03em;font-size:clamp(16px,3.2vw,30px);max-width:86%');
+    DOM.banner = mk('background:#fffaf0;color:#123954;border:2px solid #123954;box-shadow:6px 7px 0 #1264992e;padding:10px 22px;text-align:center;font-weight:800;letter-spacing:-.03em;font-size:clamp(16px,3.2vw,30px);max-width:86%');
+    DOM.banner.className = 'hpo-banner'; // placed in shell.css: top centre, or the lower third while the players are on show
     DOM.badge = mk(''); DOM.badge.className = 'hpo-replay'; // large flashing label, styled in shell.css
-    DOM.verdict = mk('position:absolute;left:50%;top:22%;transform:translateX(-50%);color:#fff;font-weight:800;font-size:clamp(40px,9vw,92px);letter-spacing:-.04em;text-shadow:4px 5px 0 #123954;padding:0 18px');
     DOM.bars = mk('position:absolute;inset:0;box-shadow:inset 0 0 0 9999px transparent');
     DOM.bars.style.cssText = 'position:absolute;left:0;right:0;top:0;height:5%;background:#0b1a2a;opacity:.85';
     DOM.bars2 = mk('position:absolute;left:0;right:0;bottom:0;height:5%;background:#0b1a2a;opacity:.85');
+    DOM.bars.className = DOM.bars2.className = 'hpo-bar';   // letterbox bars: hidden in Play mode (shell.css), where they cut into the scoreboard and the dock
     cont.appendChild(root);
   }
-  function banner(text, sub, ms, low) { // low: the intro cards sit under the state ribbon, clear of the scoreboard; CHAMPIONS keeps the top
+  function banner(text, sub, ms, low) { // low: the intro cards sit in the lower third so the players stay visible; CHAMPIONS keeps the top
     domInit(); if (!DOM.banner) return;
-    DOM.banner.style.top = low ? '58%' : '14%';
+    DOM.banner.classList.toggle('lt', !!low);
     DOM.banner.innerHTML = ''; const a = document.createElement('div'); a.textContent = text; DOM.banner.appendChild(a);
     if (sub) { const b = document.createElement('div'); b.textContent = sub; b.style.cssText = 'font-size:.45em;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#177dc5;margin-top:4px'; DOM.banner.appendChild(b); }
     DOM.banner.hidden = false; DOM.bt = ms ? ms / 1000 : 0;
@@ -9289,8 +9526,8 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
 
   const STRIDE = 45, NF = 1200;
   const RB = { buf: new Float32Array(STRIDE * NF), head: 0, count: 0, lastT: -1, ids: [], clips: ['idle'], wrapped: false };
-  const RS = { init: false, hooked: false, ghostGroup: null, ghosts: null, gball: null, gshadow: null, trail: null, marker: null, line: null, label: null, pulse: null, active: null, lastHL: -999, clock: 0, t: -1,
-    lastChallenge: null, pointStartT: 0, wallStreak: 0, maxWall: 0, wrapTick: false };
+  const RS = { init: false, hooked: false, ghostGroup: null, ghosts: null, gball: null, gshadow: null, trail: null, active: null, lastHL: -999, clock: 0, t: -1,
+    pointStartT: 0, wallStreak: 0, maxWall: 0, wrapTick: false };
   function clipId(n) { let i = RB.clips.indexOf(n); if (i < 0) { RB.clips.push(n); i = RB.clips.length - 1; } return i; }
   function frameT(k) { return RB.buf[((RB.head - RB.count + k + NF) % NF) * STRIDE]; }
 
@@ -9328,11 +9565,6 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     const sg = new T3.CircleGeometry(1, 12); sg.rotateX(-Math.PI / 2);
     RS.gshadow = new T3.Mesh(sg, noAlpha(new T3.MeshBasicMaterial({ color: 0x000000, opacity: 0.4 }))); RS.gshadow.renderOrder = 2; G.add(RS.gshadow);
     RS.trail = new T3.InstancedMesh(new T3.SphereGeometry(0.05, 5, 4), new T3.MeshBasicMaterial({ color: 0xeaf59a }), 24); RS.trail.frustumCulled = false; G.add(RS.trail);
-    RS.marker = new T3.Mesh(new T3.RingGeometry(0.2, 0.3, 24), noAlpha(new T3.MeshBasicMaterial({ color: 0x2fb26b, opacity: 0.95, side: T3.DoubleSide }))); RS.marker.rotation.x = -Math.PI / 2; RS.marker.position.y = 0.04; RS.marker.visible = false; RS.marker.renderOrder = 5; G.add(RS.marker);
-    RS.pulse = new T3.Mesh(new T3.SphereGeometry(0.1, 10, 8), noAlpha(new T3.MeshBasicMaterial({ color: 0xfff4b3, opacity: 0.75 }))); RS.pulse.visible = false; RS.pulse.renderOrder = 6; G.add(RS.pulse);
-    RS.line = new T3.Mesh(new T3.BoxGeometry(1, 0.03, 0.16), noAlpha(new T3.MeshBasicMaterial({ color: 0xfff4b3, opacity: 0.85 }))); RS.line.visible = false; RS.line.renderOrder = 4; G.add(RS.line);
-    const lt = canvasTex(160, 56, function (g, w, h) { g.clearRect(0, 0, w, h); }); lt.needsUpdate = true;
-    RS.label = new T3.Sprite(new T3.SpriteMaterial({ map: lt, transparent: true, depthTest: false })); RS.label.scale.set(3.2, 1.12, 1); RS.label.visible = false; RS.label.renderOrder = 30; G.add(RS.label);
     RS.ghosts = [];
   }
   function makeFallbackFigure(look) {
@@ -9349,32 +9581,6 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     RS.ghostGroup.add(rig.root);
     const g = { rig: rig, px: p.pos.x, pz: p.pos.z, act: null, lastClip: null }; RS.ghosts[i] = g; return g;
   }
-  const NEAR_LINES = (function () {
-    const L = [];
-    [-5, 5].forEach(z => L.push({ x0: -10, x1: 10, z0: z, z1: z, name: 'side line' }));
-    [-10, 10].forEach(x => L.push({ x0: x, x1: x, z0: -5, z1: 5, name: 'back line' }));
-    [-6.95, 6.95].forEach(x => L.push({ x0: x, x1: x, z0: -5, z1: 5, name: 'service line' }));
-    L.push({ x0: -6.95, x1: 6.95, z0: 0, z1: 0, name: 'centre line' });
-    return L;
-  })();
-  function nearestLine(p) {
-    let best = null, bd = 1e9;
-    NEAR_LINES.forEach(function (l) {
-      const dx = l.x1 - l.x0, dz = l.z1 - l.z0, L2 = dx * dx + dz * dz, t = clamp(((p.x - l.x0) * dx + (p.z - l.z0) * dz) / L2, 0, 1);
-      const d = Math.hypot(p.x - (l.x0 + dx * t), p.z - (l.z0 + dz * t)); if (d < bd) { bd = d; best = l; }
-    });
-    return best ? { line: best, dist: bd } : null;
-  }
-  function labelTex(text, verdict) {
-    const tex = canvasTex(160, 56, function (g, w, h) {
-      g.fillStyle = '#fffaf0'; g.fillRect(0, 0, w, h); g.strokeStyle = '#123954'; g.lineWidth = 4; g.strokeRect(2, 2, w - 4, h - 4);
-      g.fillStyle = verdict === 'OUT' ? '#e5484d' : '#2fb26b'; g.fillRect(6, 6, 52, h - 12);
-      g.fillStyle = '#fff'; g.font = 'bold 22px Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(verdict, 32, h / 2 + 1);
-      g.fillStyle = '#123954'; g.font = 'bold 24px Arial, sans-serif'; g.fillText(text, 110, h / 2 + 1);
-    });
-    tex.needsUpdate = true; return tex;
-  }
-
   const replay = HPO.mod.replay = {
     active: false, enabled: true, kind: null,
     init(ctx) {
@@ -9400,56 +9606,20 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   };
 
   function startReplay(o) {
-    const P = PL(), m = MT(), r = RN(), kind = o.kind === 'highlight' ? 'highlight' : 'challenge';
+    const P = PL(), m = MT(), r = RN(), kind = 'highlight';
     ensureGhosts();
     const tEnd = frameT(RB.count - 1), tStart = frameT(0);
-    let from, to, tb = null, info = null;
-    if (kind === 'challenge') {
-      const lc = RS.lastChallenge && RS.clock - RS.lastChallenge.at < 6 ? RS.lastChallenge : null;
-      let p = lc ? lc.p : null, call = lc ? lc.call : null, over = lc ? lc.overturned : false;
-      const rl = HPO.mod.rules, lb = rl && rl.lastBounces ? rl.lastBounces() : [];
-      if (!p && lb.length) { p = lb[lb.length - 1].p; call = lb[lb.length - 1].call; }
-      if (o.close && o.close.x !== undefined) p = { x: o.close.x, z: o.close.z };
-      if (!p) return false;
-      let bk = -1, bd = 1e9;
-      for (let k = Math.max(0, RB.count - 600); k < RB.count; k++) {
-        const q = ((RB.head - RB.count + k + NF) % NF) * STRIDE, d = Math.hypot(RB.buf[q + 1] - p.x, RB.buf[q + 3] - p.z) + Math.max(0, RB.buf[q + 2] - 0.15) * 2;
-        if (d < bd) { bd = d; bk = k; }
-      }
-      if (bk < 0) return false;
-      tb = frameT(bk); from = Math.max(tStart, tb - 2.0); to = Math.min(tEnd, tb + 0.9);
-      const fin = call ? (over ? (call === 'in' ? 'out' : 'in') : call) : null;
-      let margin = null;
-      for (let i = 0; i < lb.length; i++) if (lb[i].p && Math.hypot(lb[i].p.x - p.x, lb[i].p.z - p.z) < 0.35 && lb[i].marginCm !== undefined) margin = lb[i].marginCm;
-      const nl = nearestLine(p); if (margin === null && nl) margin = Math.max(0, nl.dist * 100 - 2.5);
-      info = { p: p, verdict: fin ? fin.toUpperCase() : (nl && nl.dist < 0.03 ? 'IN' : 'OUT'), margin: margin, nl: nl, overturned: over, call: call };
-    } else {
-      to = tEnd; from = Math.max(tStart, to - clamp(o.span || (to - RS.pointStartT) + 0.5, 3, 9));
-      if (o.from !== undefined) from = Math.max(tStart, o.from); if (o.to !== undefined) to = Math.min(tEnd, o.to);
-      tb = to - 0.5;
-    }
-    const act = RS.active = { kind: kind, from: from, to: to, tp: from, tb: tb, info: info, slow: o.speed > 0 ? o.speed : (kind === 'challenge' ? 0.22 : 0.35), real: 0, hold: 0, phase: 'play', pausedBy: false, prevActors: true, trailRing: [], lastTrail: -9 };
+    const to0 = tEnd; let from = Math.max(tStart, to0 - clamp(o.span || (to0 - RS.pointStartT) + 0.5, 3, 9)), to = to0;
+    if (o.from !== undefined) from = Math.max(tStart, o.from); if (o.to !== undefined) to = Math.min(tEnd, o.to);
+    const act = RS.active = { kind: kind, from: from, to: to, tp: from, slow: o.speed > 0 ? o.speed : 0.35, real: 0, hold: 0, phase: 'play', pausedBy: false, prevActors: true, trailRing: [], lastTrail: -9 };
     replay.active = true; replay.kind = kind;
     if (m && !m.paused) { m.pause(true); act.pausedBy = true; }
     const ag = grp('actors'); if (ag) { act.prevActors = ag.visible; ag.visible = false; }
     RS.ghostGroup.visible = true;
     P.list.forEach(function (p, i) { const g = ghostFor(i); g.rig.root.visible = true; g.lastClip = null; g.act = null; });
-    domInit(); if (DOM.badge) { DOM.badge.textContent = kind === 'challenge' ? 'EAGLE EYE REPLAY' : 'REPLAY'; DOM.badge.hidden = false; DOM.bars.hidden = false; DOM.bars2.hidden = false; }
+    domInit(); if (DOM.badge) { DOM.badge.textContent = 'REPLAY'; DOM.badge.hidden = false; DOM.bars.hidden = false; DOM.bars2.hidden = false; }
     camSave();
-    if (kind === 'challenge' && info) {
-      camFocus(info.p.x, info.p.z, 4.8, 0.5);
-      const ok = info.verdict === 'IN', col = ok ? 0x2fb26b : 0xe5484d;
-      RS.marker.material.color.setHex(col); RS.marker.position.set(info.p.x, 0.04, info.p.z); RS.marker.visible = false;
-      RS.pulse.position.set(info.p.x, 0.1, info.p.z); RS.pulse.visible = false;
-      if (info.nl) {
-        const l = info.nl.line; RS.line.position.set((l.x0 + l.x1) / 2, 0.05, (l.z0 + l.z1) / 2); RS.line.scale.set(Math.max(0.16, Math.abs(l.x1 - l.x0)) , 1, l.x1 === l.x0 ? 1 : 1);
-        RS.line.rotation.y = l.x1 === l.x0 ? Math.PI / 2 : 0; RS.line.scale.x = Math.max(Math.abs(l.x1 - l.x0), Math.abs(l.z1 - l.z0));
-        RS.line.visible = false;
-      }
-      if (RS.label.material.map) RS.label.material.map.dispose();
-      RS.label.material.map = labelTex(info.margin !== null ? info.margin.toFixed(1) + ' cm' : '', info.verdict); RS.label.material.needsUpdate = true;
-      RS.label.position.set(info.p.x, 1.6, info.p.z); RS.label.visible = false;
-    } else if (r) tvFollow(r);
+    if (r) tvFollow(r);
     BUS.emit('replay:start', { kind: kind });
     stepReplay(0);
     return true;
@@ -9465,22 +9635,13 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   function stepReplay(dt) {
     const A = RS.active; if (!A) return;
     A.real += dt;
-    const fast = 1.0;
     if (A.phase === 'play') {
-      const near = Math.abs(A.tp - A.tb);
-      let spd = A.kind === 'challenge' ? (near < 0.45 ? A.slow : near < 0.9 ? A.slow + (fast - A.slow) * (near - 0.45) / 0.45 : 0.8) : (A.tp > A.to - 1.6 ? A.slow : 0.9);
+      const spd = A.tp > A.to - 1.6 ? A.slow : 0.9;
       A.spd = spd; A.tp += dt * spd;
       if (A.tp >= A.to) { A.tp = A.to; A.phase = 'hold'; A.hold = 0; }
     } else { A.hold += dt; A.spd = 0; }
-    const showAfter = A.kind === 'challenge' && A.info && (A.phase === 'hold' || A.tp >= A.tb - 0.15);
     renderGhosts(A, dt);
-    if (A.kind === 'challenge' && A.info) {
-      const pul = 1 + 0.25 * Math.sin(A.real * 9);
-      RS.marker.visible = showAfter; RS.pulse.visible = showAfter; RS.line.visible = showAfter; RS.label.visible = showAfter;
-      RS.marker.scale.setScalar(pul * 1.1); RS.pulse.scale.setScalar(pul); RS.line.material.opacity = 0.55 + 0.35 * Math.sin(A.real * 7);
-      if (showAfter && DOM.verdict && DOM.verdict.hidden) { DOM.verdict.textContent = A.info.verdict; DOM.verdict.style.background = A.info.verdict === 'IN' ? '#2fb26b' : '#e5484d'; DOM.verdict.hidden = false; }
-    }
-    const holdMax = A.kind === 'challenge' ? 2.4 : 0.5;
+    const holdMax = 0.5;
     if ((A.phase === 'hold' && A.hold > holdMax) || A.real > 22) endReplay(false);
   }
   function renderGhosts(A, dt) {
@@ -9531,8 +9692,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     const m = MT(), ag = grp('actors');
     if (ag) ag.visible = true;
     if (RS.ghostGroup) RS.ghostGroup.visible = false;
-    [RS.marker, RS.pulse, RS.line, RS.label].forEach(o => { if (o) o.visible = false; });
-    if (DOM.badge) { DOM.badge.hidden = true; DOM.verdict.hidden = true; DOM.bars.hidden = true; DOM.bars2.hidden = true; }
+    if (DOM.badge) { DOM.badge.hidden = true; DOM.bars.hidden = true; DOM.bars2.hidden = true; }
     camRestore();
     if (A.pausedBy && m) m.pause(false);
     if (A.kind === 'highlight') RS.lastHL = RS.clock;
@@ -9545,7 +9705,6 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     BUS.on('match:new', function () { RB.head = 0; RB.count = 0; RB.lastT = -1; if (RS.active) endReplay(true); RS.lastHL = -999; });
     BUS.on('point:start', function (e) { if (e && e.retry) return; const P = PL(); RS.pointStartT = P ? P.now : 0; RS.wallStreak = 0; RS.maxWall = 0; });
     BUS.on('shot:hit', function (e) { if (!e) return; if (e.afterWall && e.shot !== 'serve') { RS.wallStreak++; if (RS.wallStreak > RS.maxWall) RS.maxWall = RS.wallStreak; } else RS.wallStreak = 0; });
-    BUS.on('challenge:result', function (e) { RS.lastChallenge = { p: e && e.p, call: e && e.call, overturned: !!(e && e.overturned), team: e && e.team, at: RS.clock }; });
     BUS.on('point:end', function (e) {
       if (!e || !replay.enabled || replay.active) return;
       const m = MT(); if (!m || !m.cfg || m.cfg.fast || m.speed > 2 || m.phase !== 'play') return;
@@ -10599,10 +10758,6 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       'The players change ends and take a drink.', 'Changeover, a chance to towel off and talk tactics.', 'They swap sides now.', 'A short break as the teams change ends.'] },
     changeoverSet: { pri: 1, cd: 15, lines: [
       'Set break: time to regroup and reset.', 'The players take a longer break between sets.', 'A breather between sets, the coaches will have plenty to say.', 'Set break, a chance to recover.'] },
-    challengeStands: { pri: 2, cd: 6, lines: [
-      'Eagle Eye... the call stands!', 'Eagle Eye confirms it, the call stands.', 'Eagle Eye has spoken: the original call is correct.', 'Replay shows the call was right, it stands.'] },
-    challengeOver: { pri: 3, cd: 6, lines: [
-      'Eagle Eye... the call is overturned!', 'Eagle Eye overturns it! The ball was {S}.', 'The review goes their way, the call is overturned!', 'Overturned! Eagle Eye shows the ball was {S}.'] },
     phIntro: { pri: 2, cd: 30, lines: [
       'Welcome to the Littleworld Jakarta Padel Cup!', 'Good day everyone, and welcome to the Littleworld Jakarta Padel Cup.',
       'We are live at the Littleworld Jakarta Padel Cup, the glass is gleaming and the crowd is ready.', 'Hello and welcome, we have a cracking doubles match in store.'] },
@@ -10779,9 +10934,6 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       case 'formation': return E.say(s.formation === 'attack' ? 'formationAttack' : s.formation === 'defend' ? 'formationDefend' : null, varsOf(s), withWhy(s, { formation: s.formation }));
       case 'coach': return COACH_LABEL[s.preset] ? E.say('coach', varsOf(Object.assign({}, s, { PL: _(COACH_LABEL[s.preset]) })), withWhy(s, { preset: s.preset })) : null;
       case 'changeover': return E.say(s.kind === 'set' ? 'changeoverSet' : 'changeoverGame', varsOf(s), withWhy(s, { kind: s.kind }));
-      case 'challenge': return s.overturned
-        ? E.say('challengeOver', varsOf(Object.assign({}, s, { S: s.call === 'in' ? 'out' : 'in' })), withWhy(s, { overturned: true }))
-        : E.say('challengeStands', varsOf(s), withWhy(s, { overturned: false }));
       case 'retrieval': return E.say('retrieval', varsOf(s), withWhy(s, { retrieval: true }));
       case 'timeout': return E.say('timeout', varsOf(s), withWhy(s, { timeout: true }));
       case 'phase': return phaseLine(E, s);
@@ -11124,10 +11276,6 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     flush();
     send({ type: 'changeover', kind: e.kind }, 'info');
   }
-  function onChallenge(e) {
-    if (!ctx || !e) return;
-    send({ type: 'challenge', overturned: !!e.overturned, call: e.call, T: teamLbl(e.team) }, 'eye');
-  }
   function onPhase(e) {
     if (!e) return;
     if (e.phase === 'intro' && e.prev !== 'intro') { resetContext(); }
@@ -11177,7 +11325,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       on('shot:hit', onShotHit); on('shot:planned', onShotPlanned); on('ball:contact', onContact);
       on('point:start', onPointStart); on('point:end', onPointEnd); on('fault', onFault); on('let', onLet);
       on('flag:update', onFlag); on('game:end', onGameEnd); on('set:end', onSetEnd); on('match:end', onMatchEnd); on('score:change', onScoreChange);
-      on('match:phase', onPhase); on('challenge:result', onChallenge); on('ai:formation', onFormation); on('coach:change', onCoach);
+      on('match:phase', onPhase); on('ai:formation', onFormation); on('coach:change', onCoach);
       on('speak', onSpeak); on('changeover:start', onChangeover); on('serve:hit', onServeHit);
       on('match:new', function () { resetContext(); });
     }
@@ -11228,7 +11376,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   const SKIN = ['#f7d9c0', '#efc29a', '#c98f62', '#8d5a3b'];
   const FORMAT_NAMES = { quick: 'Quick', oneSet: 'One Set', bo3: 'Best of 3', blitz: 'Blitz Americano', americano: 'Americano' };
   const PHASE_NAMES = { intro: 'Welcome', walkon: 'Walk-on', introductions: 'Introductions', toss: 'Coin toss', warmup: 'Warm-up', changeover: 'Changeover', setBreak: 'Set break', matchEnd: 'Match over', handshake: 'Handshake', ceremony: 'Ceremony', results: 'Final' };
-  const KEYS = [['Space', 'Pause / resume'], ['N', 'New match'], ['Q / E', 'Rotate camera'], ['1 - 5', 'Camera mode'], ['+ / -', 'Zoom'], ['R', 'Reset view'], ['C', 'Challenge'], ['A', 'Aim next shot, then click the court'], ['S', 'Sound on / off'], ['M', 'Mute'], ['`', 'Debug overlay'], ['?', 'This sheet']];
+  const KEYS = [['Space', 'Pause / resume'], ['N', 'New match'], ['Q / E', 'Rotate camera (Studio)'], ['1 - 5', 'Camera mode (Studio)'], ['+ / -', 'Zoom'], ['R', 'Reset view (Studio)'], ['\u2190 / \u2192', 'Rotate camera (Play mode)'], ['C', 'Next camera (Play mode)'], ['0', 'Reset view (Play mode)'], ['A', 'Aim next shot, then click the court'], ['1 - 5', 'Play mode: mindset, fortress to all-in'], ['Q W E R T Y', 'Play mode: plans (wear down, hunt, take net, break net, glass, down the middle)'], ['P', 'Play mode: shots (spin, mix, flat)'], ['V', 'Play mode: middle balls (auto, you, Annetta)'], ['F', 'Play mode: go for it'], ['O', 'Play mode: timeout'], ['S', 'Sound on / off'], ['M', 'Mute'], ['`', 'Debug overlay'], ['K', 'This sheet'], ['?', 'Game instructions']];
 
   const S = {
     format: 'quick', scoring: 'golden', type: 'M', venue: 'classicBlue', tod: 'day', teamA: [], teamB: [], seed: '',
@@ -11316,7 +11464,8 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     buildScoreboard();
     buildPanel();
     loadSavedPlayers();
-    const help = document.getElementById('btn-help'); if (help) { help.addEventListener('click', showKeys); help.title = _('Keyboard shortcuts (?)'); help.setAttribute('aria-label', _('Keyboard shortcuts')); }
+    const help = document.getElementById('btn-help'); if (help) { help.addEventListener('click', () => { const g = mod('guide'); if (g) g.toggle(); }); help.title = _('Game instructions (?)'); help.setAttribute('aria-label', _('Game instructions')); }
+    const kb = document.getElementById('btn-keys'); if (kb) { kb.addEventListener('click', showKeys); kb.title = _('Keyboard shortcuts (K)'); kb.setAttribute('aria-label', _('Keyboard shortcuts')); }
     bindBus();
     document.addEventListener('keydown', onKey);
     ['pointerdown', 'keydown', 'touchstart'].forEach(ev => window.addEventListener(ev, firstGesture, { capture: true, passive: true }));
@@ -11329,8 +11478,8 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     sync();
     ui.api = { S: S, EL: EL, h: h, add: add, safe: safe, toast: toast, feed: feed, drawPortrait: drawPortrait, flagEl: flagEl, mbar: mbar, teamName: teamName, teamIds: teamIds, rdef: rdef, roster: roster,
       contribution: contribution, teamSum: teamSum, newMatch: newMatch, applyVenueVisuals: applyVenueVisuals, applyTod: applyTod, applyDefaults: applyDefaults, refillPickers: refillPickers,
-      renderTab: renderTab, setSpeed: setSpeed, togglePause: togglePause, setMusic: setMusic, setVolume: setVolume, setCallouts: setCallouts, skipCeremony: skipCeremony, doChallenge: doChallenge, callTimeout: callTimeout, setCam: setCam, setSound: setSound, toggleAim: toggleAim, orders: orders,
-      claimCoach: claimCoach, closeModal: closeModal, fmtClock: fmtClock, M_clock: M_clock, savePlayerDef: savePlayerDef, openStudioPanel: null, ARCH: ARCH, ATTRS: ATTRS, FORMAT_NAMES: FORMAT_NAMES,
+      renderTab: renderTab, setSpeed: setSpeed, togglePause: togglePause, setMusic: setMusic, setVolume: setVolume, setCallouts: setCallouts, skipCeremony: skipCeremony, callTimeout: callTimeout, setCam: setCam, setSound: setSound, toggleAim: toggleAim, orders: orders,
+      claimCoach: claimCoach, showKeys: showKeys, closeModal: closeModal, fmtClock: fmtClock, M_clock: M_clock, savePlayerDef: savePlayerDef, openStudioPanel: null, ARCH: ARCH, ATTRS: ATTRS, FORMAT_NAMES: FORMAT_NAMES,
       PHASE_NAMES: PHASE_NAMES, VENUES: VENUES, CAMS: CAMS, showKeys: showKeys, setScore: setScore, shortName: shortName, other: other, hex: hex,
       isBusy: () => !!tmo, resultsReset: () => { resultsShown = false; } };
     const G = mod('game'); if (G && G.init) safe(() => G.init(ctx, ui.api), 'game.init');
@@ -11447,7 +11596,14 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     while (EL.toasts.children.length >= 3) EL.toasts.removeChild(EL.toasts.firstChild);
     const t = h('div', { class: 'toast ' + (opts.kind || 'info') }, text);
     EL.toasts.appendChild(t);
-    setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 400); }, opts.ms || 3600);
+    let left = opts.ms || 3600;
+    const tick = () => {
+      const rp = mod('replay');
+      if (!(rp && rp.active)) left -= 200;
+      if (left > 0) return setTimeout(tick, 200);
+      t.classList.add('out'); setTimeout(() => t.remove(), 400);
+    };
+    setTimeout(tick, 200);
   }
   function banner(html, actions) {
     if (!html) { EL.banner.hidden = true; return; }
@@ -11722,8 +11878,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     b.push(h('div', { class: 'sub' }, _('In the moment')));
     EL.btnAim = h('button', { class: 'btn', type: 'button', id: 'btn-aim', onclick: toggleAim, title: _('Aim next shot (A)') }, h('span', null, _('Aim next shot') + ' '), h('span', { class: 'keycap' }, 'A'));
     EL.btnTmo = h('button', { class: 'btn', type: 'button', id: 'btn-timeout', onclick: callTimeout }, _('Call timeout'));
-    EL.btnChal = h('button', { class: 'btn', type: 'button', id: 'btn-challenge', onclick: doChallenge, title: _('Challenge the last line call (C)') }, h('span', null, 'Challenge '), h('span', { class: 'keycap' }, 'C'));
-    b.push(h('div', { class: 'grid3' }, EL.btnAim, EL.btnTmo, EL.btnChal));
+    b.push(h('div', { class: 'grid2' }, EL.btnAim, EL.btnTmo));
     EL.coachInfo = h('p', { class: 'hint' }, '');
     b.push(EL.coachInfo);
     return section('03', 'Coach', 'Coach box', window.innerWidth >= 900, b, 'sec-coach');
@@ -11795,18 +11950,6 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     sync();
   }
   function endRest() { const M = mod('match'); if (tmo && tmo.resumeMatch && M) M.pause(false); tmo = null; banner(null); sync(); }
-  function doChallenge() {
-    const Rl = mod('rules'); if (!Rl || !Rl.canChallenge) return;
-    claimCoach();
-    const t = S.coachTeam;
-    BUS.emit('challenge:request', { team: t });
-    if (!Rl.canChallenge(t, 0)) {
-      const left = Rl.state && Rl.state.challenges ? Rl.state.challenges[t] : 0;
-      toast(left > 0 ? _('No close call to challenge right now.') : _('No challenges left this set.'), { kind: 'warn' }); return;
-    }
-    const res = Rl.challenge(t, 0);
-    if (!res) toast(_('Too late to challenge that one.'), { kind: 'warn' });
-  }
 
   function buildCameraSec() {
     const b = [];
@@ -11916,7 +12059,6 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       line('Sets', (d.setsText || '-') + '  (' + d.setsWonText + ')'),
       line('Games', d.gamesText), line(_('Points'), d.pointsText.A + ' - ' + d.pointsText.B),
       line(_('Serving'), d.serverName + (d.serveSide ? ' · ' + d.serveSide : '')),
-      line(_('Challenges left'), 'A ' + st.challenges.A + ' · B ' + st.challenges.B),
       line(_('Timeouts left'), 'A ' + st.timeouts.A + ' · B ' + st.timeouts.B),
       line(_('Court'), _((VENUES.find(v => v[0] === cfg.venue) || [0, cfg.venue || '-'])[1])),
       line(_('Seed'), String(cfg.seed != null ? cfg.seed : '-')));
@@ -12023,7 +12165,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       const d = p.def, cv = h('canvas', { width: 24, height: 24 });
       drawPortrait(cv, d);
       const bars = h('div', { class: 'bars' }, ATTRS.map(a => mbar(_(a[1]), d.attrs[a[0]], '')));
-      const live = h('div', { class: 'bars' }, h('div', { class: 'mbar live', 'data-k': 'conf' }, h('span', null, _('CONF')), h('div', { class: 't' }, h('i')), h('b', null, '')), h('div', { class: 'mbar fat', 'data-k': 'fat' }, h('span', null, _('FATIG')), h('div', { class: 't' }, h('i')), h('b', null, '')));
+      const live = h('div', { class: 'bars' }, h('div', { class: 'mbar live', 'data-k': 'conf' }, h('span', null, _('FOCUS')), h('div', { class: 't' }, h('i')), h('b', null, '')), h('div', { class: 'mbar en', 'data-k': 'fat' }, h('span', null, _('ENERGY')), h('div', { class: 't' }, h('i')), h('b', null, '')));
       const mini = h('div', { class: 'mini' });
       const card = h('div', { class: 'pcard ' + (p.team === 'A' ? 'a' : 'b'), 'data-id': p.id },
         cv,
@@ -12044,8 +12186,8 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     document.querySelectorAll('#pcards .pcard').forEach(card => {
       const p = P.byId[card._pid]; if (!p) return;
       const set = (k, v) => { const m = card._live.querySelector('[data-k=' + k + ']'); m.querySelector('i').style.width = Math.round(U.clamp(v, 0, 1) * 100) + '%'; m.querySelector('b').textContent = Math.round(v * 100); };
-      set('conf', p.confidence); set('fat', p.fatigue);
-      card._mini.textContent = 'Winners ' + p.stats.winners + ' · Unforced ' + p.stats.unforced + ' · Aces ' + p.stats.aces + ' · ' + (p.stats.distance / 1000).toFixed(2) + ' km';
+      const Mi = mod('mind'); set('conf', Mi ? Mi.focus(p) : p.confidence); set('fat', Mi ? Mi.energy(p) : 1 - p.fatigue);
+      card._mini.textContent = (Mi && p.mood && p.mood.id ? Mi.label(p.mood.id) + ' · ' : '') + 'Winners ' + p.stats.winners + ' · Unforced ' + p.stats.unforced + ' · Aces ' + p.stats.aces + ' · ' + (p.stats.distance / 1000).toFixed(2) + ' km';
     });
   }
 
@@ -12139,6 +12281,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     if (G && G.blocking && G.blocking()) return;
     if (tn === 'SELECT' && k !== '`' && k !== '?') return;
     const lk = k.length === 1 ? k.toLowerCase() : k;
+    if (G && G.hotkey && G.hotkey(lk, e)) { e.preventDefault(); return; }
     let used = true;
     switch (lk) {
       case ' ': case 'Spacebar': togglePause(); break;
@@ -12148,13 +12291,17 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       case '+': case '=': zoomBy(1); break;
       case '-': case '_': zoomBy(-1); break;
       case 'r': resetView(); break;
-      case 'c': doChallenge(); break;
+      case '0': resetView(); break;
+      case 'ArrowLeft': if (tn === 'INPUT') { used = false; break; } rot(-1); break;
+      case 'ArrowRight': if (tn === 'INPUT') { used = false; break; } rot(1); break;
+      case 'c': if (G && G.cycleCam && G.mode === 'play') G.cycleCam(); break;
       case 'a': toggleAim(); break;
       case 'n': newMatch(); break;
       case 's': setSound(!S.soundOn); break;
       case 'm': S.muted = !S.muted; if (S.muted === false && !S.soundOn) { /* stays off */ } applyAudio(); sync(); toast(S.muted ? _('Muted') : (S.soundOn ? _('Sound on') : _('Sound is off (press S)')), { ms: 1500 }); break;
       case '`': toggleDebug(); break;
-      case '?': showKeys(); break;
+      case 'k': showKeys(); break;
+      case '?': { const g = mod('guide'); if (g) g.toggle(); break; }
       default: used = false;
     }
     if (used) { e.preventDefault(); }
@@ -12277,14 +12424,6 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       feed({ src: 'ui', icon: '⇅', text: (e.kind === 'timeout' ? _('Timeout, Team {team}', { team: e.team }) : e.kind === 'set' ? _('Set changeover') : 'Changeover') + '.', key: e.kind === 'timeout' });
     });
     BUS.on('changeover:end', function (e) { if (e.kind === 'timeout') banner(null); });
-    BUS.on('challenge:result', function (e) {
-      const fin = e.overturned ? (e.call === 'in' ? 'OUT' : 'IN') : (e.call || '').toUpperCase();
-      const txt = e.overturned ? _('Eagle Eye: {call} — call overturned', { call: fin }) : _('Eagle Eye: {call} — call stands', { call: fin });
-      toast(_('{text} (Team {team})', { text: txt, team: e.team }), { kind: e.overturned ? 'good' : 'warn', ms: 4500 });
-      feed({ src: 'ui', icon: '◎', text: _('{text}, challenge by Team {team}.', { text: txt, team: e.team }), key: true });
-      const rp = mod('replay'); const M = mod('match');
-      if (rp && rp.play && !rp.active && S.coachClaimed && e.team === S.coachTeam && !(M && M.cfg && M.cfg.fast)) safe(() => rp.play({ kind: 'challenge' }), 'replay');
-    });
     BUS.on('ball:contact', function (e) { lastSurf = e.surf; lastSurfAt = performance.now(); });
     BUS.on('cam:mode', function (e) { S.cam = e.mode; sync(); });
     BUS.on('ui:setting', function (e) {
@@ -12367,12 +12506,8 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       if (Rl && Rl.state && EL.btnTmo) {
         const t = S.coachTeam, st = Rl.state;
         EL.btnTmo.textContent = 'Timeout (' + (st.timeouts ? st.timeouts[t] : 0) + ')';
-        const can = Rl.canChallenge ? Rl.canChallenge(t, 0) : false;
-        EL.btnChal.firstChild.textContent = 'Challenge (' + (st.challenges ? st.challenges[t] : 0) + ') ';
-        EL.btnChal.classList.toggle('primary', can);
         EL.btnTmo.setAttribute('aria-disabled', st.timeouts && st.timeouts[t] > 0 ? 'false' : 'true');
-        EL.btnChal.setAttribute('aria-disabled', can ? 'false' : 'true');
-        EL.coachInfo.textContent = _('Coaching Team {team} ({name}).', { team: t, name: teamName(t) }) + ' ' + (can ? _('Eagle Eye available: press C.') : '');
+        EL.coachInfo.textContent = _('Coaching Team {team} ({name}).', { team: t, name: teamName(t) });
       }
       if (S.tab === 'players') updatePlayerCards();
       if (S.tab === 'score') renderScoreTab();
@@ -12415,14 +12550,16 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   const AN = 'p5'; // Annetta Arslan
   const NATIONS = [['IDN', 'Indonesia'], ['ESP', 'Spain'], ['ARG', 'Argentina'], ['NED', 'Netherlands'], ['JPN', 'Japan'], ['SWE', 'Sweden'], ['ITA', 'Italy'], ['BRA', 'Brazil'], ['FRA', 'France'], ['GER', 'Germany'], ['POR', 'Portugal'], ['CHI', 'Chile'], ['AUS', 'Australia'], ['GBR', 'United Kingdom']];
   const MIND = ['Fortress', 'Safe', 'Balanced', 'Pressure', 'All-in'];
-  const PLAN_UI = [['exhaust', 'Wear them down', 'Aim at the tired one and make them run'], ['hunt', 'Hunt the weak one', 'Every ball at the weaker defender'], ['net', 'Take the net', 'Step up and volley'],
-    ['breakNet', 'Break the net', 'Lob deep over a pair at the net'], ['glass', 'Use the glass', 'Angles and rebounds'], ['middle', 'Down the middle', 'Split the pair']];
+  const PLAN_UI = [['exhaust', 'Wear them down', 'Aim at the tired one and make them run', 'Q'], ['hunt', 'Hunt the weak one', 'Every ball at the weaker defender', 'W'], ['net', 'Take the net', 'Step up and volley', 'E'],
+    ['breakNet', 'Break the net', 'Lob deep over a pair at the net', 'R'], ['glass', 'Use the glass', 'Angles and rebounds', 'T'], ['middle', 'Down the middle', 'Split the pair', 'Y']];
   const STYLE_UI = [['spin', 'Spin'], ['mix', 'Mix'], ['flat', 'Flat']];
   const FMT_PTS = { blitz: 1, americano: 1 };
+  const FMT_OPEN = FMT_PTS;   // the other formats are shown but locked until they are tuned for Play mode
   const FMT_HINT = { blitz: '9 points, 2 serves each. 5 points clinches it. About 3 minutes.', americano: '21 points, 5 serves each. 11 points clinches it. About 6 minutes.', quick: 'First to 4 games.', oneSet: 'First to 6 games.', bo3: 'Two sets to win. A long one.' };
   const MIND_FX = ['mostly lobs and glass, almost no smashes', 'more lobs, fewer risky shots', 'the normal mix', 'more smashes and net play', 'smashes everywhere, few lobs, big risks'];
   const STYLE_FX = { spin: 'topspin, slice and vibora: safer, awkward bounces', mix: 'the normal mix', flat: 'flat and fast: more winners, more errors' };
   const MID_UI = [['', 'Auto'], ['0', 'You'], ['1', 'Annetta']];   // who takes the middle balls
+  const MID_FX = ['Whoever is closer takes it', 'You take every ball down the middle', 'Annetta takes every ball down the middle'];
   const P_ = d => '<svg ' + 'xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"' + '>' + d + '</svg>';
   const IC = {
     shield: P_('<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>'), sword: P_('<path d="M20 4l-10 10M15 4h5v5M8 16l-4 4M6 12l6 6"/>'),
@@ -12431,7 +12568,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     glass: P_('<path d="M3 5v14M3 6l8 12 4-12 6 10"/>'), middle: P_('<path d="M5 4v16M19 4v16M12 5v13M9 15l3 3 3-3"/>'),
     go: P_('<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>'), aim: P_('<circle cx="12" cy="12" r="6"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/>'), timeout: P_('<circle cx="12" cy="13" r="8"/><path d="M12 8v5l3 2M9 2h6"/>'),
     chev: P_('<path d="M6 15l6-6 6 6"/>'),
-    challenge: P_('<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'), coach: P_('<path d="M4 6h16M4 12h16M4 18h16"/>')
+    coach: P_('<path d="M4 6h16M4 12h16M4 18h16"/>')
   };
   const COURTS = [['classicBlue', 'Classic Blue'], ['terracotta', 'Terracotta'], ['fastBlue', 'Fast Blue'], ['indoor', 'Indoor']];
   const CAM_CYCLE = [['close', 'Close-up'], ['follow', 'TV follow'], ['club', 'Whole club'], ['top', 'Top-down']];
@@ -12439,7 +12576,8 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   const SVG = 'xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
   const SND_ON = '<svg ' + SVG + '><path d="M11 5 6 9H3v6h3l5 4z" fill="currentColor"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
   const SND_OFF = '<svg ' + SVG + '><path d="M11 5 6 9H3v6h3l5 4z" fill="currentColor"/><path d="m16 9 5 6M21 9l-5 6"/></svg>';
-  const CHEV = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg>';
+  const EXPAND = '<svg ' + SVG.replace('width="22" height="22"', 'width="15" height="15"') + '><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>';
+  const COLLAPSE = '<svg ' + SVG.replace('width="22" height="22"', 'width="15" height="15"') + '><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg>';
   const PRE = { intro: 1, walkon: 1, introductions: 1, toss: 1, warmup: 1 };
   const NATION_NAME = {}; NATIONS.forEach(n => { NATION_NAME[n[0]] = n[1]; });
 
@@ -12447,7 +12585,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     mode: 'play', st: 'boot', scr: null, player: null, opp: null, qte: 'relaxed',
     cfg: { format: 'blitz', scoring: 'golden', venue: 'classicBlue', tod: 'day' },
     init: init, update: update, onFeed: onFeed, onEscape: onEscape, blocking: blocking, active: active, results: results,
-    showTitle: showTitle, showHow: showHow, showCreate: showCreate, showSetup: showSetup, setMode: setMode, onSaved: onSaved, suppressResults: suppressResults
+    hotkey: hotkey, cycleCam: cycleCam, showTitle: showTitle, showHow: showHow, showCreate: showCreate, showSetup: showSetup, setMode: setMode, onSaved: onSaved, suppressResults: suppressResults
   };
   let cp = { seed: 1, name: '', gender: 'F', nat: 'IDN' };
   let hud = {}, pauseEl = null, wasPaused = false, tickerT = 0, acc = 0, hlKey = '', lastFlagToast = '', attractT = 0;
@@ -12555,6 +12693,8 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     BUS.on('match:new', function () { hlKey = ''; if (G.st === 'title' || G.st === 'create' || G.st === 'setup') return; });
     BUS.on('match:phase', function (e) { if (e.phase === 'results' && (G.st === 'title' || G.st === 'create' || G.st === 'setup' || G.st === 'watch')) { clearTimeout(attractT); attractT = setTimeout(() => { if (G.st === 'title' || G.st === 'create' || G.st === 'setup') startAttract(); }, 5000); } });
     BUS.on('flag:update', onFlags);
+    BUS.on('replay:start', function () { EL.app.classList.add('gm-replaying'); updateHud(true); });
+    BUS.on('replay:end', function () { EL.app.classList.remove('gm-replaying'); updateHud(true); });
     BUS.on('shot:hit', onShot);
     document.addEventListener('pointerdown', function (e) { if (hud.pop && !hud.pop.hidden && !hud.pop.contains(e.target) && !hud.mix.contains(e.target)) toggleMix(false); }, true);
     BUS.on('match:phase', function (e) { if (e.phase === 'play' && G.st === 'playing' && G.tutorialPending) { G.tutorialPending = false; const Tu = mod('tutorial'); if (Tu) setTimeout(() => Tu.start(), 300); } });
@@ -12712,10 +12852,13 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     const type = myType();
     if (!G.opp || G.oppType !== type || G.opp.some(id => id === G.player.id)) { G.opp = randomOpp(type); G.oppType = type; }
     const C = G.cfg;
-    const fmt = segBtns([['blitz', 'Blitz'], ['americano', 'Americano'], ['quick', 'Quick'], ['oneSet', 'One set'], ['bo3', 'Best of 3']], () => C.format, v => { C.format = v; scoField.hidden = FMT_PTS[v]; fmtHint.textContent = hint(v); });
+    const fmt = segBtns([['blitz', 'Blitz'], ['americano', 'Americano'], ['quick', 'Quick'], ['oneSet', 'One set'], ['bo3', 'Best of 3']], () => C.format, v => { C.format = v; scoField.hidden = FMT_PTS[v]; fmtHint.textContent = hint(v) + ' ' + _('Other formats are coming soon.'); });
+    if (!FMT_OPEN[C.format]) C.format = 'blitz';
+    fmt.btns.forEach(b => { if (!FMT_OPEN[b.dataset.v]) { b.disabled = true; b.title = _('Coming soon'); } });
+    fmt.paint();
     const sco = segBtns([['golden', 'Golden Point'], ['advantage', 'Advantage']], () => C.scoring, v => { C.scoring = v; });
     const tod = segBtns([['day', 'Day'], ['dusk', 'Dusk'], ['night', 'Night']], () => C.tod, v => { C.tod = v; });
-    const scoField = h('div', { class: 'field' }, h('div', { class: 'lbl' }, _('Scoring')), sco.root), fmtHint = h('p', { class: 'hint' }, hint(C.format));
+    const scoField = h('div', { class: 'field' }, h('div', { class: 'lbl' }, _('Scoring')), sco.root), fmtHint = h('p', { class: 'hint' }, hint(C.format) + ' ' + _('Other formats are coming soon.'));
     scoField.hidden = !!FMT_PTS[C.format];
     const courts = h('div', { class: 'gm-courts' });
     const cbtns = COURTS.map(c => { const b = h('button', { type: 'button', 'aria-pressed': 'false', 'data-v': c[0], onclick: () => { C.venue = c[0]; paintCourts(); } }, h('span', { class: 'ct ct-' + c[0] }, h('i')), h('b', null, _(c[1]))); courts.appendChild(b); return b; });
@@ -12747,9 +12890,10 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   const HOW = [
     ['You are the coach', 'You and Annetta play by themselves, so there is nothing to steer. Your job is the game plan, plus a few big moments.'],
     ['Set the strategy', 'Open Strategy at the bottom. Pick a mindset (shield is safe, sword is attack), one plan, the kind of shots, and who takes the middle balls. A small tag shows what is switched on, and your plan announces itself when it works.'],
-    ['Winning chances', 'When your player gets a winning chance, or a hard smash is coming at you, time freezes. Swipe from the glowing ring to aim the shot. No time? Tap "Let it play". Aim lets you place your next shot yourself; Timeout and Challenge are what they sound like.'],
+    ['Winning chances', 'When your player gets a winning chance, or a hard smash is coming at you, time freezes. Swipe from the glowing ring to aim the shot. No time? Tap "Let it play". Aim lets you place your next shot yourself; Timeout is a breather.'],
     ['Padel in 20 seconds', () => _('Two against two. Serve underhand into the diagonal box. The ball may bounce once on your side, and it may also hit the glass walls and stay in play. {format}', { format: mod('rules') ? mod('rules').describeFormat(G.cfg.format, G.cfg.scoring) : '' })]
   ];
+  G.how = HOW;   // the instructions sheet (27_guide.js) shows the same four cards
   function showHow(next) {
     let i = 0;
     const body = h('div', { class: 'gm-howbody' }), nb = h('button', { class: 'btn primary big', type: 'button', id: 'gm-hownext' }, _('Next'));
@@ -12782,30 +12926,60 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     updateHud(true);
   }
 
+  const cap = t => t.charAt(0).toUpperCase() + t.slice(1);
+  function tip(el, name, desc, key, badge) {
+    el.dataset.tipName = name; el.dataset.tipDesc = desc || ''; if (key) el.dataset.tipKey = key; if (badge) el.dataset.kb = badge;
+    el.removeAttribute('title'); el.setAttribute('aria-label', name + (desc ? ': ' + desc : '')); return el;
+  }
+  G.tipText = el => { const n = el && el.dataset.tipName; return n ? n + (el.dataset.tipDesc ? ': ' + el.dataset.tipDesc : '') + '.' + (el.dataset.tipKey ? ' ' + _('Key: {key}.', { key: el.dataset.tipKey }) : '') : ''; };
+  let tipT = 0;
+  function showTip(el, touch) {
+    clearTimeout(tipT);
+    hud.tipName.textContent = el.dataset.tipName; hud.tipDesc.textContent = el.dataset.tipDesc || '';
+    hud.tipKey.textContent = el.dataset.tipKey || ''; hud.tipKey.hidden = !el.dataset.tipKey;
+    hud.tip.hidden = false;
+    const st = EL.stage.getBoundingClientRect(), r = el.getBoundingClientRect(), w = hud.tip.offsetWidth;
+    hud.tip.style.left = Math.round(Math.max(6, Math.min(st.width - w - 6, r.left - st.left + r.width / 2 - w / 2))) + 'px';
+    hud.tip.style.bottom = Math.round(st.bottom - r.top + 10) + 'px';
+    if (touch) tipT = setTimeout(hideTip, 2600);
+  }
+  function hideTip() { clearTimeout(tipT); if (hud.tip) hud.tip.hidden = true; }
+  function bindTips(root) {
+    const pick = e => e.target.closest && e.target.closest('[data-tip-name]');
+    root.addEventListener('pointerover', e => { const el = pick(e); if (el) showTip(el, e.pointerType === 'touch'); });
+    root.addEventListener('pointerout', e => { if (e.pointerType !== 'touch' && pick(e) && !(e.relatedTarget && pick(e).contains(e.relatedTarget))) hideTip(); });
+    root.addEventListener('focusin', e => { const el = pick(e); if (el && el.matches(':focus-visible')) showTip(el); });
+    root.addEventListener('focusout', hideTip);
+  }
   function btn(id, cls, label, title, fn) { const b = h('button', { class: 'gm-ib ' + cls, type: 'button', id: id, title: title, 'aria-label': title, onclick: fn }, label); return b; }
   function buildHud() {
     hud.root = h('div', { id: 'gm-hud' });
     hud.pause = btn('gm-pause', '', '❚❚', _('Pause (Space)'), () => { API.togglePause(); updateHud(true); });
-    hud.cam = btn('gm-cam', 'txt sm', 'CAM', _('Camera'), () => { const R = mod('render'); let i = CAM_CYCLE.findIndex(c => c[0] === (R && R.cameraMode)); i = (i + 1) % CAM_CYCLE.length; API.setCam(CAM_CYCLE[i][0]); G.camPref = CAM_CYCLE[i][0]; API.toast(_('Camera: {name}', { name: _(CAM_CYCLE[i][1]) }), { ms: 1400 }); updateHud(true); });
+    hud.cam = btn('gm-cam', 'txt sm', 'CAM', _('Camera'), () => cycleCam());
     hud.mix = btn('gm-mix', '', '', _('Volume and callouts'), () => toggleMix()); hud.mix.innerHTML = MIX; hud.mix.setAttribute('aria-expanded', 'false');
     hud.pop = h('div', { class: 'gm-pop', id: 'gm-pop', hidden: true }, h('div', { class: 'tag' }, _('Sound, music, callouts')), audioBlock(), calloutRow(), h('div', { class: 'gm-langrow' }, langBtn()));
     hud.icons = h('div', { class: 'gm-icons' }, hud.pause, hud.cam, hud.mix);
-    hud.steps = MIND.map((n, i) => h('button', { type: 'button', class: 'gm-step', 'data-v': String(i - 2), title: _(n), 'aria-label': _('Mindset: {name}', { name: _(n) }), 'aria-pressed': 'false', onclick: () => setOrder({ mindset: i - 2 }, _('Mindset: {name}: {fx}', { name: _(n), fx: _(MIND_FX[i]) })) }));
+    hud.steps = MIND.map((n, i) => h('button', { type: 'button', class: 'gm-step', 'data-v': String(i - 2), 'aria-pressed': 'false', onclick: () => setOrder({ mindset: i - 2 }, _('Mindset: {name}: {fx}', { name: _(n), fx: _(MIND_FX[i]) })) }));
+    hud.steps.forEach((b, i) => tip(b, _('Mindset: {name}', { name: _(MIND[i]) }), cap(_(MIND_FX[i])), String(i + 1)));
     hud.mindLab = h('span', { class: 'gm-lab2' }, _('Balanced'));
     const ic = (cls, svg) => { const e = h('span', { class: cls }); e.innerHTML = svg; return e; };
     hud.mind = h('div', { class: 'gm-mind' }, h('div', { class: 'gm-mindrow' }, ic('gm-ico', IC.shield), h('div', { class: 'gm-steps' }, hud.steps), ic('gm-ico', IC.sword)), hud.mindLab);
-    hud.planBtns = PLAN_UI.map(q => { const b = h('button', { type: 'button', class: 'gm-plan', 'data-plan': q[0], 'aria-pressed': 'false', title: _('{name}: {desc}', { name: _(q[1]), desc: _(q[2]) }), 'aria-label': _(q[1]), onclick: () => togglePlan(q[0]) }); b.innerHTML = IC[q[0]]; return b; });
+    hud.planBtns = PLAN_UI.map(q => { const b = h('button', { type: 'button', class: 'gm-plan', 'data-plan': q[0], 'aria-pressed': 'false', onclick: () => togglePlan(q[0]) }); b.innerHTML = IC[q[0]]; return tip(b, _(q[1]), _(q[2]), q[3], q[3]); });
     hud.planLab = h('span', { class: 'gm-lab2' }, _('No plan'));
     hud.plans = h('div', { class: 'gm-plans' }, h('div', { class: 'gm-planrow' }, hud.planBtns), hud.planLab);
     hud.styleBtns = STYLE_UI.map(q => h('button', { type: 'button', class: 'gm-sty', 'data-style': q[0], 'aria-pressed': 'false', onclick: () => setOrder({ style: q[0] }, _('Shots: {name}: {fx}', { name: _(q[1]), fx: _(STYLE_FX[q[0]]) })) }, _(q[1])));
+    hud.styleBtns.forEach((b, i) => tip(b, _('Shots: {name}', { name: _(STYLE_UI[i][1]) }), cap(_(STYLE_FX[STYLE_UI[i][0]])), 'P'));
     hud.style = h('div', { class: 'gm-style' }, h('div', { class: 'gm-sty-row' }, hud.styleBtns), h('span', { class: 'gm-lab2' }, _('Shots')));
     hud.midBtns = MID_UI.map(q => h('button', { type: 'button', class: 'gm-sty gm-mid', 'data-mid': q[0], 'aria-pressed': 'false', onclick: () => setMid(q[0] === '' ? undefined : +q[0]) }, _(q[1])));
+    hud.midBtns.forEach((b, i) => tip(b, _('Middle balls: {who}', { who: _(MID_UI[i][1]) }), _(MID_FX[i]), 'V'));
     hud.mid = h('div', { class: 'gm-style' }, h('div', { class: 'gm-sty-row' }, hud.midBtns), h('span', { class: 'gm-lab2' }, _('Middle balls')));
-    const moment = (id, svg, title, fn) => { const b = h('button', { type: 'button', class: 'gm-mo', id: id, title: title, 'aria-label': title, onclick: fn }); b.innerHTML = svg + '<span class="gm-badge" hidden></span>'; return b; };
-    hud.go = moment('gm-go', IC.go, _('Go for it: your next winning chance becomes a swipe shot (QTE)'), () => { const Q = mod('qte'); if (!Q) return; const on = Q.arm(); API.toast(on ? _('Go for it: you take the next winning chance') : (Q.mode === 'off' ? _('QTE shots are off (pause menu)') : _('Go for it cancelled')), { kind: 'info', ms: 1800 }); updateHud(true); }); hud.go.setAttribute('aria-pressed', 'false');
-    hud.aim = moment('gm-aim', IC.aim, _('Aim your next shot'), () => API.toggleAim()); hud.aim.setAttribute('aria-pressed', 'false');
-    hud.tmo = moment('gm-timeout', IC.timeout, _('Timeout'), () => { API.callTimeout(); updateHud(true); });
-    hud.chal = moment('gm-challenge', IC.challenge, _('Challenge (Eagle Eye)'), () => { API.doChallenge(); updateHud(true); });
+    const moment = (id, svg, title, fn) => { const b = h('button', { type: 'button', class: 'gm-mo', id: id, onclick: fn }); b.innerHTML = svg + '<span class="gm-badge" hidden></span>'; return b; };
+    hud.go = moment('gm-go', IC.go, '', () => goForIt()); hud.go.setAttribute('aria-pressed', 'false');
+    hud.aim = moment('gm-aim', IC.aim, '', () => API.toggleAim()); hud.aim.setAttribute('aria-pressed', 'false');
+    hud.tmo = moment('gm-timeout', IC.timeout, '', () => { API.callTimeout(); updateHud(true); });
+    tip(hud.go, _('Go for it'), _('The next ball you get becomes a swipe shot'), 'F', 'F');
+    tip(hud.aim, _('Aim'), _('Place your next shot yourself'), 'A', 'A');
+    tip(hud.tmo, _('Timeout'), _('A breather after this point to rethink your strategy. One per match'), 'O', 'O');
     hud.fab = h('button', { type: 'button', class: 'gm-fab', id: 'gm-fab', 'aria-expanded': 'false', 'aria-label': _('Strategy'), onclick: () => { const o = hud.coach.classList.toggle('open'); hud.fab.setAttribute('aria-expanded', String(o)); } });
     hud.fab.innerHTML = '<span class="gm-chev">' + IC.chev + '</span><span>' + _('Strategy') + '</span>';
     hud.hintTxt = h('span', null);
@@ -12813,21 +12987,34 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       h('button', { type: 'button', class: 'gm-hint-go', onclick: () => { if (hs.cur) togglePlan(hs.cur[0], true); hideHint(); } }, _('Apply')),
       h('button', { type: 'button', class: 'gm-hint-x', 'aria-label': _('Dismiss hint'), onclick: () => hideHint() }, '×'));
     hud.tag = h('div', { class: 'gm-tag', hidden: true });
+    hud.tipName = h('b'); hud.tipDesc = h('span'); hud.tipKey = h('kbd', { class: 'keycap' });
+    hud.tip = h('div', { class: 'gm-tip', role: 'tooltip', hidden: true }, hud.tipName, hud.tipDesc, hud.tipKey);
     hud.sheet = h('div', { class: 'gm-sheet' }, hud.mind, hud.plans, hud.style, hud.mid);
-    hud.coach = h('div', { class: 'gm-dock' }, hud.hint, hud.tag, h('div', { class: 'gm-dockrow' }, hud.sheet, h('div', { class: 'gm-moments' }, hud.fab, hud.go, hud.aim, hud.tmo, hud.chal)));
+    hud.coach = h('div', { class: 'gm-dock' }, hud.hint, hud.tag, h('div', { class: 'gm-dockrow' }, hud.sheet, h('div', { class: 'gm-moments' }, hud.fab, hud.go, hud.aim, hud.tmo)));
     hud.ticker = h('div', { class: 'gm-ticker', hidden: true });
-    hud.skip = h('button', { type: 'button', class: 'btn small gm-skip', id: 'gm-skip', onclick: () => { API.skipCeremony(); } }, _('Skip intro ▸'));
+    hud.skip = h('button', { type: 'button', class: 'btn small gm-skip', id: 'gm-skip', onclick: () => { const rp = mod('replay'); if (rp && rp.active) rp.stop(); else API.skipCeremony(); updateHud(true); } }, _('Skip intro ▸'));
     hud.watchBar = h('div', { class: 'gm-watchbar' }, h('button', { type: 'button', class: 'btn primary', id: 'gm-watch-play', onclick: () => showCreateOrSetup() }, _('Play with Annetta')));
     hud.labels = h('div', { class: 'gm-labels' });
     hud.labYou = h('div', { class: 'gm-lab you' }, _('YOU')); hud.labAn = h('div', { class: 'gm-lab an' }, _('ANNETTA'));
     hud.labels.append(hud.labYou, hud.labAn);
-    hud.sbTab = h('button', { type: 'button', class: 'gm-sbtab', id: 'gm-sbtab', 'aria-expanded': 'false', 'aria-controls': 'gm-drawer', 'aria-label': _('Open match centre'), title: _('Match centre'), onclick: () => toggleSb() });
-    hud.sbTab.innerHTML = CHEV;
+    hud.sbTab = h('button', { type: 'button', class: 'gm-sbx', id: 'gm-sbtab', 'aria-expanded': 'false', 'aria-controls': 'gm-drawer', 'aria-label': _('Open match centre'), title: _('Match centre'), onclick: () => toggleSb() });
+    hud.sbTab.innerHTML = EXPAND;
+    if (EL.sbCard) EL.sbCard.appendChild(hud.sbTab);
     hud.drawer = h('div', { class: 'gm-drawer', id: 'gm-drawer', hidden: true });
     ['pointerdown', 'wheel', 'touchstart'].forEach(ev => hud.drawer.addEventListener(ev, e => e.stopPropagation(), { passive: true }));
-    hud.root.append(hud.labels, hud.sbTab, hud.drawer, hud.icons, hud.pop, hud.skip, hud.ticker, hud.coach, hud.watchBar);
+    hud.root.append(hud.labels, hud.drawer, hud.icons, hud.pop, hud.skip, hud.ticker, hud.coach, hud.tip, hud.watchBar);
+    bindTips(hud.coach);
     EL.stage.appendChild(hud.root);
     hud.root.hidden = true;
+  }
+  function cycleCam() {
+    const R = mod('render'); let i = CAM_CYCLE.findIndex(c => c[0] === (R && R.cameraMode)); i = (i + 1) % CAM_CYCLE.length;
+    API.setCam(CAM_CYCLE[i][0]); G.camPref = CAM_CYCLE[i][0]; API.toast(_('Camera: {name}', { name: _(CAM_CYCLE[i][1]) }), { ms: 1400 }); updateHud(true);
+  }
+  function goForIt(on) {
+    const Q = mod('qte'); if (!Q) return;
+    const set = Q.arm(on);
+    API.toast(set ? _('Go for it: you take the next ball you get') : (Q.mode === 'off' ? _('QTE shots are off (pause menu)') : _('Go for it cancelled')), { kind: 'info', ms: 1800 }); updateHud(true);
   }
   function toggleMix(force) {
     const open = force === undefined ? hud.pop.hidden : !!force;
@@ -12851,6 +13038,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     EL.app.classList.toggle('gm-sb-open', G.sbOpen);
     hud.sbTab.setAttribute('aria-expanded', G.sbOpen ? 'true' : 'false');
     hud.sbTab.setAttribute('aria-label', G.sbOpen ? _('Close match centre') : _('Open match centre'));
+    hud.sbTab.innerHTML = G.sbOpen ? COLLAPSE : EXPAND;
   }
   function showCreateOrSetup() { const s = S.saved && S.saved.length; if (s) { G.player = G.player || S.saved[S.saved.length - 1]; showSetup(); } else showCreate(); }
   function updateVisibility() {
@@ -12912,6 +13100,22 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     else if (byDef[1].attrs.defense - byDef[0].attrs.defense >= 10) sg = ['hunt', _('{name} defends worst: hunt them', { name: nm(byDef[0]) })];
     if (sg && sg[0] !== o.plan) showHint(sg);
   }
+  const PLAN_KEY = {}; PLAN_UI.forEach(q => { PLAN_KEY[q[3].toLowerCase()] = q[0]; });
+  function hotkey(k, e) {
+    const Q = mod('qte');
+    if (G.mode !== 'play' || G.st !== 'playing' || G.scr || pauseEl || (Q && Q.open)) return false;
+    const o = API.orders('A'), pressBtn = b => { if (b && !b.disabled) b.click(); };
+    let b = null;
+    if (PLAN_KEY[k]) b = hud.planBtns.find(x => x.dataset.plan === PLAN_KEY[k]);
+    else if (k >= '1' && k <= '5' && k.length === 1) b = hud.steps[+k - 1];
+    else if (k === 'p') b = hud.styleBtns[(STYLE_UI.findIndex(q => q[0] === (o.style || 'mix')) + 1) % STYLE_UI.length];
+    else if (k === 'v') b = hud.midBtns[(MID_UI.findIndex(q => q[0] === (o.middlePriority === 0 || o.middlePriority === 1 ? String(o.middlePriority) : '')) + 1) % MID_UI.length];
+    else if (k === 'f') { if (!e.repeat) goForIt(); return true; }
+    else if (k === 'o') { if (!e.repeat) API.callTimeout(); updateHud(true); return true; }
+    else return false;
+    if (!e.repeat) pressBtn(b);
+    return true;
+  }
   function setMid(i) {
     const Ai = mod('ai'); if (!Ai || !Ai.setOrders) return;
     S.coachTeam = 'A'; API.claimCoach();
@@ -12939,14 +13143,20 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     const tg = [mi ? _(MIND[mi + 2]) : '', pl ? _(PLAN_UI.find(q => q[0] === pl)[1]) + (hs.planN ? ' x' + hs.planN : '') : '', st !== 'mix' ? _(st) : '', mid !== '' ? _('middle: {who}', { who: mid === '0' ? _('you') : 'Annetta' }) : ''].filter(Boolean);
     hud.tag.hidden = !tg.length; if (tg.length) hud.tag.textContent = _('Your strategy: {list}', { list: tg.join(' · ') });
     if (Rl && Rl.state) {
-      const st = Rl.state, tl = st.timeouts ? st.timeouts.A : 0, cl = st.challenges ? st.challenges.A : 0;
+      const st = Rl.state, tl = st.timeouts ? st.timeouts.A : 0;
       const canT = tl > 0 && M && M.phase === 'play' && !st.over;
       hud.tmo.disabled = !canT; badge(hud.tmo, tl);
-      const canC = Rl.canChallenge ? Rl.canChallenge('A', 0) : false;
-      hud.chal.disabled = !canC; badge(hud.chal, cl); hud.chal.classList.toggle('ready', canC);
     }
-    hud.skip.hidden = !(G.st === 'playing' && M && PRE[M.phase]);
+    const rep = mod('replay'), replaying = !!(rep && rep.active);
+    hud.skip.hidden = !(replaying || (G.st === 'playing' && M && PRE[M.phase]));
+    const lab = replaying ? _('Skip replay ▸') : _('Skip intro ▸'); if (hud.skip.textContent !== lab) hud.skip.textContent = lab;
     void force;
+  }
+  let dockH = -1, tickH = -1;
+  function dockMetrics() {
+    const dh = hud.coach.hidden ? 12 : hud.coach.offsetHeight + 20, th = hud.ticker.hidden ? 0 : hud.ticker.offsetHeight + 6;
+    if (dh !== dockH) { dockH = dh; EL.stage.style.setProperty('--dock-h', dh + 'px'); }
+    if (th !== tickH) { tickH = th; EL.stage.style.setProperty('--tick-h', th + 'px'); }
   }
   function clearHighlights() {
     const A = mod('actors'), P = mod('players');
@@ -12957,7 +13167,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   function update(dt) {
     if (!hud.root) return;
     acc += dt;
-    if (acc > 0.25) { acc = 0; updateHud(); hintTick(0.25); }
+    if (acc > 0.25) { acc = 0; dockMetrics(); updateHud(); hintTick(0.25); }
     if (hud.root.hidden || G.st !== 'playing') return;
     const P = mod('players'), A = mod('actors'), R = mod('render'), rp = mod('replay');
     if (!P || !P.list || !G.player) return;
@@ -12974,7 +13184,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     if (!p) { el.hidden = true; return; }
     if (!tmpV) tmpV = new R.THREE.Vector3();
     const rig = A && A.rigOf ? A.rigOf(p.id) : null;
-    if (rig && rig.root) tmpV.set(rig.root.position.x, 2.35, rig.root.position.z); else tmpV.set(p.pos.x, 2.35, p.pos.z);
+    if (rig && rig.root) tmpV.set(rig.root.position.x, 3.05, rig.root.position.z); else tmpV.set(p.pos.x, 3.05, p.pos.z);
     const s = R.project(tmpV);
     if (!s || !s.visible) { el.hidden = true; return; }
     el.hidden = false; el.style.transform = 'translate(' + Math.round(s.x) + 'px,' + Math.round(s.y) + 'px) translate(-50%,-100%)';
@@ -13060,7 +13270,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   const BUS = HPO.BUS, _ = HPO.t;
   const mod = n => HPO.mod[n];
 
-  const SHOT = { smashFlat: 'smash', smashKick: 'smash', lobDef: 'lob', lobOff: 'lob', bandeja: 'bandeja', bajada: 'bajada', chiquita: 'chiquita', dejada: 'dropshot' };
+  const SHOT = { smashFlat: 'smash', smashKick: 'smash', lobDef: 'lob', lobOff: 'lob', bandeja: 'bandeja', vibora: 'vibora', bajada: 'bajada', chiquita: 'chiquita', dejada: 'dropshot' };
   const KIND = {
     out:     { text: 'OUT!',          col: '#e5484d', pri: 5, big: 1, shake: 1, rot: -6 },
     fault:   { text: 'FAULT!',        col: '#ff8a1f', pri: 5, big: 1, shake: 1, rot: 5 },
@@ -13070,14 +13280,16 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     smash:   { text: 'SMASH!',        col: '#ff4d2e', pri: 3, shake: 1, rot: -7 },
     lob:     { text: 'LOB!',          col: '#27a9e1', pri: 2, rot: 5 },
     bandeja: { text: 'BANDEJA!',      col: '#8e5bd9', pri: 2, rot: -4 },
+    vibora:  { text: 'VIBORA!',       col: '#3b5bdb', pri: 3, shake: 1, rot: 5 },
     bajada:  { text: 'BAJADA!',       col: '#2fb26b', pri: 3, rot: 4 },
     chiquita: { text: 'CHIQUITA!',    col: '#d6409f', pri: 2, rot: -5 },
-    dropshot: { text: 'DROP SHOT!',   col: '#14a89a', pri: 3, rot: 5 }
+    dropshot: { text: 'DROP SHOT!',   col: '#14a89a', pri: 3, rot: 5 },
+    mixBoth: { text: 'MINE!',        col: '#ff8a1f', pri: 4, rot: -5 },
+    mixNone: { text: 'YOURS?!',      col: '#8e5bd9', pri: 4, rot: 5 }
   };
   const END = { out: 'out', wallFirst: 'out', ceiling: 'out', net: 'net', doubleFault: 'double' };
   const STATE = {
-    intro: ['MATCH INTRO', 'Welcome to the club'], walkon: ['WALK-ON', 'The teams take the court'],
-    introductions: ['MEET THE PLAYERS', 'Introductions'], toss: ['COIN TOSS', 'Who serves first?'], warmup: ['WARM-UP', 'Get ready']
+    walkon: ['WALK-ON', 'The teams take the court'], warmup: ['WARM-UP', 'Get ready']
   };
   const LIFE_MS = 1500, SOFT_GAP_MS = 2200;
 
@@ -13191,7 +13403,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
 /* 23_versions.js */
 (function (HPO) {
   'use strict';
-  const VERSIONS = ['2026.11.05.11', '2026.11.05.10', '2026.11.05.9', '2026.11.05.8', '2026.11.05.7', '2026.11.05.6', '2026.11.05.5', '2026.11.05.4', '2026.11.05.3', '2026.11.05.2', '2026.11.05.1', '2026.11.03', '2026.11.02'];
+  const VERSIONS = ['2026.11.06.7', '2026.11.06.6', '2026.11.06.5', '2026.11.06.4', '2026.11.06.3', '2026.11.06.2', '2026.11.06', '2026.11.05.11', '2026.11.05.10', '2026.11.05.9', '2026.11.05.8', '2026.11.05.7', '2026.11.05.6', '2026.11.05.5', '2026.11.05.4', '2026.11.05.3', '2026.11.05.2', '2026.11.05.1', '2026.11.03', '2026.11.02'];
   const _ = HPO.t, foot = document.getElementById('foot');
   if (!foot) return;
   const date = v => {
@@ -13233,8 +13445,8 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
       if (Q.open) return Q.key === key;
       if (Q.key === key) return false;
       if (M.phase !== 'play' || M.paused || (rp && rp.active) || info.outside || info.above) return false;
-      const kind = chance(p, info);
-      if (!kind || !(Q.armed && kind === 'attack') && !budgetOk()) return false;
+      const kind = chance(p, info) || (Q.armed ? (info.slack < 0.1 || U.clamp((info.reach - 0.8) / 0.4, 0, 1) > 0.6 ? 'defence' : 'attack') : null);
+      if (!kind || (!Q.armed && !budgetOk())) return false;
       Q.key = key; open(kind, p, pl, info); return true;
     },
     take(p) { const o = Q.order; if (o && o.playerId === p.id) { Q.order = null; return o; } return null; },
@@ -13396,27 +13608,53 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   'use strict';
   const mod = n => HPO.mod[n], _ = HPO.t;
   const Tu = HPO.mod.tutorial = { active: false, start: start, stop: stop };
-  let ui = null, steps = [], at = -1, poll = 0, held = false, qteSeen = false, t0 = 0;
+  let ui = null, steps = [], at = -1, poll = 0, held = false, qteSeen = false, t0 = 0, camDirty = false, camPref0 = null;
 
   function steps_() {
-    const g = mod('game'), hud = g.hud, orders = () => mod('ai').orders('A');
+    const g = mod('game'), hud = g.hud, orders = () => mod('ai').orders('A'), R = mod('render'), coarse = matchMedia('(pointer:coarse)').matches;
     const collapsed = () => !!hud.fab && getComputedStyle(hud.fab).display !== 'none';
     const isOpen = () => hud.coach.classList.contains('open');
     const setOpen = v => { if (collapsed() && isOpen() !== v) hud.fab.click(); };
+    const shown = el => () => !!el && el.getBoundingClientRect().width > 0;
+    const one = (el, open) => ({ target: () => el, before: () => setOpen(open), text: g.tipText(el) });
+    let panBase = null;
+    const v = () => R.view, v0 = {};
+    const meter = () => { const X = mod('moodui'), me = g.player && X && X.els[g.player.id]; return me && !me.el.hidden ? me.el : null; };
+    const meters = () => !!meter();
+    const moodMeter = () => { const X = mod('moodui'), e = X && Object.keys(X.els).map(k => X.els[k]).find(q => !q.el.hidden && !q.buff.hidden); return e ? e.el : meter(); };
+    const look = () => { camPref0 = g.camPref; camDirty = true; v0.yaw = v().yawT; v0.zoom = v().zoom; panBase = null; };
     return [
       { text: _("Hi, I'm Annetta. We play by ourselves, so you are the coach. Let me show you around. It takes a minute."), btn: 'Show me' },
       { target: () => document.querySelector('.sb-card'), text: scoreText() },
+      { show: shown(hud.sbTab), target: () => hud.sbTab, text: _('Tap this corner icon to open the match centre: full score, stats, players and the live feed. Tap it again to close.') },
       { show: collapsed, target: () => hud.fab, text: _('This is Strategy. Tap it to open your coaching panel.'), wait: isOpen, before: () => setOpen(false) },
-      { target: () => hud.mind, before: () => setOpen(true), text: _('Mindset: the shield plays it safe, the sword goes for it. Tap one to try it.'), wait: () => (orders().mindset | 0) !== 0 },
-      { target: () => hud.plans, text: _('Then pick one plan. Try "Break the net": lobs over players who crowd the net.'), wait: () => !!orders().plan },
-      { target: () => hud.style, text: _('Shots sets the spin and pace. Middle balls says who takes the ones down the middle: you, me, or whoever is closer.') },
+      { target: () => hud.mind, before: () => setOpen(true), text: _('Mindset: the shield plays it safe, the sword goes for it. Tap one to try it. Keys: 1 to 5.'), wait: () => (orders().mindset | 0) !== 0 },
+      ...hud.planBtns.map(b => one(b, true)),
+      { target: () => hud.plans, text: _('Now pick one plan to switch it on. Tap it again to switch it off.'), wait: () => !!orders().plan },
+      { target: () => hud.style, text: _('Shots sets the spin and pace: spin is safer, flat is faster and riskier. Key: P cycles through them.') },
+      { target: () => hud.mid, text: _('Middle balls says who takes the ones down the middle: you, me, or whoever is closer. Key: V cycles through them.') },
       { show: () => !hud.tag.hidden && getComputedStyle(hud.tag).display !== 'none', target: () => hud.tag, text: _('Your choices are listed here, and your plan calls out when it works.') },
-      { target: () => hud.aim, before: () => setOpen(false), text: _('Aim lets you place your next shot yourself. Tap it.'), wait: () => mod('ui').api.S.aim },
+      { show: meters, target: () => meter(), text: _('Over every player there are two bars. The big one is energy: it only goes down, and a tired player is slower and less accurate. The thin one is concentration: it goes up with good points and down with errors.') },
+      { show: meters, target: () => moodMeter(), text: _('The face next to the bars is a mood. It boosts some stats and hurts others, and its ring is a timer that flashes before it ends. A timeout settles a bad mood. The ? button at the top lists every mood.') },
+      { target: () => hud.aim, before: () => setOpen(false), text: g.tipText(hud.aim) + ' ' + _('Tap it.'), wait: () => mod('ui').api.S.aim },
       { free: true, text: _('The other side of the court is flashing. Tap anywhere on it and your next shot goes there if it can.'), wait: () => !mod('ui').api.S.aim },
-      { target: () => hud.go, text: _('Go for it: your next winning chance becomes a swipe shot. Timeout and Challenge are what they sound like.') },
+      one(hud.go, false),
+      one(hud.tmo, false),
+      { free: true, before: look, text: coarse ? _('Let us look around. Drag with two fingers to turn the view.') : _('Let us look around. Drag on the court to turn the view, or press the left and right arrow keys.'), wait: () => Math.abs(v().yawT - v0.yaw) > 0.2 },
+      { free: true, before: look, text: coarse ? _('Pinch to zoom in and out.') : _('Scroll to zoom in and out, or press + and -.'), wait: () => Math.abs(Math.log(v().zoom / v0.zoom)) > 0.15 },
+      { free: true, text: coarse ? _('Drag with one finger to slide the view along the court.') : _('Hold the right mouse button (or Shift) and drag to slide the view along the court.'),
+        wait: () => { if (R.cameraMode !== 'free') { panBase = null; return false; } const t = v().tTarget; if (!panBase) { panBase = { x: t.x, z: t.z }; return false; } return Math.hypot(t.x - panBase.x, t.z - panBase.z) > 0.8; } },
+      { target: () => hud.cam, text: _('Tap CAM (or press C until you see the court from above). Top-down is the best view for reading the whole court.'), wait: () => R.cameraMode === 'top' },
+      { before: restoreCam, text: _('That is the camera. I put it back where it was. Press 0 any time to reset the view.') },
       { qte: true, text: _('Winning chances freeze time. Let me find you one. When the ring flashes, swipe from it toward their court. Longer and faster swipes hit harder.') },
       { text: _("That's everything. The rest is playing. Good luck!"), btn: "Let's play" }
     ];
+  }
+  function restoreCam() {
+    if (!camDirty) return; camDirty = false;
+    const R = mod('render'), g = mod('game'), api = mod('ui') && mod('ui').api;
+    if (R && R.resetView) R.resetView();
+    g.camPref = camPref0; if (api && g.camPref) api.setCam(g.camPref);
   }
   function scoreText() {
     const Rl = mod('rules'), c = Rl && Rl.state && Rl.state.config;
@@ -13449,7 +13687,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   }
   function stop() {
     if (!Tu.active) return;
-    Tu.active = false; clearInterval(poll); poll = 0;
+    Tu.active = false; clearInterval(poll); poll = 0; restoreCam();
     if (ui) ui.root.hidden = true;
     const M = mod('match'), Q = mod('qte');
     if (Q) { Q.force = null; Q.armed = false; }
@@ -13507,6 +13745,205 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
     const top = !r ? Math.max(12, (H - bh) / 2) : (r.y + r.h / 2 > H * 0.55 ? Math.max(8, r.y - bh - 12) : Math.min(H - bh - 8, r.y + r.h + 12));
     ui.bubble.style.top = (s.qte || s.free ? 12 : top) + 'px';
   }
+})(HPO);
+
+/* 26_moodui.js */
+(function (HPO) {
+  'use strict';
+  const BUS = HPO.BUS, _ = HPO.t, U = HPO.util, mod = n => HPO.mod[n];
+  const X = HPO.mod.moodui = { layer: null, els: {}, key: '' };
+  let tmpV = null;
+
+
+  const PAL = { o: '#4a2f12', y: '#ffd23f', Y: '#f0a800', k: '#1d1a17', w: '#ffffff', r: '#e5484d', R: '#8f1d24', a: '#f0603a', b: '#3b8be0', B: '#a9d8ff', p: '#9a68e6', P: '#4b2a8c', s: '#e8a76b', S: '#b97a43', g: '#b8c0c8', n: '#2b5fb8' };
+  const DISC = ['...oooooo...', '..offffffo..', '.offffffffo.', 'offffffffffo', 'offffffffffo', 'offffffffffo', 'offffffffffo', 'offffffffffo', 'offffffffffo', '.offffffffo.', '..offffffo..', '...oooooo...'];
+  const disc = (f, ol) => DISC.map(r => r.replace(/f/g, f).replace(/o/g, ol || 'o').split(''));
+  const put = (g, c, pts) => { pts.forEach(q => { if (q[0] >= 0 && q[0] < 12 && q[1] >= 0 && q[1] < 12) g[q[1]][q[0]] = c; }); return g; };
+  const BROW_MAD = [[2, 3], [3, 4], [4, 4], [9, 3], [8, 4], [7, 4]], BROW_SAD = [[2, 4], [3, 3], [4, 3], [9, 4], [8, 3], [7, 3]];
+  const EYES = [[3, 5], [4, 5], [3, 6], [4, 6], [7, 5], [8, 5], [7, 6], [8, 6]], FROWN = [[5, 8], [6, 8], [4, 9], [7, 9]];
+  function star(g, cx, cy, r) { for (let i = -r; i <= r; i++) put(g, 'Y', [[cx + i, cy], [cx, cy + i]]); if (r > 1) put(g, 'y', [[cx - 1, cy - 1], [cx + 1, cy - 1], [cx - 1, cy + 1], [cx + 1, cy + 1]]); put(g, 'w', [[cx, cy]]); }
+  const FLAME = ['.....oo.....', '....orro....', '....orrro.o.', '...orrOrroro', '..orrOOOrrro', '..orOOyOOrro', '.orOOyyyOOro', '.orOyyyyyOro', '.orOyyyyyOro', '..orOyyyOro.', '...orOOOro..', '....oooo....'];
+  const HAND = ['............', '....oooo....', '...oyyyyo...', 'nnosssyyyoww', 'nnosSsSyyoww', 'nnosssSyyoww', 'nnosSsSyyoww', 'nnosssyyyoww', '..osysysyso.', '...oooooo...', '............', '............'];
+  const FACE = {
+    angry_partner: () => put(put(disc('a'), 'k', BROW_MAD.concat(EYES, FROWN)), 'w', [[3, 5], [7, 5]]),
+    self_blame: () => put(put(disc('y'), 'k', BROW_SAD.concat(EYES, FROWN)), 'B', [[3, 7], [3, 8]]),
+    cocky: () => put(put(disc('y'), 'k', [[2, 4], [3, 4], [4, 4], [5, 4], [6, 4], [7, 4], [8, 4], [9, 4], [3, 5], [4, 5], [7, 5], [8, 5], [4, 8], [5, 8], [6, 8], [7, 8], [8, 7]]), 'w', [[3, 4], [7, 4]]),
+    nervous: () => put(put(put(disc('y'), 'w', [[3, 4], [4, 4], [3, 5], [4, 5], [7, 4], [8, 4], [7, 5], [8, 5]]), 'k', [[4, 5], [7, 5], [3, 3], [4, 2], [8, 3], [7, 2], [4, 9], [5, 8], [6, 9], [7, 8]]), 'b', [[9, 6], [9, 7]]),
+    defeated: () => put(put(disc('y'), 'k', [[2, 4], [4, 4], [3, 5], [2, 6], [4, 6], [7, 4], [9, 4], [8, 5], [7, 6], [9, 6], [4, 8], [5, 8], [6, 8], [7, 8]]), 'r', [[6, 9], [7, 9]]),
+    vengeful: () => put(put(put(put(disc('p', 'P'), 'k', BROW_MAD.concat([[3, 5], [4, 5], [7, 5], [8, 5], [2, 7], [9, 7], [3, 8], [4, 8], [5, 8], [6, 8], [7, 8], [8, 8]])), 'w', [[3, 5], [8, 5], [4, 9], [5, 9], [6, 9], [7, 9]]), 'r', [[3, 0], [3, 1], [4, 1], [8, 0], [8, 1], [7, 1]]), 'R', [[2, 1], [9, 1]]),
+    irritated: () => put(put(disc('y'), 'k', BROW_MAD.concat([[3, 5], [4, 5], [7, 5], [8, 5], [3, 8], [4, 8], [5, 8], [6, 8], [7, 8], [8, 8], [3, 9], [8, 9], [4, 10], [5, 10], [6, 10], [7, 10], [5, 9], [6, 9]])), 'w', [[4, 9], [7, 9]]),
+    fired_up: () => FLAME.map(r => r.replace(/o/g, 'R').split('')),
+    flow: () => { const g = DISC.map(() => '............'.split('')); star(g, 4, 7, 3); star(g, 9, 3, 2); star(g, 9, 9, 1); return g; },
+    supportive: () => HAND.map(r => r.split(''))
+  };
+  const art = X.art = function (id) {
+    X.cache = X.cache || {};
+    if (X.cache[id] || !FACE[id]) return X.cache[id];
+    const g = FACE[id](), cv = document.createElement('canvas'); cv.width = cv.height = 12;
+    const c = cv.getContext('2d');
+    g.forEach((row, y) => row.forEach((ch, x) => { if (PAL[ch]) { c.fillStyle = PAL[ch]; c.fillRect(x, y, 1, 1); } }));
+    return (X.cache[id] = cv.toDataURL());
+  };
+
+  BUS.on('boot:ready', function () {
+    const R = mod('render'), cont = (R && R.container) || document.getElementById('stage'); if (!cont || typeof document === 'undefined') return;
+    X.layer = document.createElement('div'); X.layer.className = 'mu-layer'; X.layer.setAttribute('aria-hidden', 'true');
+    cont.appendChild(X.layer);
+    if (R && R.onFrame) R.onFrame(update);
+  });
+
+  function visible(replayOk) {
+    const g = mod('game'), M = mod('match'), rp = mod('replay');
+    if (!M || M.phase !== 'play' || (rp && rp.active && !replayOk)) return false;
+    return !g || g.mode !== 'play' || ((g.st === 'playing' || g.st === 'watch') && !g.scr);
+  }
+  function build(p) {
+    const el = document.createElement('div'); el.className = 'mu'; el.hidden = true;
+    el.innerHTML = '<div class="mu-bars"><i class="mu-en"><b></b></i><i class="mu-fo"><b></b></i></div><div class="mu-buff" hidden><span class="mu-ico"></span></div>';
+    X.layer.appendChild(el);
+    return { el: el, en: el.querySelector('.mu-en b'), fo: el.querySelector('.mu-fo b'), buff: el.querySelector('.mu-buff'), ico: el.querySelector('.mu-ico'), mood: '', lv: '', w: -1, f: -1 };
+  }
+  function update() {
+    const P = mod('players'), R = mod('render'), A = mod('actors'), Mi = mod('mind');
+    if (!X.layer || !P || !P.list || !Mi) return;
+    const on = visible() && R.project && R.THREE;
+    X.layer.hidden = !on;
+    if (!on) return;
+    const key = P.list.map(p => p.id).join();
+    if (key !== X.key) { X.layer.textContent = ''; X.els = {}; X.key = key; }
+    if (!tmpV) tmpV = new R.THREE.Vector3();
+    P.list.forEach(function (p) {
+      const e = X.els[p.id] || (X.els[p.id] = build(p));
+      const rig = A && A.rigOf ? A.rigOf(p.id) : null;
+      if (rig && rig.root) tmpV.set(rig.root.position.x, 2.05, rig.root.position.z); else tmpV.set(p.pos.x, 2.05, p.pos.z);
+      const s = R.project(tmpV);
+      if (!s || !s.visible) { e.el.hidden = true; return; }
+      e.el.hidden = false; e.el.style.transform = 'translate(' + Math.round(s.x) + 'px,' + Math.round(s.y) + 'px) translate(-50%,-100%)';
+      const en = Math.round(Mi.energy(p) * 100), fo = Math.round(Mi.focus(p) * 100);
+      if (en !== e.w) { e.w = en; e.en.style.width = en + '%'; const lv = en > 55 ? 'hi' : en > 30 ? 'mid' : 'lo'; if (lv !== e.lv) { e.lv = lv; e.el.dataset.lv = lv; } }
+      if (fo !== e.f) { e.f = fo; e.fo.style.width = fo + '%'; }
+      const id = p.mood.id;
+      if (id !== e.mood) {
+        e.mood = id; e.buff.hidden = !id;
+        if (id) { const d = Mi.MOODS[id]; e.ico.style.setProperty('--spr', 'url(' + art(id) + ')'); e.ico.dataset.mood = id; e.buff.dataset.tone = d.tone; e.buff.title = Mi.label(id); }
+      }
+      if (id) {
+        const left = Mi.left(p), frac = left / p.mood.dur;
+        e.buff.style.setProperty('--p', (frac * 100).toFixed(1));
+        const b = left < Math.max(3, p.mood.dur * 0.2) ? (left < 1.5 ? 2 : 1) : 0;   // about to end: flash, faster in the last second and a half
+        if (b !== e.blink) { e.blink = b; e.buff.classList.toggle('blink', b === 1); e.buff.classList.toggle('blink2', b === 2); }
+      }
+    });
+  }
+
+  BUS.on('mood:change', function (e) {
+    if (!e || !e.mood || !visible(true)) return;   // a replay may be starting: the toast waits for it (19_ui.js)
+    const M = mod('match'), ui = mod('ui'), Mi = mod('mind'), p = mod('players').byId[e.playerId];
+    if (!ui || !ui.toast || !p || (M.cfg && M.cfg.fast) || M.speed >= 4) return;
+    const node = document.createElement('div'), top = document.createElement('b'), row = document.createElement('div');
+    node.className = 'mu-toast'; row.className = 'mu-tags';
+    top.textContent = _('{name}: {mood}', { name: p.name.split(' ')[0], mood: Mi.label(e.mood) });
+    Mi.effects(e.mood).forEach(function (s) { const t = document.createElement('span'); t.className = s.dir > 0 ? 'up' : 'dn'; t.textContent = s.tag + ' ' + (s.dir > 0 ? '▲' : '▼').repeat(s.n); row.appendChild(t); });
+    node.append(top, row);
+    const tone = Mi.MOODS[e.mood].tone;
+    ui.toast(node, { kind: tone === 'good' ? 'good' : tone === 'bad' ? 'warn' : 'info', ms: 2800 });
+  });
+  BUS.on('mood:mixup', function (e) {
+    const C = mod('callouts'), p = mod('players').byId[e.who];
+    if (C && C.show && p) C.show(e.kind === 'both' ? 'mixBoth' : 'mixNone', { x: p.pos.x, y: 2.7, z: p.pos.z });
+  });
+})(HPO);
+
+/* 27_guide.js */
+(function (HPO) {
+  'use strict';
+  const BUS = HPO.BUS, _ = HPO.t, mod = n => HPO.mod[n];
+  const Gd = HPO.mod.guide = { el: null, open: open, close: close, toggle: toggle, isOpen: () => !!Gd.el };
+  let wasPaused = true;
+
+  const STATS = [
+    ['PWR', 'Power', 'How hard the ball is hit.'],
+    ['ACC', 'Accuracy', 'How close shots land to where they were aimed. Low accuracy means wider misses.'],
+    ['REF', 'Reflexes', 'How quickly a player reads the ball and reacts.'],
+    ['COV', 'Coverage', 'Running speed and how much of the court they reach.'],
+    ['STA', 'Stamina', 'How slowly energy drains.'],
+    ['NET', 'Net', 'Calm, sharp volleys and smashes near the net.'],
+    ['DEF', 'Defense', 'Digging out hard balls, lobs and resets.'],
+    ['WAL', 'Wall read', 'Judging how the ball comes off the glass.'],
+    ['TAC', 'Tactics', 'Shot choice and aim, and a cool head: fewer mood swings.']
+  ];
+  const MOOD = {
+    angry_partner: ['Their partner keeps making errors.', "Grabs balls, even the partner's. Both may go for the same one."],
+    self_blame: ['They keep making errors themselves.', 'Plays safe and leaves balls to the partner. Both may leave one.'],
+    fired_up: ['A big winner (smash or ace) or three points in a row.', 'Hits harder and runs faster, but burns energy.'],
+    cocky: ['They are well ahead.', 'Tries drop shots and slips on easy balls.'],
+    nervous: ['Break, set or match point.', 'Shaky serve, safer shots, slower to react.'],
+    flow: ['Several clean points in a row, with energy to spare.', 'Sharper and quicker to react.'],
+    defeated: ['They are far behind, late in the match.', 'Slower and gives up on far balls, but spends less energy.'],
+    vengeful: ['They were beaten by a smash or an ace.', 'Aims at whoever hurt them, which makes them easier to read.'],
+    supportive: ['Their partner erred and they stay calm.', 'Calms the partner and avoids mix-ups.'],
+    irritated: ['A close line call went against them.', 'Hits harder and wilder for a moment.']
+  };
+
+  function build(api) {
+    const h = api.h, M = mod('mind'), G = mod('game'), X = mod('moodui');
+    const sec = (title, kids) => h('section', { class: 'gd-sec' }, h('h3', null, _(title)), kids);
+    const how = (G && G.how ? G.how : []).map(s => h('div', { class: 'gd-how' }, h('b', null, _(s[0])), h('p', null, typeof s[1] === 'function' ? s[1]() : _(s[1]))));
+    const stats = h('dl', { class: 'gd-stats' }, STATS.map(s => [h('dt', null, s[0]), h('dd', null, h('b', null, _(s[1])), ' · ' + _(s[2]))]));
+    const moods = Object.keys(M.MOODS).map(id => {
+      const d = M.MOODS[id], ico = h('span', { class: 'gd-ico', 'data-tone': d.tone });
+      if (X && X.art) ico.style.setProperty('--spr', 'url(' + X.art(id) + ')');
+      const tags = h('div', { class: 'mu-tags' }, M.effects(id).map(s => h('span', { class: s.dir > 0 ? 'up' : 'dn' }, s.tag + ' ' + (s.dir > 0 ? '▲' : '▼').repeat(s.n))));
+      return h('div', { class: 'gd-mood' }, ico, h('div', null, h('b', null, M.label(id)), h('p', null, _(MOOD[id][1]) + ' ', h('i', null, _('When: {why}', { why: _(MOOD[id][0]).replace(/\.$/, '') }))), tags));
+    });
+    const tut = () => h('button', { class: 'btn primary gd-tut', type: 'button', onclick: watchTutorial }, _('Watch the tutorial'));
+    const keys = () => h('button', { class: 'btn', type: 'button', onclick: () => { close(); const U = mod('ui'); if (U && U.api && U.api.showKeys) U.api.showKeys(); } }, _('Keyboard shortcuts'));
+    const bye = () => h('button', { class: 'btn', type: 'button', onclick: () => close() }, _('Close'));
+    return h('div', { class: 'modal gd', id: 'gd', role: 'dialog', 'aria-label': _('Game instructions'), onclick: e => { if (e.target === Gd.el) close(); } },
+      h('div', { class: 'card sheet guide' },
+        h('div', { class: 'tag' }, _('Game instructions')), h('h2', null, _('How it all works')),
+        h('div', { class: 'acts' }, tut(), keys(), bye()),
+        sec('How to play', how),
+        sec('Player stats', [h('p', null, _('Every player has nine stats, from about 40 to 95. They show on the player cards in the match centre.')), stats]),
+        sec('Energy and concentration', [
+          h('p', null, h('b', null, _('Energy')), ' · ' + _('The bar over each player. It only goes down: running and hard shots cost it, and nothing gives it back. A tired player is slower, less accurate, and smashes less.')),
+          h('p', null, h('b', null, _('Concentration')), ' · ' + _('The thin bar under it. It goes up with points won and down with errors, losing runs and big points. A timeout or a changeover settles it. Tired players cannot concentrate fully.'))]),
+        sec('Moods', [h('p', null, _('A mood is a timed boost or setback next to the bars. The ring around the face is its timer: it empties, and flashes just before the mood ends. Green tags are stats that go up, red ones go down.')), h('div', { class: 'gd-moods' }, moods)]),
+        h('div', { class: 'acts' }, tut(), bye())));
+  }
+
+  function watchTutorial() {
+    const g = mod('game'), Tu = mod('tutorial'), api = mod('ui') && mod('ui').api;
+    close(true);
+    if (!g || !Tu) return;
+    if (g.mode === 'play' && g.st === 'playing') { setTimeout(() => Tu.start(), 150); return; }
+    g.tutorialPending = true;   // the next match starts with it (21_game.js)
+    if (api) api.toast(g.mode === 'play' ? _('The tutorial starts with your next match.') : _('The tutorial runs in Play mode: switch to Play and start a match.'), { kind: 'info', ms: 3600 });
+  }
+
+  function open() {
+    const api = mod('ui') && mod('ui').api; if (!api || Gd.el) return;
+    const M = mod('match'); wasPaused = !!(M && M.paused); if (M && !wasPaused && M.pause) M.pause(true);
+    Gd.el = build(api);
+    Gd.el.querySelectorAll('.gd-tut').forEach(b => { b.hidden = !!(mod('game') && mod('game').mode !== 'play'); });
+    api.EL.stage.appendChild(Gd.el);
+    const card = Gd.el.querySelector('.guide'); if (card) card.scrollTop = 0;
+    const hb = document.getElementById('btn-help'); if (hb) hb.setAttribute('aria-expanded', 'true');
+  }
+  function close(keepPaused) {
+    if (!Gd.el) return;
+    Gd.el.remove(); Gd.el = null;
+    const M = mod('match'); if (M && !wasPaused && !keepPaused && M.pause) M.pause(false);
+    const hb = document.getElementById('btn-help'); if (hb) hb.setAttribute('aria-expanded', 'false');
+  }
+  function toggle() { if (Gd.el) close(); else open(); }
+
+  document.addEventListener('keydown', function (e) {
+    if (!Gd.el) return;
+    if (e.key === 'Escape' || e.key === '?') { e.preventDefault(); close(); }
+    if (!e.ctrlKey && !e.metaKey && e.key !== 'Tab') e.stopImmediatePropagation();
+  }, true);
+  BUS.on('match:new', function () { if (Gd.el) close(true); });
 })(HPO);
 
 </script></body></html>

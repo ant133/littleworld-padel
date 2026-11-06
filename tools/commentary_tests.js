@@ -44,8 +44,6 @@ function ok(c, m) { if (c) pass++; else { fail++; console.log('FAIL', m); } }
   one({ type: 'flag', flags: { matchPoint: 'A', golden: false }, who: { matchPoint: 'Team A' } }, 'matchPoint', 'match point');
   one({ type: 'flag', flags: { golden: true } }, 'goldenPoint', 'golden point');
   one({ type: 'tiebreak' }, 'tiebreak', 'tie-break');
-  one({ type: 'challenge', overturned: true, call: 'out', T: 'x' }, 'challengeOver', 'challenge overturned');
-  one({ type: 'challenge', overturned: false, call: 'in', T: 'x' }, 'challengeStands', 'challenge stands');
   one({ type: 'streak', n: 4, T: 'Team A' }, 'streak', 'streak');
   one({ type: 'let' }, 'letNet', 'net let');
   // speed scaling: at 4x the same events produce fewer lines
@@ -77,12 +75,12 @@ const CONFIGS = [
 ];
 const keysSeen = {}; let sample = null, totalLines = 0, totalCom = 0, maxWin = 0;
 const UMP_OK = [/^(Love|Fifteen|Thirty|Forty|Zero|One|Two|Three|Four|Five|Six|Seven|Eight|Nine|Ten|Eleven|Twelve|Thirteen|Fourteen|Fifteen|Sixteen|Seventeen|Eighteen)[– ]/, /^Deuce$/, /^Advantage Team [AB]$/, /^Golden point/, /^Fault$/, /^Foot fault$/,
-  /^Let$/, /^Out$/, /^Double fault$/, /^Second serve$/, /^Game, Team [AB]\./, /^Game and (first|second|third) set/, /^Game, set and match/, /^Tie-break, zero all/, /^Challenge /, /^Tactical timeout/];
+  /^Let$/, /^Out$/, /^Double fault$/, /^Second serve$/, /^Game, Team [AB]\./, /^Game and (first|second|third) set/, /^Game, set and match/, /^Tie-break, zero all/, /^Tactical timeout/];
 
 CONFIGS.forEach(function (cfg) {
   const HPO = load(), C = HPO.mod.commentary, BUS = HPO.BUS, M = HPO.mod.match;
   C.init();
-  const lines = [], ev = { shots: [], points: [], contacts: [], flags: [], faults: [], lets: [], phases: [], challenges: [], coach: [], form: [], games: [], sets: [], match: [], changeovers: [] };
+  const lines = [], ev = { shots: [], points: [], contacts: [], flags: [], faults: [], lets: [], phases: [], coach: [], form: [], games: [], sets: [], match: [], changeovers: [] };
   let glassRun = 0, wallsRun = 0;
   const T = () => M.simTime;
   BUS.on('speak', e => lines.push(Object.assign({ at: T() }, e)));
@@ -93,7 +91,6 @@ CONFIGS.forEach(function (cfg) {
   BUS.on('fault', e => ev.faults.push(Object.assign({ t: T() }, e)));
   BUS.on('let', e => ev.lets.push({ t: T() }));
   BUS.on('match:phase', e => ev.phases.push(Object.assign({ t: T() }, e)));
-  BUS.on('challenge:result', e => ev.challenges.push(Object.assign({ t: T() }, e)));
   BUS.on('game:end', e => ev.games.push(Object.assign({ t: T() }, e)));
   BUS.on('set:end', e => ev.sets.push(Object.assign({ t: T() }, e)));
   BUS.on('match:end', e => ev.match.push(Object.assign({ t: T() }, e)));
@@ -172,8 +169,6 @@ CONFIGS.forEach(function (cfg) {
       case 'letNet': good = near(ev.lets, l.t).length > 0 || near(ev.faults, l.t).some(f => f.kind === 'let'); break;
       case 'faultMesh': good = near(ev.faults, l.t).some(f => f.kind === 'mesh'); break;
       case 'faultNet': good = near(ev.faults, l.t).some(f => f.kind === 'net'); break;
-      case 'challengeStands': good = near(ev.challenges, l.t).some(c => !c.overturned); break;
-      case 'challengeOver': good = near(ev.challenges, l.t).some(c => c.overturned); break;
       case 'changeoverGame': case 'changeoverSet': good = near(ev.changeovers, l.t).length > 0; break;
       case 'fatigue': good = w.fatigue >= C.fatigueThreshold; break;
       case 'formationAttack': case 'formationDefend': good = !!w.formation; break;

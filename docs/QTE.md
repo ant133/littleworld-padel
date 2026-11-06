@@ -11,7 +11,7 @@ Replaces the old coach bar (tactic dropdown, middle-ball dropdown, three text bu
 | Mindset | 5-stop dial, shield (defend) to sword (attack): Fortress, Safe, Balanced, Pressure, All-in | `mindset` -2..2 | multipliers for smash, vibora, flat, lob, wallDef, risk and `netBias` (`MINDSET` in `07_ai.js`) |
 | Plan | one of six icon toggles, exclusive; tapping the active one clears it | `plan` | `PLANS` in `07_ai.js` |
 | Style | Spin / Mix / Flat | `style` | `STYLES` in `07_ai.js` |
-| Moments | Go for it (arms the next QTE chance), Aim, Timeout, Challenge (badges show what is left) | - | `qte.arm()` and existing actions |
+| Moments | Go for it (the next ball you get opens a QTE), Aim, Timeout (the badge shows what is left) | - | `qte.arm()` and existing actions |
 | Middle balls | Auto / You / Annetta, the fourth group of the sheet | `middlePriority` | existing |
 | Hint | one-line suggestion chip with Apply | - | UI only |
 
@@ -29,7 +29,7 @@ Collapsed layout (under 1180 px wide or under 640 px tall): the sheet is closed 
 
 - Play mode only, for the visitor's player (`G.player`); never in headless tests.
 - Setting (pause menu): Off / No timer / Timed / Timed, often. The default is **No timer** (`relaxed`): occasional frequency, the swipe waits for you, and a "Let it play" button hands the shot back to the AI with no penalty. Playtesters found the timed freeze a jump scare.
-- One shared budget for attack and defence QTEs: about 1 per game, at least 3 points between them. The dock's **Go for it** moment (added with the QTE) arms the next attack chance on demand.
+- One shared budget for attack and defence QTEs: about 1 per game, at least 3 points between them. The dock's **Go for it** moment (added with the QTE) arms the QTE on demand: the next ball the visitor's player gets always opens it (a stretched ball opens a defence QTE, any other an attack QTE), whatever the chance check or the budget says. Balls played from outside the court or above the glass are skipped and the arm stays for the next one.
 - The sim freezes while the QTE is open, at the moment the shot would be committed (0.34 s before contact). The window is 4.2 s of real time for an attack and 3.6 s for a defence. The AI's shot decision still happens afterwards: the QTE only writes an order (`qte.take()`, read by `ai.decideShot`) that the decision honours if the solver says it can fly it.
 - Camera: a `qte` camera mode behind the player, facing the opponent, about 60 degrees elevation, zoomed to the whole court; restored afterwards with the replay camera save/restore.
 - The hit circle: a ring projected onto the racket, shrinking = time left, flashing pulse and radial burst, rest of the screen desaturated with a vignette, audio sting, `navigator.vibrate`, "NOW!" callout.

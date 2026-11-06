@@ -103,7 +103,7 @@
         if (y >= 2.1 && y <= 2.95) s += (deepLob ? 4.0 : 1.8) * m.smash;
         if (c.ownBounces === 0) s += atNet ? 0.9 * T.volleyWilling * (1 + (m.netBias > 0 ? 0.3 : 0)) : -0.5; // volley when at the net
         if (c.outside) s -= 2.5;                                      // only when nothing inside the glass can be reached
-        if (c.afterWall) s += lvl(p.attrs.wallRead) * 0.6 - (atNet ? 0.5 : 0);   // wall specialists let it come back
+        if (c.afterWall) s += lvl(p.attrs.wallRead) * 0.6 * (0.75 + 0.5 * HPO.mod.mind.focus(p)) - (atNet ? 0.5 : 0);   // wall specialists let it come back
         if (c.ownBounces === 0 && c.dt < 0.25) s -= 0.5;              // too rushed
         if (d < 1.0) s -= 0.6;                                       // too close to net / body in the net
         if (c.reach > 0.9) s -= (c.reach - 0.9) * 1.5;
@@ -187,6 +187,7 @@
         if (arch === 'smasher') { if (SMASH[k]) x *= 1.6; if (k === 'vibora') x *= 1.25; }
         if (arch === 'precision') { if (SOFT[k]) x *= 1.4; if (k === 'bandeja') x *= 1.15; }
         if (arch === 'counterpuncher') { if (k === 'counterDW') x *= 1.6; if (LOB[k]) x *= 1.2; }
+        x *= HPO.mod.mind.shotMul(p, k);
         const diff = S.difficulty(k, h, info.ballSpeed, 0);
         x *= S.heightFit(k, h) + 0.02;
         x *= (1 - U.clamp(diff - 0.3 * lvl(p.attrs.accuracy), 0, 1) * (0.5 + press * 0.5));
@@ -314,7 +315,8 @@
     const cands = [];
     const clampT = t => ({ x: U.clamp(t.x, ox * 0, ox * 99), z: t.z });
     const addAim = (dx, z, tag) => cands.push({ x: ox * dx, z: U.clamp(z, -5 + marginZ, 5 - marginZ), tag: tag });
-    const weak = ops.slice().sort((a, b) => m.tire ? b.fatigue - a.fatigue : weakness(b) - weakness(a))[0];
+    const vg = p.mood.id === 'vengeful' ? ops.find(q => q.id === p.mind.revenge) : null;
+    const weak = vg || ops.slice().sort((a, b) => m.tire ? b.fatigue - a.fatigue : weakness(b) - weakness(a))[0];
     let kindDepth;
     const effortBase = 0.35 + 0.3 * (m.flat - 0.8) + 0.2 * lvl(p.attrs.power);
     let effort = U.clamp(effortBase, 0.2, 0.9);
@@ -388,6 +390,7 @@
       const nomO = S.nominal(info.p, kind, { x: aimOrder.x, z: aimOrder.z }, { effort: effort });
       if (nomO.feasible && S.difficulty(kind, info.height, info.ballSpeed, 0) < 0.85) { target = { x: aimOrder.x, z: aimOrder.z }; tm.orders.aimPoint = null; }
     }
+    effort = U.clamp(effort + HPO.mod.mind.effort(p), 0.12, 0.98);
     const intent = LOB[kind] || kind === 'wallDef' ? 'defend' : (SMASH[kind] || kind === 'vibora' ? 'attack' : (SOFT[kind] ? 'finesse' : 'rally'));
     return { kind: kind, target: target, effort: effort, intent: intent, reason: best.tag, netMargin: SMASH[kind] ? U.clamp(0.3 + 0.1 * kEst, 0.32, 0.7) : U.clamp(T.netSafe * (0.12 + 0.07 * kEst), 0.12, 0.7) };
   }
@@ -416,7 +419,7 @@
     return { slack: best };
   }
 
-  function weakness(q) { return (1 - lvl(q.attrs.defense)) * 0.6 + q.fatigue * 0.5 + (1 - q.confidence) * 0.2; }
+  function weakness(q) { return (1 - lvl(q.attrs.defense)) * 0.6 + q.fatigue * 0.5 + (1 - q.confidence) * 0.2 + HPO.mod.mind.weak(q); }
 
   // ---- team tick ----
   function tickTeam(team, dt) {
@@ -456,7 +459,7 @@
       return { p: p, c: c, first: c.length ? c[0] : null };
     });
     const bz = B.p.z;
-    let best = null, bs = -1e9;
+    let best = null, bs = -1e9, bs2 = -1e9;
     res.forEach(function (r) {
       let s;
       if (r.first) {
@@ -467,6 +470,7 @@
         const lat = (r.first.p.x - r.p.pos.x) * rv.x + (r.first.p.z - r.p.pos.z) * rv.z;
         s += (r.p.hand === 'R' ? lat > 0 : lat < 0) ? 0.1 : 0;
         s += lvl(r.p.attrs.coverage) * 0.1;
+        s += HPO.mod.mind.claim(r.p);          // an angry player grabs the ball, a blaming one leaves it
         // middle balls: coach priority, else better wall reader/defender
         if (Math.abs(r.first.p.z) < 1.1) {
           const mp = tm.orders.middlePriority;
@@ -482,8 +486,9 @@
         const e = ballEnd();
         s = -10 - Math.hypot(r.p.pos.x - e.x, r.p.pos.z - e.z) * 0.2;
       }
-      if (s > bs) { bs = s; best = r; }
+      if (s > bs) { bs2 = bs; bs = s; best = r; } else if (s > bs2) bs2 = s;
     });
+    if (res.length === 2 && res[0].first && res[1].first) HPO.mod.mind.contest(team, res[0].p, res[1].p, bs - bs2, B.hitsSinceServe);
     tm.claim = best.p.id;
     const e = ballEnd(); const sx = HPO.court.sides[team];
     return { interceptor: best.p, supporter: ps.find(q => q !== best.p), cands: best.first ? best.c : null, chase: { x: U.clamp(e.x, sx < 0 ? -9.4 : 0.8, sx < 0 ? -0.8 : 9.4), z: U.clamp(e.z, -4.4, 4.4) } };

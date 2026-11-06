@@ -70,10 +70,10 @@ crowd.init(ctx)         // InstancedMesh spectators filling worldClub seat slots
 crowd.setMood(0..3); crowd.react(level, kind); crowd.wave(); crowd.update(dt)
 crowd.mascot            // Annetta mascot spectator (distinct sprite-like figure with "A✦" shirt)
 fx.confetti(n, origin?) ; fx.dust(p) ; fx.glassRipple(p, n); fx.flagWave(mesh)
-replay.record()  (called by match tick @60Hz)  replay.play({kind:'challenge'|'highlight', from, to, speed}) ; replay.active
+replay.record()  (called by match tick @60Hz)  replay.play({kind:'highlight', from, to, speed}) ; replay.active
 ceremony.walkOn() / introductions() / toss() / handshake() / podium() / trophy() — visual helpers used by match coroutine hooks; ceremony.skip()
 ```
-Listens to BUS: `point:end`, `rally:stroke`, `match:phase`, `flag:update`, `challenge:result`, `ball:contact` (glass ripple), `ball:bounce` (dust), `match:end`.
+Listens to BUS: `point:end`, `rally:stroke`, `match:phase`, `flag:update`, `ball:contact` (glass ripple), `ball:bounce` (dust), `match:end`.
 
 ## 5. audio / commentary (src/17_audio.js, src/18_commentary.js)
 - `audio.unlock()` on first gesture (called from `ui` on any click/key); master gain 0 until the user switches Sound on. Buses `fx, crowd, commentary, ambience` (+ `audio.setVolume(bus, 0..1)`, `audio.setMuted(bool)`).
@@ -81,7 +81,7 @@ Listens to BUS: `point:end`, `rally:stroke`, `match:phase`, `flag:update`, `chal
 - `commentary` turns real events into English lines using event data (shot kinds, rally length, wall use, score flags, streaks) with a no-repeat memory; emits BUS `speak {text, voice}` and appends to the UI feed via `ui.feed(entry)`. Pure/testable part: `commentary.lineFor(eventSummary)`; Node-testable with `tools/commentary_tests.js`.
 
 ## 6. ui (src/19_ui.js, src/shell.html, src/shell.css)
-Page shell in annetta.dev style (CONTRACT §13). `ui.init(ctx)` builds panel DOM into `#panel`, TV scoreboard overlay into `#stage`, match centre tabs, coach controls (all presets, serve/return direction, middle priority, focus opponent, click-to-aim `A`, timeout, challenge `C`), camera controls, court settings, audio sliders, debug overlay (backtick). Keys: Q/E rotate, 1–5 cameras, +/- zoom, R reset, Space pause, C challenge, A aim. `ui.feed(entry)`, `ui.setScore(state)`, `ui.toast(text)`. Responsive: desktop panel at right (≥ 900 px), stacked below on mobile.
+Page shell in annetta.dev style (CONTRACT §13). `ui.init(ctx)` builds panel DOM into `#panel`, TV scoreboard overlay into `#stage`, match centre tabs, coach controls (all presets, serve/return direction, middle priority, focus opponent, click-to-aim `A`, timeout), camera controls, court settings, audio sliders, debug overlay (backtick). Keys: Q/E rotate, 1–5 cameras, +/- zoom, R reset, Space pause, A aim. `ui.feed(entry)`, `ui.setScore(state)`, `ui.toast(text)`. Responsive: desktop panel at right (≥ 900 px), stacked below on mobile.
 
 ## 7. Performance & mobile
 `HPO.cfg.mobile = matchMedia('(pointer:coarse)').matches || innerWidth < 700` → reduced mode (pixel size stays 2), crowd ×0.5, no shadows, fewer trees/flowers, particles ×0.5. Provide `setOptions({mobile})`.

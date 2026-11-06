@@ -124,10 +124,6 @@
     'commentary.changeoverSet': [
       'Set break: saatnya menyusun ulang dan mengatur ulang.', 'Para pemain istirahat lebih lama di antara set.', 'Napas sejenak antar set, pelatih pasti punya banyak yang disampaikan.',
       'Set break, kesempatan untuk memulihkan tenaga.'],
-    'commentary.challengeStands': [
-      'Eagle Eye... keputusan bertahan!', 'Eagle Eye mengonfirmasi, keputusan tetap.', 'Eagle Eye sudah bicara: keputusan awal benar.', 'Replay menunjukkan keputusannya benar, tetap berlaku.'],
-    'commentary.challengeOver': [
-      'Eagle Eye... keputusan dibatalkan!', 'Eagle Eye membatalkannya! Bolanya ternyata {S}.', 'Challenge berpihak pada mereka, keputusan dibatalkan!', 'Dibatalkan! Eagle Eye menunjukkan bolanya {S}.'],
     // ---- phases
     'commentary.phIntro': [
       'Selamat datang di Littleworld Jakarta Padel Cup!', 'Halo semuanya, dan selamat datang di Littleworld Jakarta Padel Cup.',

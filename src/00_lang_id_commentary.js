@@ -33,8 +33,6 @@
     'ord.first': 'pertama', 'ord.second': 'kedua', 'ord.third': 'ketiga', 'ord.fourth': 'keempat', 'ord.fifth': 'kelima',
 
     // match flow (spoken and shown in the feed)
-    'Challenge from Team {team}. The call is overturned.': 'Challenge dari Team {team}. Keputusan dibatalkan.',
-    'Challenge from Team {team}. The call stands.': 'Challenge dari Team {team}. Keputusan tetap.',
     'Tactical timeout, Team {team}.': 'Timeout taktik, Team {team}.',
     'Choose four different players eligible for this match type.': 'Pilih empat pemain berbeda yang sesuai dengan jenis pertandingan ini.',
     'Mixed teams require one woman and one man.': 'Tim campuran harus terdiri dari satu perempuan dan satu laki-laki.',

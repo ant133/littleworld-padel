@@ -13,7 +13,7 @@
     TITLE() { return 'Littleworld Jakarta Padel Cup ' + new Date().getFullYear(); },
     PHYS_DT: 1 / 240, SIM_DT: 1 / 60, MAX_SUBSTEPS: 16,
     BALL: { R: 0.0335, M: 0.0565, CD: 0.55, RHO: 1.2, MAGNUS: 0.00055, G: 9.81 },
-    RULES: { outOfCourtRetrieval: true, challengesPerSet: 2 },
+    RULES: { outOfCourtRetrieval: true },
     PIXEL: { size: 2, palette: 90 },
     TUNE: {} // filled by modules (ai/shots) with their tunables
   };
@@ -65,7 +65,7 @@
   HPO.reseed = function (seed) {
     HPO.rng = makeRng(seed);
     HPO.streams = {};
-    ['ai', 'exec', 'ball', 'rules', 'crowd'].forEach(function (k) { HPO.streams[k] = makeRng(seed).fork(k); });
+    ['ai', 'exec', 'ball', 'rules', 'crowd', 'mind'].forEach(function (k) { HPO.streams[k] = makeRng(seed).fork(k); });
     return HPO.rng;
   };
   HPO.reseed(1);

@@ -265,13 +265,9 @@ test('flags: golden point deciding the set is match/set point', function () {
   const s = games(mk('oneSet', 'golden'), 'AAAAA'); play(s, 'AAABBB'); eq(s.goldenPoint, true); eq(s.flags.matchPoint, 'A');
   const t = games(mk('oneSet', 'golden'), 'BBBBBA'); play(t, 'AAABBB'); eq(t.flags.matchPoint, 'B', '1-5: B wins the golden point -> 6-1 match');
 });
-test('challenges: per set, reset each set, consumption helper', function () {
-  const s = mk('bo3', 'advantage'); eq(s.challenges, { A: 2, B: 2 });
-  ok(SC.consumeChallenge(s, 'A')); eq(s.challenges, { A: 1, B: 2 });
-  games(s, 'AAAAAA'); eq(s.challenges, { A: 2, B: 2 }, 'reset at set end');
-  ok(SC.consumeChallenge(s, 'B') && SC.consumeChallenge(s, 'B') && !SC.consumeChallenge(s, 'B'));
-  eq(SC.createMatch({ format: 'quick', challengesPerSet: 3 }).challenges, { A: 3, B: 3 });
-  ok(SC.useTimeout(s, 'A') && !SC.useTimeout(s, 'A'));
+test('timeouts: one per match, consumption helper', function () {
+  const s = mk('bo3', 'advantage'); eq(s.timeouts, { A: 1, B: 1 });
+  ok(SC.useTimeout(s, 'A') && !SC.useTimeout(s, 'A') && SC.useTimeout(s, 'B'));
 });
 test('describe(): sets/games/server text and banners', function () {
   const s = games(mk('bo3', 'advantage'), 'AAAAAABB');
@@ -600,54 +596,6 @@ test('FSM point:end kinds ace/winner/forced/unforced/doubleFault/fault all reach
   run(() => { h.toss('a1'); h.hit('a1'); h.shot('b1'); });
   eq(Array.from(seen).sort(), ['ace', 'doubleFault', 'fault', 'forced', 'unforced', 'winner']);
 });
-
-// ---------- challenges ----------
-fsmTest('challenge: correct call is upheld and consumes the challenge; window rules', function (h) {
-  const S = h.start(); h.toss('a1'); h.hit('a1'); h.bounce(3, -0.02, 2);       // in by 2 cm
-  ok(!h.R.canChallenge('B'), 'no challenge while the point is live');
-  h.bounce(8, -3, 3);
-  ok(h.end()); eq(h.R.lastBounces().length, 2);
-  ok(h.R.canChallenge('B') && h.R.canChallenge('A'));
-  const r = h.R.challenge('B'); eq([r.overturned, r.call, r.final, r.margin], [false, 'in', 'in', 3]);
-  eq(S.challenges, { A: 2, B: 1 }); eq(h.last('challenge:result').overturned, false);
-  ok(!h.R.canChallenge('B'), 'one challenge per call'); eq(h.R.challenge('B'), null);
-  h.R.startPoint(); h.goodServe(); h.bounce(8, -3, 40);
-  ok(!h.R.canChallenge('A'), 'margin 40 cm is not a close call');
-});
-fsmTest('challenge: a first-serve fault call can be challenged before the second serve', function (h) {
-  const S = h.start(); h.toss('a1'); h.hit('a1'); h.bounce(7.0, -2, 5);
-  eq(h.last('fault').kind, 'long'); ok(h.R.canChallenge('A'));
-  const r = h.R.challenge('A'); eq([r.overturned, r.call], [false, 'out']); eq(S.challenges.A, 1);
-  h.toss('a1'); ok(!h.R.canChallenge('B'), 'window closes when the next serve starts');
-});
-MODES.forEach(m => test('challenge: overturned line calls (lineErrorCm>0) restore faultCount / undo the point; not consumed [court=' + m + ']', function () {
-  let first = 0, dbl = 0, calledIn = 0;
-  for (let trial = 0; trial < 240 && (first < 3 || dbl < 3 || calledIn < 3); trial++) {
-    const h = mkFSM(m), S = h.start(); h.H.reseed(900 + trial);
-    const kind = trial % 3;
-    h.H.cfg.RULES.lineErrorCm = 30;
-    if (kind === 0) {                       // truly IN, called OUT on the first serve
-      h.toss('a1'); h.hit('a1'); h.bounce(3, -0.01, 1);
-      if (!h.all('fault').length) continue;
-      const r = h.R.challenge('B'); ok(r && r.overturned && r.final === 'in', 'overturned'); first++;
-      eq(S.faultCount, 0); eq(h.last('point:start').retry, true); eq(h.last('point:start').faultCount, 0);
-      eq(S.challenges, { A: 2, B: 2 }, 'overturn not consumed'); eq(h.R.phase(), 'serveWait');
-    } else if (kind === 1) {                // double fault with a wrongly called second serve
-      h.H.cfg.RULES.lineErrorCm = 0; h.toss('a1'); h.hit('a1'); h.bounce(8, -2); h.H.cfg.RULES.lineErrorCm = 30;
-      h.toss('a1'); h.hit('a1'); h.bounce(3, -0.01, 1);
-      if (!h.end() || h.end().kind !== 'doubleFault') continue;
-      const r = h.R.challenge('A'); ok(r && r.overturned); dbl++;
-      eq(S.points, { A: 0, B: 0 }); eq(S.log.length, 0); eq(S.faultCount, 1); eq(h.last('point:start').faultCount, 1); SC.assertState(S);
-    } else {                                // truly OUT, called IN, ace awarded, then challenged
-      h.toss('a1'); h.hit('a1'); h.bounce(6.96, -2, 1);
-      if (h.all('fault').length) continue;
-      h.bounce(8, -3, 2); eq(h.end().kind, 'ace');
-      const r = h.R.challenge('B', 1); ok(r && r.overturned && r.final === 'out'); calledIn++;
-      eq(S.points, { A: 0, B: 0 }); eq(S.faultCount, 1); eq(h.last('fault').kind, 'long'); SC.assertState(S);
-    }
-  }
-  ok(first >= 1 && dbl >= 1 && calledIn >= 1, 'coverage ' + [first, dbl, calledIn]);
-}));
 
 // ---------- court module cross-check ----------
 test('court: HPO.mod.court.serviceBox agrees with the rules fallback (only if the real module exists)', function () {

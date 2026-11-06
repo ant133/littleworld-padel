@@ -21,8 +21,9 @@
       if (Q.open) return Q.key === key;
       if (Q.key === key) return false;
       if (M.phase !== 'play' || M.paused || (rp && rp.active) || info.outside || info.above) return false;
-      const kind = chance(p, info);
-      if (!kind || !(Q.armed && kind === 'attack') && !budgetOk()) return false;
+      // armed (Go for it): the next ball this player gets always opens it; a stretched ball is a save, anything else an attack
+      const kind = chance(p, info) || (Q.armed ? (info.slack < 0.1 || U.clamp((info.reach - 0.8) / 0.4, 0, 1) > 0.6 ? 'defence' : 'attack') : null);
+      if (!kind || (!Q.armed && !budgetOk())) return false;
       Q.key = key; open(kind, p, pl, info); return true;
     },
     // called by ai.decideShot once per committed shot

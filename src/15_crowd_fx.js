@@ -744,7 +744,6 @@
       crowd.react(level, kind);
       if (level === 3 && CS.clock - CS.lastWave > 25) crowd.wave();
     });
-    BUS.on('challenge:result', function (e) { if (!e) return; if (e.overturned) crowd.react(2, 'cheer'); else crowd.react(1, 'groan'); });
     BUS.on('match:phase', function (e) {
       if (!e) return; const ph = e.phase;
       if (ph === 'intro' || ph === 'toss' || ph === 'introductions') crowd.setMood(1);

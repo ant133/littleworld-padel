@@ -92,8 +92,9 @@ Source in `src/`, concatenated in numeric order by `tools/build.js` into `dist/`
 | `04_ball.js` | `ball` | M6 | ball integrator, spin, CCD collisions vs `court` surfaces, bounce counting, contact events |
 | `05_shots.js` | `shots` | M6/M7 | shot table (§9), solver for launch velocity/spin given target & type, execution-error model |
 | `06_players.js` | `players` | M5 | roster, attributes, fatigue/confidence, kinematics (accel/brake/split-step), strike-window logic |
+| `06_mind.js` | `mind` | M5 | energy, concentration and mood (§10.3): event-driven state plus the multipliers players and AI read |
 | `07_ai.js` | `ai` | M7 | doubles coordination, formations, interceptor choice, tactics, shot selection, coach-instruction mapping |
-| `08_rules.js` | `rules` | M8 | scoring, serve procedure + rotation, fault/let/out decisions, challenge logic, point FSM |
+| `08_rules.js` | `rules` | M8 | scoring, serve procedure + rotation, fault/let/out decisions, point FSM |
 | `09_match.js` | `match` | M8 | match state machine, generator-coroutine sequence (walk-on→ceremony), changeovers, stats aggregation |
 | `10_render_core.js` | `render` | Core/M3 | renderer, low-res target, depth outline, palette snap, dither, cameras, cutaway, lighting rigs, shadows |
 | `11_world_court.js` | `worldCourt` | M1 | court meshes: turf textures, lines, glass, mesh fence, posts, net, entrance, signage |
@@ -122,7 +123,7 @@ HPO.cfg = {
   TITLE(){ return 'Littleworld Jakarta Padel Cup ' + new Date().getFullYear(); },
   PHYS_DT: 1/240, SIM_DT: 1/60, MAX_SUBSTEPS: 16,
   BALL: { R:0.0335, M:0.0565, CD:0.55, RHO:1.2, MAGNUS:0.00055 /* tuned */, G:9.81 },
-  RULES: { outOfCourtRetrieval:true, challengesPerSet:2, golden:false, format:'quick'|'oneSet'|'bo3'|'blitz'|'americano' },
+  RULES: { outOfCourtRetrieval:true, golden:false, format:'quick'|'oneSet'|'bo3'|'blitz'|'americano' },
   VENUES: { classicBlue, terracotta, fastBlue, indoor },   // §7.3
   PIXEL: { size:2, palette:90 }
 };
@@ -195,7 +196,7 @@ MatchState {
   gameNo, pointNo, faultCount:0|1,
   sides:{A:-1|+1,B:-1|+1},
   flags:{ matchPoint:team|null, setPoint:team|null, breakPoint:team|null },
-  challenges:{A:int,B:int}, timeouts:{A:int,B:int},
+  timeouts:{A:int,B:int},
   stats:{...§11}, log:[PointRecord]
 }
 ```
@@ -231,11 +232,11 @@ MatchState {
 | `flag:update` | rules | `{matchPoint,setPoint,breakPoint,golden}` |
 | `game:end` / `set:end` | rules | `{winner, score}` |
 | `changeover:start/end` | match | `{kind:'game'|'set'}` |
-| `challenge:request` | ui | `{team}` |
-| `challenge:result` | rules | `{team, overturned, call, p}` |
-| `replay:start/end` | replay | `{kind:'challenge'|'highlight'}` |
+| `replay:start/end` | replay | `{kind:'highlight'}` |
 | `coach:change` | ui | `{team, orders}` |
 | `ai:formation` | ai | `{team, formation}` |
+| `mood:change` | mind | `{playerId, team, mood, was}` (`mood` is `''` when it ends) |
+| `mood:mixup` | mind | `{team, kind:'both'|'neither', a, b, who}` two partners contested a ball and both lost time |
 | `crowd:react` | crowd/rules | `{level:0..3, kind}` |
 | `speak` | commentary | `{text, voice:'umpire'|'commentator'}` |
 | `audio:unlock` | ui | `{}` |
@@ -293,7 +294,7 @@ Numbers are initial values. Tuning goes through `cfg.TUNE` (`sim_cli.js --tune '
 - Games: Quick = first to 4, tie-break at 4–4 (set decided 5–4). One Set = first to 6, win by 2, tie-break at 6–6. Best of 3 = two sets to win; each set as One Set, **including** a final-set tie-break at 6–6.
 - Tie-break: first to 7, win by 2. Serving: player whose turn it is serves point 1; then the opponents' players serve 2 points each in order; sides change every 6 points.
 - Match/set/break point flags computed purely from score state by `rules.flags(state)`.
-- **Points formats (Americano).** `blitz` (Blitz Americano: 2 serves per player, 8 serves + 1 tie-break = 9 points) and `americano` (5 serves per player, 20 serves + 1 tie-break = 21 points). Every point counts 1 (no 15/30/40, no games or sets). The match always plays to the full total (`_r.pts`); the winner has more points. A team that reaches the majority (5 of 9, 11 of 21) has **clinched** the match: `flags.clinched` is that team, `describe().banner` is `CLINCHED`, and play continues. Serving: each player serves `run` points in a row (2 or 5) in the order A1, B1, A2, B2, alternating sides within the run (deuce first); the last point (the tie-break) is served by the first server and `inTiebreak` is true for it. Sides change every 4 points (Blitz) or 6 points (Americano). `flags.matchPoint` is the team one point short of the majority. The final score is stored as one pseudo set (`sets = [{A, B}]`, `setsWon` 1-0) so results and commentary read it as before; `pointsText` is the plain count and `gamesText` is empty.
+- **Points formats (Americano).** `blitz` (Blitz Americano: 2 serves per player, 8 serves + 1 tie-break = 9 points) and `americano` (5 serves per player, 20 serves + 1 tie-break = 21 points). Every point counts 1 (no 15/30/40, no games or sets). The match always plays to the full total (`_r.pts`); the winner has more points. A team that reaches the majority (5 of 9, 11 of 21) has **clinched** the match: `flags.clinched` is that team, `describe().banner` is `CLINCHED`, and play continues. Serving: each player serves `run` points in a row (2 or 5) in the order A1, B1, A2, B2, alternating sides within the run (deuce first); the last point (the tie-break) is served by the first server and `inTiebreak` is true for it. There are no changeovers: sides never change in Blitz or Americano. `flags.matchPoint` is the team one point short of the majority. The final score is stored as one pseudo set (`sets = [{A, B}]`, `setsWon` 1-0) so results and commentary read it as before; `pointsText` is the plain count and `gamesText` is empty.
 
 ### 8.2 Serve rotation
 - `serveOrder = [A_i, B_j, A_k(partner of A_i), B_l(partner of B_j)]`, fixed at the coin toss + chosen at start of match, continues across sets (next server is the next in cycle after the last game's server). Each player serves an entire service game. Order violations are impossible by construction and asserted in tests.
@@ -318,11 +319,8 @@ A rally is a sequence of strokes alternating teams. After each stroke the ball i
 - Net: ball hitting net and falling back ⇒ ball in net ⇒ stroke error. Net cord that trickles over and bounces correctly ⇒ in play.
 - `point:end.kind` classification: `winner` (opponent couldn't touch/return legally and shot was high quality), `forced` (error under time pressure: hit but failed under difficulty), `unforced` (comfortable ball, error).
 
-### 8.5 Challenge / review
-- Close calls: bounce within ±8 cm of a line, or net/wall ambiguity flagged by `ball:bounce` with `marginCm`. Each team has `challengesPerSet` (default 2); a *successful* challenge keeps the challenge. Resolution is exact (computed from recorded trajectory), then replay visual plays (§12).
-- AI teams challenge when `margin<6cm` and `confidence`-weighted probability > 0.5.
-
----
+### 8.5 Line calls
+- Calls are exact: there is no challenge or review (padel has none). `ball:bounce` still carries `marginCm`, which the rules module no longer uses.
 
 ## 9. Shot interface (`HPO.mod.shots`)
 
@@ -386,6 +384,17 @@ Shot-selection is weighted sampling (seeded): `P(kind) ∝ base[kind | situation
 
 Statistical targets for tuning (configurable in `cfg.TUNE`): first serve in 85–95 %, aces 0.5–2 %, double faults 1–3 %, avg rally 6–12 strokes (σ≈4), lobs ≈ 8–14 % of strokes, volleys ≈ 25–35 %, wall rebounds struck ≈ 15–25 %, smash winners 2–6 % of points, unforced error share of points 25–40 %.
 
+
+### 10.3 Energy, concentration and mood (`mind`, `src/06_mind.js`)
+
+Per player, no new data beyond `temper`, `baseFocus`, `mood {id,k,t0,dur}` and `mind {errs,clean,revenge}` (set by `mind.init`, called from `players.setup`; `match.start` calls `mind.reset(format)`).
+
+- **Energy** = `1 - fatigue`; it only drains. Cost per metre run (as before) plus a lump per shot (`COST`: smash 0.0045, vibora 0.003, bandeja 0.0015, lob 0.0012, other 0.0008, a lunge +0.001), all scaled by `stamina` and by `st.K`, which `reset(format)` sets from the format (`FMT` = points a format takes and the measured raw drain per point) so the average player has lost `TUNE.mind.target` (0.45) by the last point. `players.rest()` no longer refunds energy; it cools heads (below). Effects: speed (-18 % at 0), shot error (+50 %), read time (`1 + 0.6 f²`), pace (`mind.effort`: -0.2 × tiredness), and from a quarter gone fewer smashes and viboras and more lobs; `mind.focus` caps concentration at `0.6 + 0.4 × energy`.
+- **Concentration** = `confidence`, a baseline per player (`baseFocus`, 0.35-0.65, higher for tacticians) it drifts back to by 10 % each point. Up: a point won (+0.03, more for a long rally or an own winner), a clean run; down: a point lost (-0.03), an unforced error (-0.06, double fault -0.08), a losing run of 3+, a big shot against, a tight out call against, a defeated partner, a break, set, match or golden point (-0.04 at the start). Effects: shot error (as before, through `mind.focus`), read time (`readMul`), wall reading in `chooseStrike`. Rests pull it back (`rest(0.05)` is half way, `0.12` all the way); a timeout resets it.
+- **Mood**: one at a time, a timed buff or debuff. `MOODS[id]` = `{dur, tone, fx}`; `dur` is seconds of match time at full strength (scaled by `0.6 + 0.8 k`), `fx` multipliers (`err aggr safe soft speed read drain tell serve`) and additions (`effort claim`) scaled by `0.5 + 0.5 k`. Ten moods: angry at partner, self-blame, fired up, cocky, nervous, in the flow, defeated, vengeful, supportive, irritated. Triggers are evaluated at `point:end` (nervous at `point:start` on a flagged point) with chances shaped by `temper` and the seeded `mind` stream; the strongest candidate wins and a running mood only gives way to a stronger one (`k × time left`). A mood ends by time (`mind.tick()` from `players.update`), a timeout (clears the hot ones), a supportive partner (-8 s on anger and blame) and rests (`-60 s × amount`).
+- **Hooks**: `players.vmax` (speed), `readDelay` (own read time and the hitter's `tell`), `execCtx` (`errMul`, `confidence`), `serveSequence` (`serveMul`), `stepPlayer` (drain); `ai.decideShot` (`shotMul` on every weight, `effort`), `aimFor` (a vengeful player aims at the one who hurt them), `weakness` (rattled players are targeted), `pickInterceptor` (`claim`: anger +0.9, blame -0.6, supportive +0.3, and `mind.contest` rolls a mix-up on a contested ball: an angry partner means both go, two blaming partners mean neither, both lose `TUNE.mind.mixDelay` s of reaction time).
+- **Presentation** (`src/26_moodui.js`, module `moodui`): over every player an energy bar (green, amber below 55 %, red below 30 %), a thin concentration bar and the mood as a custom 12x12 pixel-art face (drawn once to a canvas from a base disc plus a few pixels per mood, shown with `image-rendering: pixelated`) with a countdown ring (green good, red bad, amber mixed) that flashes for its last 20 % (fast in the last 1.5 s); a two-row toast on `mood:change`: `Name: Mood`, then the four biggest stat changes as short tags (`mind.effects`: `ACC PWR ATK SAFE TCH SPD REA STA DSG SRV CALL`), each with one or two arrows (▲ green buffed, ▼ red nerfed); all toasts share one left edge (same notification category), and a toast's clock stops while a replay runs; a `MINE!` / `YOURS?!` callout on `mood:mixup`. Studio player cards show FOCUS, ENERGY and the mood.
+
 ---
 
 ## 11. Stats model (collected by `match`, read by `ui`)
@@ -427,7 +436,7 @@ Voxel-blocky skeleton: pelvis, torso, head, 2×(upper/lower arm), 2×(thigh/shin
 Synth-only. `audio.unlock()` on first user gesture; master default muted/off. Buses: `fx`, `crowd`, `commentary`, `ambience` with independent gains. Per-sound voice limiter (e.g. ≤ 6 racket hits/s, ≤ 8 footsteps/s overall) and speed-aware gain ducking at 2×/4×. Sound mapping: `shot:hit` → racket (pitch by shot), `ball:bounce` → turf, `ball:contact` by `surf` → glass back/side, mesh, net; `crowd:react`; `speak` → speechSynthesis if available and enabled.
 
 ### 12.5 UI (`ui`)
-Two experiences share the same sim and canvas. **Play mode** (default, `21_game.js`, docs/PLAY_MODE.md): title → create player → quick setup → full-screen match with a limited coach box for the visitor's team only (six tactics, middle-ball choice, timeout, challenge), pause menu and results card; the panel is hidden. **Studio mode** (`19_ui.js`, optional via the Studio controls link (title, pause menu) or `?mode=studio`; the header ⚙ button only shows in Studio, as "▶ Play mode"): responsive grid, desktop = canvas left, panel right (min 340 px); mobile = canvas on top, panel stacked. Panel sections: Match, Court, Coach, Camera, Audio, Stats (tabs), Event feed. Scoreboard overlay (TV style) inside canvas container. Debug overlay toggled with backtick `` ` `` (hidden by default). All strings English. Style rules: §13.
+Two experiences share the same sim and canvas. **Play mode** (default, `21_game.js`, docs/PLAY_MODE.md): title → create player → quick setup → full-screen match with a limited coach box for the visitor's team only (six tactics, middle-ball choice, timeout), pause menu and results card; the panel is hidden. **Studio mode** (`19_ui.js`, optional via the Studio controls link (title, pause menu) or `?mode=studio`; the header ⚙ button only shows in Studio, as "▶ Play mode"): responsive grid, desktop = canvas left, panel right (min 340 px); mobile = canvas on top, panel stacked. Panel sections: Match, Court, Coach, Camera, Audio, Stats (tabs), Event feed. Scoreboard overlay (TV style) inside canvas container. Debug overlay toggled with backtick `` ` `` (hidden by default). All strings English. Style rules: §13.
 
 ---
 
@@ -449,7 +458,7 @@ intro → walkOn → introductions → coinToss → warmup(≈20 s cooperative r
 → loop { play game(s) → changeover(water/towel/discussion; coach may change tactics)
          → setBreak } → matchEnd → handshake → ceremony (podium, confetti) → results
 ```
-Sim speed multiplier (0.5/1/2/4×) scales `SIM_DT`/`PHYS_DT` steps per real frame (clamped to `MAX_SUBSTEPS`); cosmetic timings (waits) scale too. At 4× audio rate-limits tighter; replays disabled except challenges.
+Sim speed multiplier (0.5/1/2/4×) scales `SIM_DT`/`PHYS_DT` steps per real frame (clamped to `MAX_SUBSTEPS`); cosmetic timings (waits) scale too. At 4× audio rate-limits tighter; highlight replays disabled.
 
 **Watchdogs** (any triggers `BUS 'ball:dead'` + deterministic fallback, logged):
 - Point > 45 s of sim time ⇒ end by rule §8.4 against last unreturned team.
@@ -527,3 +536,10 @@ Integration checkpoints (each ends in running `dupcheck` + headless matrix):
 - 0.10.3 — i18n dictionary module (`src/00_i18n.js`, `src/00_lang_id.js`, docs/I18N.md, `tools/i18n_tests.js`): `HPO.t` and `HPO.mod.i18n`; English by default, Bahasa Indonesia with `?lang=id`; emits the existing `ui:setting` with key `lang`. Player-facing text now goes through it (`const _ = HPO.t`); the Indonesian dictionary is split into `src/00_lang_id*.js`; in-world texts (LED, scoreboards, signs, banners) and padel terms stay English; 15-15 is "Salim" in Indonesian. `speak` events from `match` carry `kind: 'timeout'`, umpire lines carry `tone` for the speech chime; speech uses voices of the page language and stays silent if there is none. `scoreCall` no longer throws in the point-count formats.
 - 0.10.4 — Aim mode flashes the opponent's half (`ui` SVG `.aimzone`, projected from the court corners); the tutorial's Aim step is now two steps (tap Aim, then tap the flashing half, undimmed). Intro cards (welcome, players, coin toss) sit at 58% height so they clear the scoreboard and the state ribbon; the ribbon's live dot is smaller.
 - 0.10.4 — Language switch (English / Bahasa Indonesia) on the Play title screen and in the in-match volume/callouts popover: reloads with `?lang=` (no storage), asks first mid-match. The header ⚙ Studio button is hidden in Play mode (Studio stays reachable from the title link and pause menu).
+- 0.11.0 — Playtest feedback pass. Challenge / Eagle Eye removed (padel has no review): `rules.canChallenge`/`challenge`/`consumeChallenge`, `challenges` state, `challengesPerSet`, `challengeMarginCm`, `lineErrorCm` (officials are exact), the bounce log (`lastBounces`), `challenge:request`/`challenge:result`, the replay `challenge` kind, the AI auto-challenge, the Play and Studio buttons and the `C` key. Play mode: strategy hotkeys (`game.hotkey`, called from `ui` onKey), one custom dock tooltip (`game.tipText` feeds the tutorial), Blitz and Americano are the only open formats on setup (others shown locked), the match centre opens from an expand icon in the scoreboard's bottom-right corner (replaces the left tab), `VIBORA!` callout, tutorial has one step per plan/moment button and camera steps (rotate, zoom, pan, top-down). CSS: the shared dock button rule had lost its selector brace and was rewritten.
+- 0.11.1 — `render.camSnapshot`/`camRestore` also keep the yaw (`yawT`, `yawK`): after a QTE a free (dragged) camera went back to its target and zoom but stayed turned to the QTE angle.
+- 0.11.2 — HUD overlap pass. Ceremony cards (intro, player introductions, coin toss; walk-on and warm-up ribbon in Play mode) are a compact lower third (`.hpo-banner.lt`, `.mode-play .hpo-state`) instead of the middle of the court; the `intro`, `introductions` and `toss` ribbons are gone (the card carries the label). `game.js` measures the dock and the commentary line and sets `--dock-h` / `--tick-h` on the stage; commentary, Skip intro, toasts (small screens), lower third and the REPLAY badge stack above them. In Play mode the REPLAY badge is smaller and sits at the top centre (above the dock on small screens). The scoreboard keeps clear of the icon column on small screens and shortens its phase label.
+- 0.11.3 — Play mode keys: `1`-`5` mindset, `Q W E R T Y` plans (dock order), `P` `V` `F` `O` as before; camera in Play mode moves to `←` `→` / `C` / `0` (Studio keeps Q/E, 1-5, R). `qte.offer`: an armed Go for it opens a QTE on the next ball the visitor's player gets (defence when stretched, otherwise attack) and bypasses the budget; the button and the `F` key both toggle.
+- 0.12.0 — Energy, concentration and mood (§10.3): module `mind` (`src/06_mind.js`), `src/26_moodui.js`, events `mood:change` and `mood:mixup`, `TUNE.mind`, stream `mind`. `players.rest` no longer refunds fatigue; `confidence` is owned by `mind` (the ±0.012 per point and -0.03 per unforced error in `match` are gone); `execCtx` returns `errMul` and `executeSwing` multiplies it with the QTE's. Studio cards read FOCUS and ENERGY; `mood:change` toasts are `{node}` content (two rows). `tools/browser.js` shot steps take a `clip`. Tests: `tools/mind_tests.js`.
+- 0.11.4 — Blitz and Americano have no changeovers (`FORMATS.*.flip = 0`; `pointWonPts` skips the side swap when `flip` is 0).
+- 0.12.1 — Game instructions (`src/27_guide.js`, module `guide`): `#btn-help` (`?`) opens it instead of the shortcut sheet; the sheet has its own `#btn-keys` button and the `K` key, `?` now toggles the instructions; `ui.api.showKeys`, `game.how` (the four How to play cards). Tutorial steps 16-17 explain energy, concentration and moods (tutorial is 28 steps). No new bus events.

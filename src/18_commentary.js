@@ -141,10 +141,6 @@
       'The players change ends and take a drink.', 'Changeover, a chance to towel off and talk tactics.', 'They swap sides now.', 'A short break as the teams change ends.'] },
     changeoverSet: { pri: 1, cd: 15, lines: [
       'Set break: time to regroup and reset.', 'The players take a longer break between sets.', 'A breather between sets, the coaches will have plenty to say.', 'Set break, a chance to recover.'] },
-    challengeStands: { pri: 2, cd: 6, lines: [
-      'Eagle Eye... the call stands!', 'Eagle Eye confirms it, the call stands.', 'Eagle Eye has spoken: the original call is correct.', 'Replay shows the call was right, it stands.'] },
-    challengeOver: { pri: 3, cd: 6, lines: [
-      'Eagle Eye... the call is overturned!', 'Eagle Eye overturns it! The ball was {S}.', 'The review goes their way, the call is overturned!', 'Overturned! Eagle Eye shows the ball was {S}.'] },
     // ---- phases
     phIntro: { pri: 2, cd: 30, lines: [
       'Welcome to the Littleworld Jakarta Padel Cup!', 'Good day everyone, and welcome to the Littleworld Jakarta Padel Cup.',
@@ -310,7 +306,7 @@
   }
 
   // ---------------------------------------------------------------- dispatch of summaries (pure)
-  // summary types: shot, plan, rally, point, fault, let, flag, streak, gameStreak, game, set, match, tiebreak, fatigue, formation, coach, changeover, phase, challenge, score
+  // summary types: shot, plan, rally, point, fault, let, flag, streak, gameStreak, game, set, match, tiebreak, fatigue, formation, coach, changeover, phase, score
   function dispatch(E, s) {
     if (!s || !s.type) return null;
     switch (s.type) {
@@ -331,9 +327,6 @@
       case 'formation': return E.say(s.formation === 'attack' ? 'formationAttack' : s.formation === 'defend' ? 'formationDefend' : null, varsOf(s), withWhy(s, { formation: s.formation }));
       case 'coach': return COACH_LABEL[s.preset] ? E.say('coach', varsOf(Object.assign({}, s, { PL: _(COACH_LABEL[s.preset]) })), withWhy(s, { preset: s.preset })) : null;
       case 'changeover': return E.say(s.kind === 'set' ? 'changeoverSet' : 'changeoverGame', varsOf(s), withWhy(s, { kind: s.kind }));
-      case 'challenge': return s.overturned
-        ? E.say('challengeOver', varsOf(Object.assign({}, s, { S: s.call === 'in' ? 'out' : 'in' })), withWhy(s, { overturned: true }))
-        : E.say('challengeStands', varsOf(s), withWhy(s, { overturned: false }));
       case 'retrieval': return E.say('retrieval', varsOf(s), withWhy(s, { retrieval: true }));
       case 'timeout': return E.say('timeout', varsOf(s), withWhy(s, { timeout: true }));
       case 'phase': return phaseLine(E, s);
@@ -696,10 +689,6 @@
     flush();
     send({ type: 'changeover', kind: e.kind }, 'info');
   }
-  function onChallenge(e) {
-    if (!ctx || !e) return;
-    send({ type: 'challenge', overturned: !!e.overturned, call: e.call, T: teamLbl(e.team) }, 'eye');
-  }
   function onPhase(e) {
     if (!e) return;
     if (e.phase === 'intro' && e.prev !== 'intro') { resetContext(); }
@@ -752,7 +741,7 @@
       on('shot:hit', onShotHit); on('shot:planned', onShotPlanned); on('ball:contact', onContact);
       on('point:start', onPointStart); on('point:end', onPointEnd); on('fault', onFault); on('let', onLet);
       on('flag:update', onFlag); on('game:end', onGameEnd); on('set:end', onSetEnd); on('match:end', onMatchEnd); on('score:change', onScoreChange);
-      on('match:phase', onPhase); on('challenge:result', onChallenge); on('ai:formation', onFormation); on('coach:change', onCoach);
+      on('match:phase', onPhase); on('ai:formation', onFormation); on('coach:change', onCoach);
       on('speak', onSpeak); on('changeover:start', onChangeover); on('serve:hit', onServeHit);
       on('match:new', function () { resetContext(); });
     }

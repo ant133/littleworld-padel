@@ -1,0 +1,26 @@
+# Follow-ups 2026-11-06
+
+- [ ] Verify padel.annetta.dev resolves and serves the game (from 2026-11-04)
+- [ ] Balance: aces 0%, wall returns 8% (15-25), volley share 20% (25-35), winners 41% (30), rally median 9 (11-12); try C plus react x0.8 / speed x1.15 (from 2026-11-04)
+- [ ] Revisit the forced/unforced classifier (unforced stays near 6%) (from 2026-11-04)
+- [ ] `node tools/build.js --check` ends with 'The "file" argument must be of type string' and flags offline at 3.3 MB (over the 3 MB target); cause not investigated (from 2026-11-04)
+- [ ] Re-run the 40-match balance stats after the lob/vibora change; trim lobBase/lobNet if overall lobs should be back under 14% (from 2026-11-05)
+- [ ] Check touch gestures and the Aim button on a real phone (from 2026-11-05)
+- [ ] QTE: build the attack QTE (behind-the-player camera, hit ring, swipe, mishit on failure), then the defence QTE; add the Go for it moment to the dock (docs/QTE.md) (from 2026-11-05)
+- [ ] Check the coach dock on a real phone (sheet height covers the court while open) (from 2026-11-05)
+- [ ] Full regression suites and features_browser before the next release (skipped after the QTE and dock restyle by request) (from 2026-11-05)
+- [ ] QTE: defence dive (extra reach) not built; real-phone feel of the swipe and the 2.8 s window; audio sting is a simple synth tone (from 2026-11-05)
+- [ ] QTE telegraph cue before the freeze; more OST tracks; bigger trophy ceremony; clearer Play/Studio switch (playtest feedback) (from 2026-11-05)
+- [ ] Full regression suites and features_browser before release (skipped by request); check Americano on a real phone (from 2026-11-05)
+- [ ] i18n: fix the text-parsing couplings (commentary `/timeout/i`, LED banner compares, replay IN/OUT, `toneKind`) then wire `HPO.t` into the call sites; order in docs/I18N.md (from 2026-11-05)
+- [ ] i18n: `AGENTS.md` still says "UI language: English"; update when Indonesian ships (from 2026-11-05)
+- [ ] i18n: check speech with a real id-ID voice, and a phone pass of `?lang=id` (longer text in the dock, callouts and buttons at 390 px) (from 2026-11-05)
+- [ ] i18n: language switch in the pause menu and Studio panel (sets `?lang=` and reloads); `AGENTS.md` still says "UI language: English" (from 2026-11-05)
+- [ ] i18n: `scoreCall` for Blitz/Americano now says "{n} all" or the plain point count; the umpire's `Deuce` at 3-3 in point formats is still tennis wording (from 2026-11-05)
+- [ ] Check the new strategy hotkeys, tooltip (touch: shows 2.6 s on tap) and the tutorial camera steps on a real phone and with a real mouse (right-drag pan)
+- [ ] Re-run physics/player_ai/matrix suites and the 40-match balance table before release: the rules change removed the 2 cm serve-call error (serve faults near the line are now exact), and the AI no longer draws a challenge random number
+- [ ] Format lock: Quick / One set / Best of 3 are disabled in Play mode only; decide when they return
+- [ ] dupcheck fails on uncommitted src/06_mind.js (mood:change, mood:mixup not in CONTRACT section 6): belongs to another session, add the events to the contract when that work lands
+- [ ] Mind: re-run the 40-match balance table and the full suites (no energy refunds, wider concentration swings, mood multipliers all move it); about 8 mood changes per Blitz match may be too many toasts (tune the chances in `src/06_mind.js`)
+- [ ] Mind: One set drains to 0.93 (target 0.45) and Best of 3 is unmeasured; the `FMT` table in `src/06_mind.js` needs those two measured
+- [ ] Mind: QTE window width does not use concentration yet; commentary has no mood lines; the handshake sprite (supportive) is the weakest read at 24 px; phone check of the bars and toasts

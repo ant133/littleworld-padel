@@ -2,8 +2,8 @@
 (function (HPO) {
   'use strict';
   const M = HPO.mod.rules = {}, _ = HPO.t;
-  // pts = points format (Americano): total points played, run = serves in a row per player, flip = points between changes of ends (CONTRACT 8.1)
-  const FORMATS = { quick: { G: 4, sets: 1 }, oneSet: { G: 6, sets: 1 }, bo3: { G: 6, sets: 2 }, blitz: { pts: 9, run: 2, flip: 4 }, americano: { pts: 21, run: 5, flip: 6 } };
+  // pts = points format (Americano): total points played, run = serves in a row per player, flip = points between changes of ends, 0 = never (CONTRACT 8.1)
+  const FORMATS = { quick: { G: 4, sets: 1 }, oneSet: { G: 6, sets: 1 }, bo3: { G: 6, sets: 2 }, blitz: { pts: 9, run: 2, flip: 0 }, americano: { pts: 21, run: 5, flip: 0 } };
   const SL = 6.95, HALF_W = 5, HALF_L = 10;
   const TEAMS = ['A', 'B'];
   const other = t => t === 'A' ? 'B' : 'A';
@@ -84,14 +84,13 @@
     if (c.firstServeTeam !== 'A' && c.firstServeTeam !== 'B') throw new Error('rules: bad firstServeTeam');
     c.serveOrder = (c.serveOrder || ['A1', 'B1', 'A2', 'B2']).slice();
     if (c.serveOrder.length !== 4 || new Set(c.serveOrder).size !== 4) throw new Error('rules: serveOrder needs 4 distinct ids');
-    c.challengesPerSet = num(c.challengesPerSet, num(RC().challengesPerSet, 2));
     c.timeoutsPerMatch = num(c.timeoutsPerMatch, 1);
     const sideA = c.sideA === 1 ? 1 : -1;
     const s = {
       config: c, phase: 'play', sets: [], games: { A: 0, B: 0 }, points: { A: 0, B: 0 }, setsWon: { A: 0, B: 0 },
       inTiebreak: false, goldenPoint: false, goldenReceiverSide: null, server: null, serveOrder: c.serveOrder.slice(),
       serveSide: 'deuce', gameNo: 1, pointNo: 1, faultCount: 0, sides: { A: sideA, B: -sideA },
-      flags: null, challenges: { A: c.challengesPerSet, B: c.challengesPerSet }, timeouts: { A: c.timeoutsPerMatch, B: c.timeoutsPerMatch },
+      flags: null, timeouts: { A: c.timeoutsPerMatch, B: c.timeoutsPerMatch },
       receivers: {}, over: false, winner: null, stats: { pointsWon: { A: 0, B: 0 } }, log: [], last: null,
       _r: { G: F.G, sets: F.sets, golden: !F.pts && c.scoring === 'golden', pts: F.pts || 0, run: F.run || 0, flip: F.flip || 0 }, _gi: 0, _pg: 0, _tbN: 0, _flips: 0, _emit: !!(opts && opts.emit)
     };
@@ -132,7 +131,6 @@
         const e = c2(s.games); if (wasTb) e.tb = pre;
         s.sets.push(e);
         s.games.A = s.games.B = 0;
-        s.challenges = { A: s.config.challengesPerSet, B: s.config.challengesPerSet };
         ev.push(['set:end', { winner: team, score: e, setNo: s.sets.length }]);
       }
       s.gameNo++; s._gi++; s._pg = 0; s._tbN = 0;
@@ -162,7 +160,7 @@
       s.over = true; s.winner = s.points.A > s.points.B ? 'A' : 'B'; last.match = true;
       s.sets = [c2(s.points)]; s.setsWon[s.winner] = 1;
       ev.push(['match:end', { winner: s.winner, sets: s.sets, stats: s.stats }]);
-    } else if (total % R.flip === 0) flip(s, last);
+    } else if (R.flip && total % R.flip === 0) flip(s, last);
     refresh(s);
     if (s._emit) {
       ev.forEach(function (e) { HPO.BUS.emit(e[0], e[1]); });
@@ -179,7 +177,6 @@
     s.goldenReceiverSide = side; s.serveSide = side;
     return true;
   }
-  function consumeChallenge(s, team) { if (s.challenges[team] <= 0) return false; s.challenges[team]--; return true; }
   function useTimeout(s, team) { if (s.timeouts[team] <= 0) return false; s.timeouts[team]--; return true; }
 
   function describe(s, names) {
@@ -274,7 +271,7 @@
     return [format === 'quick' ? _('First to 4 games, with a tie-break at 4-4.') : format === 'oneSet' ? _('First to 6 games, with a tie-break at 6-6.') : _('Win two sets; a set is first to 6 games.'),
       _('Points go 15, 30, 40, then the game.'), scoring === 'advantage' ? _('At 40-40 you need two points in a row.') : _('At 40-40 one golden point decides the game.')].join(' ');
   };
-  M.score = { createMatch, pointWon, flags, describe, checkState, assertState, rebuild, serverFor, setGoldenSide, consumeChallenge, useTimeout, step, formats: FORMATS };
+  M.score = { createMatch, pointWon, flags, describe, checkState, assertState, rebuild, serverFor, setGoldenSide, useTimeout, step, formats: FORMATS };
   M.createMatch = createMatch; M.pointWon = pointWon; M.flags = flags; M.describe = describe;
   M.checkState = checkState; M.assertState = assertState; M.rebuild = rebuild;
 
@@ -286,8 +283,8 @@
   const LEAVE = /out|left|exit|ground|over|enclos|bounds/i;
 
   function newPt() {
-    return { phase: 'idle', t: 0, strokes: 0, stroke: null, prev: null, bounces: [], shotKinds: [], retrieving: false, retT: 0,
-      netTouched: false, challengeOK: false, challenged: false, lastP: null, companion: false };
+    return { phase: 'idle', t: 0, strokes: 0, stroke: null, prev: null, shotKinds: [], retrieving: false, retT: 0,
+      netTouched: false, lastP: null, companion: false };
   }
   const live = () => S && !S.over && (pt.phase === 'tossed' || pt.phase === 'serveFlight' || pt.phase === 'serve' || pt.phase === 'rally');
 
@@ -310,12 +307,6 @@
     return { x: left ? [0, SL] : [-SL, 0], z: zs > 0 ? [0, HALF_W] : [-HALF_W, 0] };
   }
   const boxMargin = (b, p) => 100 * Math.min(p.x - b.x[0], b.x[1] - p.x, p.z - b.z[0], b.z[1] - p.z);
-  function lineCall(m) {
-    const sd = num(RC().lineErrorCm, 0);
-    if (!(sd > 0)) return m >= 0;
-    return m + (HPO.streams && HPO.streams.rules || HPO.rng).normal(0, sd) >= 0;
-  }
-  function pushBounce(b) { pt.bounces.push(b); if (pt.bounces.length > 3) pt.bounces.shift(); }
 
   M.newMatch = function (config) {
     S = M.state = createMatch(config, { emit: true });
@@ -349,7 +340,7 @@
   };
   function toServeWait() {
     Object.assign(pt, { phase: 'serveWait', stroke: null, prev: null, strokes: 0, shotKinds: [], netTouched: false, t: 0,
-      retrieving: false, challenged: false, challengeOK: true, companion: false });
+      retrieving: false, companion: false });
     emitStart(true);
   }
 
@@ -364,7 +355,7 @@
   function finish(winner, reason, kind) {
     const st = pt.stroke;
     kind = kind || classify(winner, reason);
-    pt.phase = 'ended'; pt.challengeOK = true; pt.challenged = false; pt.retrieving = false;
+    pt.phase = 'ended'; pt.retrieving = false;
     const rec = { reason: reason, kind: kind, hitter: st ? st.hitter : S.server.playerId, rallyLen: pt.strokes };
     E('point:end', { winner: winner, reason: reason, kind: kind, hitter: rec.hitter, rallyLen: rec.rallyLen, shotKinds: pt.shotKinds.slice() });
     pointWon(S, winner, rec);
@@ -385,13 +376,13 @@
 
   function onToss() {
     if (!S || S.over || (pt.phase !== 'serveWait' && pt.phase !== 'tossed')) return;
-    pt.phase = 'tossed'; pt.t = 0; pt.challengeOK = false; pt.netTouched = false; pt.companion = false;
+    pt.phase = 'tossed'; pt.t = 0; pt.netTouched = false; pt.companion = false;
   }
   // players emit serve:hit and then a companion shot:hit{shot:'serve'}; the companion only refines quality
   function onServeEvt(e) { if (onServeHit(e)) pt.companion = true; }
   function onServeHit(e) {
     if (!S || S.over || (pt.phase !== 'serveWait' && pt.phase !== 'tossed')) return false;
-    pt.phase = 'serveFlight'; pt.challengeOK = false; pt.netTouched = false;
+    pt.phase = 'serveFlight'; pt.netTouched = false;
     pt.strokes = 1; pt.prev = null; pt.shotKinds = ['serve'];
     pt.stroke = { n: 1, hitter: S.server.playerId, team: S.server.team, shot: 'serve', quality: num(e.quality, 0.5), pressure: 0,
       reached: true, isServe: true, bounced: false, cnt: { A: 0, B: 0 }, net: false };
@@ -463,12 +454,10 @@
   }
 
   function serveBounce(e, p, bt) {
-    const st = pt.stroke, attempt = S.faultCount + 1;
-    if (bt === st.team) { pushBounce({ team: bt, p: p, marginCm: num(e.marginCm, 100), call: false, truth: false, serve: true, attempt: attempt }); return serveFault('net'); }
+    const st = pt.stroke;
+    if (bt === st.team) return serveFault('net');
     const b = boxOf(st.team, S.serveSide), m = boxMargin(b, p), ic = inCourt(p);
-    const truth = ic && m >= 0, call = ic && lineCall(m);
-    pushBounce({ team: bt, p: p, marginCm: Math.abs(m), call: call, truth: truth, serve: true, attempt: attempt });
-    if (!call) {
+    if (!(ic && m >= 0)) {
       const dx = Math.min(p.x - b.x[0], b.x[1] - p.x), dz = Math.min(p.z - b.z[0], b.z[1] - p.z);
       return serveFault(!ic || dx < dz ? 'long' : 'wide');
     }
@@ -483,7 +472,6 @@
     const bt = teamAtX(p.x);
     if (pt.phase === 'serveFlight') return serveBounce(e, p, bt);
     const ic = inCourt(p);
-    pushBounce({ team: bt, p: p, marginCm: num(e.marginCm, 100), call: ic, truth: ic, serve: false });
     st.cnt[bt]++;
     if (!st.bounced) {
       if (bt === st.team) finish(other(st.team), st.net ? 'net' : 'ownSide');
@@ -513,40 +501,6 @@
     }
   };
 
-  // ---- challenges ----
-  // back: 0 = last recorded bounce, 1 = the one before, ...
-  M.canChallenge = function (team, back) {
-    if (!S || !pt.challengeOK || pt.challenged || !(S.challenges[team] > 0)) return false;
-    const b = pt.bounces[pt.bounces.length - 1 - (back | 0)];
-    return !!b && b.marginCm <= num(RC().challengeMarginCm, 8);
-  };
-  M.challenge = function (team, back) {
-    if (!M.canChallenge(team, back)) return null;
-    const b = pt.bounces[pt.bounces.length - 1 - (back | 0)], overturned = b.call !== b.truth;
-    pt.challenged = true;
-    if (!overturned) S.challenges[team]--;
-    const res = { overturned: overturned, call: b.call ? 'in' : 'out', final: b.truth ? 'in' : 'out', margin: b.marginCm };
-    E('challenge:result', { team: team, overturned: overturned, call: res.call, p: b.p });
-    if (overturned && b.serve) overturnServe(b);
-    return res;
-  };
-  function undoLast() {
-    const ns = rebuild(S.log.slice(0, -1), S.config, { emit: false });
-    ns.challenges = c2(S.challenges); ns.timeouts = c2(S.timeouts); ns._emit = S._emit; ns.receivers = S.receivers;
-    Object.keys(S).forEach(function (k) { delete S[k]; });
-    Object.assign(S, ns);
-    syncCourt(S);
-    E('flag:update', flagPayload(S));
-    E('score:change', { state: S });
-  }
-  function overturnServe(b) {
-    if (pt.phase === 'ended') undoLast();
-    if (b.truth) { S.faultCount = b.attempt - 1; toServeWait(); return; }
-    pt.stroke = null; pt.prev = null; pt.strokes = 0; pt.shotKinds = [];
-    S.faultCount = b.attempt - 1;
-    serveFault('long');
-  }
-
   // ---- wiring ----
   const HANDLERS = [['serve:toss', onToss], ['serve:hit', onServeEvt], ['shot:hit', onShot], ['ball:contact', onContact],
     ['ball:bounce', onBounce], ['ball:dead', onDead]];
@@ -563,5 +517,4 @@
   };
   M.init = function () { M.attach(); };
   M.phase = () => pt.phase;
-  M.lastBounces = () => pt.bounces.slice();
 })(typeof window !== 'undefined' ? window.HPO : globalThis.HPO);

@@ -24,10 +24,10 @@ const ORDER = ['A1', 'B1', 'A2', 'B2'];
   assert.strictEqual(c.flags.clinched, 'A'); assert(!c.over, 'play continues after the clinch'); assert.strictEqual(R.describe(c).banner, 'CLINCHED');
   while (!c.over) R.pointWon(c, 'B');
   assert.strictEqual(c.winner, 'A', 'the clinched team still wins');
-  // sides change every `flip` points
+  // no changeovers in the points formats
   const flips = R.createMatch({ format: fmt, scoring: 'golden', firstServeTeam: 'A', serveOrder: ORDER });
   while (!flips.over) R.pointWon(flips, 'A');
-  assert.strictEqual(flips._flips, Math.floor((total - 1) / (fmt === 'blitz' ? 4 : 6)), fmt + ' side changes');
+  assert.strictEqual(flips._flips, 0, fmt + ' has no side changes');
 });
 
 // a whole Blitz match through the live flow

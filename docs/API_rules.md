@@ -1,6 +1,6 @@
 # API: `HPO.mod.rules` (src/08_rules.js)
 
-Headless, no THREE/DOM, no `Math.random` (only `HPO.streams.rules` when `lineErrorCm > 0`). Tests: `node tools/scoring_tests.js [--quick]` (119 cases, about 12 s; 60 000 random scoring matches + full matches driven through the FSM).
+Headless, no THREE/DOM, no `Math.random`. Tests: `node tools/scoring_tests.js [--quick]` (119 cases, about 12 s; 60 000 random scoring matches + full matches driven through the FSM).
 
 Two layers: **`rules.score`** (pure scoring, no BUS/court/ball needed) and the **live FSM** (`newMatch`, `startPoint`, BUS inputs). Pure functions are also aliased on `rules` itself.
 
@@ -8,22 +8,21 @@ Two layers: **`rules.score`** (pure scoring, no BUS/court/ball needed) and the *
 
 | Function | Notes |
 |---|---|
-| `createMatch(config, opts?) -> MatchState` | `config = {format:'quick'｜'oneSet'｜'bo3', scoring:'advantage'｜'golden', serveOrder:[4 distinct ids], firstServeTeam:'A'｜'B', challengesPerSet?, timeoutsPerMatch?(1), sideA?(-1)}` plus any extra keys (stored in `state.config`). Defaults: `quick`, `advantage` (`golden` if `cfg.RULES.golden`), `['A1','B1','A2','B2']`, team `'A'`, `challengesPerSet = cfg.RULES.challengesPerSet`. `opts.emit:true` makes `pointWon` emit BUS events and sync `court.sides` (set by `rules.newMatch`; default off so tests/replays are silent). Throws on bad config. |
+| `createMatch(config, opts?) -> MatchState` | `config = {format:'quick'｜'oneSet'｜'bo3', scoring:'advantage'｜'golden', serveOrder:[4 distinct ids], firstServeTeam:'A'｜'B', timeoutsPerMatch?(1), sideA?(-1)}` plus any extra keys (stored in `state.config`). Defaults: `quick`, `advantage` (`golden` if `cfg.RULES.golden`), `['A1','B1','A2','B2']`, team `'A'`. `opts.emit:true` makes `pointWon` emit BUS events and sync `court.sides` (set by `rules.newMatch`; default off so tests/replays are silent). Throws on bad config. |
 | `pointWon(state, team, rec?) -> state` | Mutates and returns `state`. `rec = {reason, kind, rallyLen, hitter}` is copied into the log. Throws `'rules: match over'` after the match ended. Sets `state.last = {winner, game, set, match, sidesChanged}` (what this point caused). |
 | `flags(state) -> {matchPoint, setPoint, breakPoint}` | Pure; each value is `'A'｜'B'｜null`. `setPoint` excludes match point (a one-set match point is `matchPoint` only). Tie-break points included; `breakPoint` never in a tie-break; at a golden point the receivers have a break point. |
 | `describe(state, names?) -> {pointsText:{A,B}, setsText, setsList, gamesText, setsWonText, serverName, serverTeam, serveSide, tiebreak, banner}` | `pointsText`: `'0','15','30','40','Ad'`, raw numbers in a tie-break. `setsText` e.g. `'6-4 7-6(5)'` (tie-break loser's points). `names` maps playerId -> display name. `banner`: `'MATCH OVER'｜'MATCH POINT'｜'SET POINT'｜'GOLDEN POINT'｜'BREAK POINT'｜''`. |
 | `checkState(state) -> string[]` | Invariant violations (empty = ok). |
 | `assertState(state) -> true` | Throws `Error('rules.assertState: ...')` listing violations. |
 | `rebuild(log, config, opts?) -> state` | Replays `log` (needs only `winner` + the rec fields). `JSON(rebuild(live.log, live.config)) === JSON(live)` (tested, all formats). |
-| `serverFor(state)`, `setGoldenSide(state, 'deuce'｜'ad')`, `consumeChallenge(state, team)`, `useTimeout(state, team)`, `step`, `formats` | helpers. `setGoldenSide` only works while `state.goldenPoint`; returns bool. |
+| `serverFor(state)`, `setGoldenSide(state, 'deuce'｜'ad')`, `useTimeout(state, team)`, `step`, `formats` | helpers. `setGoldenSide` only works while `state.goldenPoint`; returns bool. |
 
 ### Rules implemented
 - Points: raw integers `state.points`. Advantage: normalised so deuce is `3-3` and advantage `4-3`/`3-4`. Golden (`scoring:'golden'`): at `3-3` the next point wins the game, `goldenPoint = true`, `goldenReceiverSide` is `null` until `setGoldenSide` is called (it then overrides `serveSide`).
 - Sets: quick = first to 4 games **win by 2** (4-0..4-2, 5-3), tie-break at 4-4 (set 5-4); oneSet/bo3 = first to 6 win by 2, tie-break at 6-6 (7-6), also in the third set of bo3. Tie-break: first to 7, win by 2.
 - Server: `serveOrder[(gameIdx) % 4]`, a tie-break counts as one game of the cycle. In a tie-break point `n` (0-based) is served by `order[(tbStart + (n==0 ? 0 : floor((n+1)/2))) % 4]` (1, 2, 2, 2, ...), the cycle advances once after it. Continues across sets.
 - Serve side: `deuce` on even points of a game (tie-break too), `ad` on odd, reset each game.
-- Change of ends: after every game whose in-set game total is odd (incl. the last game of a set), every 6 tie-break points; none after the final point of the match. `state.sides = {A:±1, B:∓1}` (`-1` = x<0 half). `state.last.sidesChanged` tells the caller to start a changeover.
-- Challenges reset each set; `consumeChallenge` for a failed challenge (a successful one is not consumed by `rules.challenge`).
+- Change of ends (not in Blitz or Americano, which never change ends): after every game whose in-set game total is odd (incl. the last game of a set), every 6 tie-break points; none after the final point of the match. `state.sides = {A:±1, B:∓1}` (`-1` = x<0 half). `state.last.sidesChanged` tells the caller to start a changeover.
 
 ### MatchState (CONTRACT §5.4) deviations/additions
 - `sets` holds **completed** sets only: `{A, B, tb?:{A,B}}`; current set is `games`. `setsWon:{A,B}` added.
@@ -49,7 +48,6 @@ rules.expectedReceiver() -> playerId        // from state.receivers[other(server
 rules.serveTarget() -> {box:{x:[a,b],z:[c,d]}, side}   // court.serviceBox(serverTeam, serveSide) if available, else identical fallback
 rules.setReceivers(team, deucePlayerId) -> bool
 rules.setGoldenSide('deuce'｜'ad') -> bool;  rules.useTimeout(team) -> bool
-rules.canChallenge(team, back=0) -> bool;    rules.challenge(team, back=0) -> {overturned, call, final, margin}|null
 rules.phase()  'idle'｜'serveWait'｜'tossed'｜'serveFlight'｜'serve'｜'rally'｜'ended'
 rules.lastBounces() -> up to 3 {team,p,marginCm,call,truth,serve,attempt}
 rules.attach() / detach() / init()  // BUS wiring; init() (called by HPO.boot) attaches
@@ -66,7 +64,6 @@ rules.attach() / detach() / init()  // BUS wiring; init() (called by HPO.boot) a
 | `fault` | `{kind:'foot'｜'long'｜'wide'｜'net'｜'mesh'｜'wallFirst'｜'let', attempt}`. Let emits `let {}` then `fault{kind:'let'}` (not counted). Double fault emits `fault` (attempt 2) then `point:end`. |
 | `point:end` | `{winner, reason, kind, hitter, rallyLen, shotKinds}`. Emitted **before** `game:end`/`score:change` (do not call `startPoint` from inside the handler; start the next point from a coroutine). `rallyLen` includes the serve (ace = 1, double fault = 0). |
 | `ball:out_retrieve` | `{p}` |
-| `challenge:result` | `{team, overturned, call:'in'｜'out', p}` |
 | `score:change`, `flag:update`, `game:end`, `set:end`, `match:end` | see above |
 
 `reason` values: `doubleBounce`, `wallFirst`, `ownSide` (stroke bounced on hitter's own side), `net`, `out`, `ceiling`, `lost` (left the court after a valid bounce with retrieval disabled), `retrieveFailed`, `dead` (ball died after a valid bounce), `volleyReturn`, `doubleFault`, `watchdog`.
@@ -80,12 +77,9 @@ rules.attach() / detach() / init()  // BUS wiring; init() (called by HPO.boot) a
 - Other `ball:dead` (`rest`, `watchdog`): before the bounce = hitter loses; after it = hitter wins (`dead`).
 - Watchdog: `update(dt)` accumulates from `serve:toss`; at `RULES.pointMaxS` (45 s) the point goes to the team that hit last (`watchdog`, kind `fault`); with no stroke yet it is a `foot` fault.
 
-### Challenges
-`canChallenge(team, back=0)`: challenges left, point just ended or serve fault pending (window closes at the next `serve:toss`/`startPoint`), not already challenged, and the chosen recorded bounce (0 = last of the last 3) has `marginCm <= RULES.challengeMarginCm` (8). For serve-box bounces `marginCm` is computed from the service box (the ball module's `marginCm` is the distance to the nearest line of any kind, so it is not used there). `challenge()` returns `{overturned, call (original), final (exact), margin}` and emits `challenge:result`; an upheld call consumes the challenge, an overturned one does not.
-Calls are exact by default. With `HPO.cfg.RULES.lineErrorCm = σ > 0` the officials' **serve-box** call is perturbed (`HPO.streams.rules`); a successful challenge then undoes the consequence (first-serve fault: `faultCount` back to 0 and the serve is replayed; double fault or wrongly accepted serve: the scored point is removed via `rebuild`, `state` is restored in place and `fault`/`point:start` are re-emitted). Only serve-box calls are affected; rally calls are never wrong.
 
 ### Config keys read from `HPO.cfg.RULES`
-`outOfCourtRetrieval` (true), `challengesPerSet` (2), `golden` (default scoring), plus optional `retrieveMaxS` (12), `pointMaxS` (45), `challengeMarginCm` (8), `lineErrorCm` (0).
+`outOfCourtRetrieval` (true), `golden` (default scoring), plus optional `retrieveMaxS` (12), `pointMaxS` (45).
 
 ## 3. Coupling with other modules
 - `HPO.mod.court` (read at call time): `serviceBox(team, side)`, `inCourt(x,z)`; rules writes `HPO.mod.court.sides = {A,B}` (= `HPO.court.sides`, core alias) on `newMatch`, every change of ends and after an undo. Without a court module the same box/in-court maths run internally (test-verified identical to `02_court_data.js`).

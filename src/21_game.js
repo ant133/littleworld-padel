@@ -9,14 +9,16 @@
   const NATIONS = [['IDN', 'Indonesia'], ['ESP', 'Spain'], ['ARG', 'Argentina'], ['NED', 'Netherlands'], ['JPN', 'Japan'], ['SWE', 'Sweden'], ['ITA', 'Italy'], ['BRA', 'Brazil'], ['FRA', 'France'], ['GER', 'Germany'], ['POR', 'Portugal'], ['CHI', 'Chile'], ['AUS', 'Australia'], ['GBR', 'United Kingdom']];
   // coach dock (docs/QTE.md section 1)
   const MIND = ['Fortress', 'Safe', 'Balanced', 'Pressure', 'All-in'];
-  const PLAN_UI = [['exhaust', 'Wear them down', 'Aim at the tired one and make them run'], ['hunt', 'Hunt the weak one', 'Every ball at the weaker defender'], ['net', 'Take the net', 'Step up and volley'],
-    ['breakNet', 'Break the net', 'Lob deep over a pair at the net'], ['glass', 'Use the glass', 'Angles and rebounds'], ['middle', 'Down the middle', 'Split the pair']];
+  const PLAN_UI = [['exhaust', 'Wear them down', 'Aim at the tired one and make them run', 'Q'], ['hunt', 'Hunt the weak one', 'Every ball at the weaker defender', 'W'], ['net', 'Take the net', 'Step up and volley', 'E'],
+    ['breakNet', 'Break the net', 'Lob deep over a pair at the net', 'R'], ['glass', 'Use the glass', 'Angles and rebounds', 'T'], ['middle', 'Down the middle', 'Split the pair', 'Y']];
   const STYLE_UI = [['spin', 'Spin'], ['mix', 'Mix'], ['flat', 'Flat']];
   const FMT_PTS = { blitz: 1, americano: 1 };
+  const FMT_OPEN = FMT_PTS;   // the other formats are shown but locked until they are tuned for Play mode
   const FMT_HINT = { blitz: '9 points, 2 serves each. 5 points clinches it. About 3 minutes.', americano: '21 points, 5 serves each. 11 points clinches it. About 6 minutes.', quick: 'First to 4 games.', oneSet: 'First to 6 games.', bo3: 'Two sets to win. A long one.' };
   const MIND_FX = ['mostly lobs and glass, almost no smashes', 'more lobs, fewer risky shots', 'the normal mix', 'more smashes and net play', 'smashes everywhere, few lobs, big risks'];
   const STYLE_FX = { spin: 'topspin, slice and vibora: safer, awkward bounces', mix: 'the normal mix', flat: 'flat and fast: more winners, more errors' };
   const MID_UI = [['', 'Auto'], ['0', 'You'], ['1', 'Annetta']];   // who takes the middle balls
+  const MID_FX = ['Whoever is closer takes it', 'You take every ball down the middle', 'Annetta takes every ball down the middle'];
   const P_ = d => '<svg ' + 'xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"' + '>' + d + '</svg>';
   const IC = {
     shield: P_('<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>'), sword: P_('<path d="M20 4l-10 10M15 4h5v5M8 16l-4 4M6 12l6 6"/>'),
@@ -25,7 +27,7 @@
     glass: P_('<path d="M3 5v14M3 6l8 12 4-12 6 10"/>'), middle: P_('<path d="M5 4v16M19 4v16M12 5v13M9 15l3 3 3-3"/>'),
     go: P_('<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>'), aim: P_('<circle cx="12" cy="12" r="6"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/>'), timeout: P_('<circle cx="12" cy="13" r="8"/><path d="M12 8v5l3 2M9 2h6"/>'),
     chev: P_('<path d="M6 15l6-6 6 6"/>'),
-    challenge: P_('<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'), coach: P_('<path d="M4 6h16M4 12h16M4 18h16"/>')
+    coach: P_('<path d="M4 6h16M4 12h16M4 18h16"/>')
   };
   const COURTS = [['classicBlue', 'Classic Blue'], ['terracotta', 'Terracotta'], ['fastBlue', 'Fast Blue'], ['indoor', 'Indoor']];
   const CAM_CYCLE = [['close', 'Close-up'], ['follow', 'TV follow'], ['club', 'Whole club'], ['top', 'Top-down']];
@@ -34,7 +36,8 @@
   const SVG = 'xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
   const SND_ON = '<svg ' + SVG + '><path d="M11 5 6 9H3v6h3l5 4z" fill="currentColor"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
   const SND_OFF = '<svg ' + SVG + '><path d="M11 5 6 9H3v6h3l5 4z" fill="currentColor"/><path d="m16 9 5 6M21 9l-5 6"/></svg>';
-  const CHEV = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg>';
+  const EXPAND = '<svg ' + SVG.replace('width="22" height="22"', 'width="15" height="15"') + '><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>';
+  const COLLAPSE = '<svg ' + SVG.replace('width="22" height="22"', 'width="15" height="15"') + '><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg>';
   const PRE = { intro: 1, walkon: 1, introductions: 1, toss: 1, warmup: 1 };
   const NATION_NAME = {}; NATIONS.forEach(n => { NATION_NAME[n[0]] = n[1]; });
 
@@ -42,7 +45,7 @@
     mode: 'play', st: 'boot', scr: null, player: null, opp: null, qte: 'relaxed',
     cfg: { format: 'blitz', scoring: 'golden', venue: 'classicBlue', tod: 'day' },
     init: init, update: update, onFeed: onFeed, onEscape: onEscape, blocking: blocking, active: active, results: results,
-    showTitle: showTitle, showHow: showHow, showCreate: showCreate, showSetup: showSetup, setMode: setMode, onSaved: onSaved, suppressResults: suppressResults
+    hotkey: hotkey, cycleCam: cycleCam, showTitle: showTitle, showHow: showHow, showCreate: showCreate, showSetup: showSetup, setMode: setMode, onSaved: onSaved, suppressResults: suppressResults
   };
   let cp = { seed: 1, name: '', gender: 'F', nat: 'IDN' };
   let hud = {}, pauseEl = null, wasPaused = false, tickerT = 0, acc = 0, hlKey = '', lastFlagToast = '', attractT = 0;
@@ -156,6 +159,8 @@
     BUS.on('match:new', function () { hlKey = ''; if (G.st === 'title' || G.st === 'create' || G.st === 'setup') return; });
     BUS.on('match:phase', function (e) { if (e.phase === 'results' && (G.st === 'title' || G.st === 'create' || G.st === 'setup' || G.st === 'watch')) { clearTimeout(attractT); attractT = setTimeout(() => { if (G.st === 'title' || G.st === 'create' || G.st === 'setup') startAttract(); }, 5000); } });
     BUS.on('flag:update', onFlags);
+    BUS.on('replay:start', function () { EL.app.classList.add('gm-replaying'); updateHud(true); });
+    BUS.on('replay:end', function () { EL.app.classList.remove('gm-replaying'); updateHud(true); });
     BUS.on('shot:hit', onShot);
     document.addEventListener('pointerdown', function (e) { if (hud.pop && !hud.pop.hidden && !hud.pop.contains(e.target) && !hud.mix.contains(e.target)) toggleMix(false); }, true);
     // the intro/ceremony camera sweeps change the view: when play starts, go back to the camera the player picked
@@ -318,10 +323,13 @@
     const type = myType();
     if (!G.opp || G.oppType !== type || G.opp.some(id => id === G.player.id)) { G.opp = randomOpp(type); G.oppType = type; }
     const C = G.cfg;
-    const fmt = segBtns([['blitz', 'Blitz'], ['americano', 'Americano'], ['quick', 'Quick'], ['oneSet', 'One set'], ['bo3', 'Best of 3']], () => C.format, v => { C.format = v; scoField.hidden = FMT_PTS[v]; fmtHint.textContent = hint(v); });
+    const fmt = segBtns([['blitz', 'Blitz'], ['americano', 'Americano'], ['quick', 'Quick'], ['oneSet', 'One set'], ['bo3', 'Best of 3']], () => C.format, v => { C.format = v; scoField.hidden = FMT_PTS[v]; fmtHint.textContent = hint(v) + ' ' + _('Other formats are coming soon.'); });
+    if (!FMT_OPEN[C.format]) C.format = 'blitz';
+    fmt.btns.forEach(b => { if (!FMT_OPEN[b.dataset.v]) { b.disabled = true; b.title = _('Coming soon'); } });
+    fmt.paint();
     const sco = segBtns([['golden', 'Golden Point'], ['advantage', 'Advantage']], () => C.scoring, v => { C.scoring = v; });
     const tod = segBtns([['day', 'Day'], ['dusk', 'Dusk'], ['night', 'Night']], () => C.tod, v => { C.tod = v; });
-    const scoField = h('div', { class: 'field' }, h('div', { class: 'lbl' }, _('Scoring')), sco.root), fmtHint = h('p', { class: 'hint' }, hint(C.format));
+    const scoField = h('div', { class: 'field' }, h('div', { class: 'lbl' }, _('Scoring')), sco.root), fmtHint = h('p', { class: 'hint' }, hint(C.format) + ' ' + _('Other formats are coming soon.'));
     scoField.hidden = !!FMT_PTS[C.format];
     const courts = h('div', { class: 'gm-courts' });
     const cbtns = COURTS.map(c => { const b = h('button', { type: 'button', 'aria-pressed': 'false', 'data-v': c[0], onclick: () => { C.venue = c[0]; paintCourts(); } }, h('span', { class: 'ct ct-' + c[0] }, h('i')), h('b', null, _(c[1]))); courts.appendChild(b); return b; });
@@ -354,9 +362,10 @@
   const HOW = [
     ['You are the coach', 'You and Annetta play by themselves, so there is nothing to steer. Your job is the game plan, plus a few big moments.'],
     ['Set the strategy', 'Open Strategy at the bottom. Pick a mindset (shield is safe, sword is attack), one plan, the kind of shots, and who takes the middle balls. A small tag shows what is switched on, and your plan announces itself when it works.'],
-    ['Winning chances', 'When your player gets a winning chance, or a hard smash is coming at you, time freezes. Swipe from the glowing ring to aim the shot. No time? Tap "Let it play". Aim lets you place your next shot yourself; Timeout and Challenge are what they sound like.'],
+    ['Winning chances', 'When your player gets a winning chance, or a hard smash is coming at you, time freezes. Swipe from the glowing ring to aim the shot. No time? Tap "Let it play". Aim lets you place your next shot yourself; Timeout is a breather.'],
     ['Padel in 20 seconds', () => _('Two against two. Serve underhand into the diagonal box. The ball may bounce once on your side, and it may also hit the glass walls and stay in play. {format}', { format: mod('rules') ? mod('rules').describeFormat(G.cfg.format, G.cfg.scoring) : '' })]
   ];
+  G.how = HOW;   // the instructions sheet (27_guide.js) shows the same four cards
   function showHow(next) {
     let i = 0;
     const body = h('div', { class: 'gm-howbody' }), nb = h('button', { class: 'btn primary big', type: 'button', id: 'gm-hownext' }, _('Next'));
@@ -391,32 +400,63 @@
   }
 
   // ---------- HUD ----------
+  // One tooltip for the whole dock. Native titles are slow, tiny and never show on touch; this one is drawn above the button, with its key.
+  const cap = t => t.charAt(0).toUpperCase() + t.slice(1);
+  function tip(el, name, desc, key, badge) {
+    el.dataset.tipName = name; el.dataset.tipDesc = desc || ''; if (key) el.dataset.tipKey = key; if (badge) el.dataset.kb = badge;
+    el.removeAttribute('title'); el.setAttribute('aria-label', name + (desc ? ': ' + desc : '')); return el;
+  }
+  G.tipText = el => { const n = el && el.dataset.tipName; return n ? n + (el.dataset.tipDesc ? ': ' + el.dataset.tipDesc : '') + '.' + (el.dataset.tipKey ? ' ' + _('Key: {key}.', { key: el.dataset.tipKey }) : '') : ''; };
+  let tipT = 0;
+  function showTip(el, touch) {
+    clearTimeout(tipT);
+    hud.tipName.textContent = el.dataset.tipName; hud.tipDesc.textContent = el.dataset.tipDesc || '';
+    hud.tipKey.textContent = el.dataset.tipKey || ''; hud.tipKey.hidden = !el.dataset.tipKey;
+    hud.tip.hidden = false;
+    const st = EL.stage.getBoundingClientRect(), r = el.getBoundingClientRect(), w = hud.tip.offsetWidth;
+    hud.tip.style.left = Math.round(Math.max(6, Math.min(st.width - w - 6, r.left - st.left + r.width / 2 - w / 2))) + 'px';
+    hud.tip.style.bottom = Math.round(st.bottom - r.top + 10) + 'px';
+    if (touch) tipT = setTimeout(hideTip, 2600);
+  }
+  function hideTip() { clearTimeout(tipT); if (hud.tip) hud.tip.hidden = true; }
+  function bindTips(root) {
+    const pick = e => e.target.closest && e.target.closest('[data-tip-name]');
+    root.addEventListener('pointerover', e => { const el = pick(e); if (el) showTip(el, e.pointerType === 'touch'); });
+    root.addEventListener('pointerout', e => { if (e.pointerType !== 'touch' && pick(e) && !(e.relatedTarget && pick(e).contains(e.relatedTarget))) hideTip(); });
+    root.addEventListener('focusin', e => { const el = pick(e); if (el && el.matches(':focus-visible')) showTip(el); });
+    root.addEventListener('focusout', hideTip);
+  }
   function btn(id, cls, label, title, fn) { const b = h('button', { class: 'gm-ib ' + cls, type: 'button', id: id, title: title, 'aria-label': title, onclick: fn }, label); return b; }
   function buildHud() {
     hud.root = h('div', { id: 'gm-hud' });
     // top-right icons
     hud.pause = btn('gm-pause', '', '❚❚', _('Pause (Space)'), () => { API.togglePause(); updateHud(true); });
-    hud.cam = btn('gm-cam', 'txt sm', 'CAM', _('Camera'), () => { const R = mod('render'); let i = CAM_CYCLE.findIndex(c => c[0] === (R && R.cameraMode)); i = (i + 1) % CAM_CYCLE.length; API.setCam(CAM_CYCLE[i][0]); G.camPref = CAM_CYCLE[i][0]; API.toast(_('Camera: {name}', { name: _(CAM_CYCLE[i][1]) }), { ms: 1400 }); updateHud(true); });
+    hud.cam = btn('gm-cam', 'txt sm', 'CAM', _('Camera'), () => cycleCam());
     hud.mix = btn('gm-mix', '', '', _('Volume and callouts'), () => toggleMix()); hud.mix.innerHTML = MIX; hud.mix.setAttribute('aria-expanded', 'false');
     hud.pop = h('div', { class: 'gm-pop', id: 'gm-pop', hidden: true }, h('div', { class: 'tag' }, _('Sound, music, callouts')), audioBlock(), calloutRow(), h('div', { class: 'gm-langrow' }, langBtn()));
     hud.icons = h('div', { class: 'gm-icons' }, hud.pause, hud.cam, hud.mix);
     // coach bar
-    hud.steps = MIND.map((n, i) => h('button', { type: 'button', class: 'gm-step', 'data-v': String(i - 2), title: _(n), 'aria-label': _('Mindset: {name}', { name: _(n) }), 'aria-pressed': 'false', onclick: () => setOrder({ mindset: i - 2 }, _('Mindset: {name}: {fx}', { name: _(n), fx: _(MIND_FX[i]) })) }));
+    hud.steps = MIND.map((n, i) => h('button', { type: 'button', class: 'gm-step', 'data-v': String(i - 2), 'aria-pressed': 'false', onclick: () => setOrder({ mindset: i - 2 }, _('Mindset: {name}: {fx}', { name: _(n), fx: _(MIND_FX[i]) })) }));
+    hud.steps.forEach((b, i) => tip(b, _('Mindset: {name}', { name: _(MIND[i]) }), cap(_(MIND_FX[i])), String(i + 1)));
     hud.mindLab = h('span', { class: 'gm-lab2' }, _('Balanced'));
     const ic = (cls, svg) => { const e = h('span', { class: cls }); e.innerHTML = svg; return e; };
     hud.mind = h('div', { class: 'gm-mind' }, h('div', { class: 'gm-mindrow' }, ic('gm-ico', IC.shield), h('div', { class: 'gm-steps' }, hud.steps), ic('gm-ico', IC.sword)), hud.mindLab);
-    hud.planBtns = PLAN_UI.map(q => { const b = h('button', { type: 'button', class: 'gm-plan', 'data-plan': q[0], 'aria-pressed': 'false', title: _('{name}: {desc}', { name: _(q[1]), desc: _(q[2]) }), 'aria-label': _(q[1]), onclick: () => togglePlan(q[0]) }); b.innerHTML = IC[q[0]]; return b; });
+    hud.planBtns = PLAN_UI.map(q => { const b = h('button', { type: 'button', class: 'gm-plan', 'data-plan': q[0], 'aria-pressed': 'false', onclick: () => togglePlan(q[0]) }); b.innerHTML = IC[q[0]]; return tip(b, _(q[1]), _(q[2]), q[3], q[3]); });
     hud.planLab = h('span', { class: 'gm-lab2' }, _('No plan'));
     hud.plans = h('div', { class: 'gm-plans' }, h('div', { class: 'gm-planrow' }, hud.planBtns), hud.planLab);
     hud.styleBtns = STYLE_UI.map(q => h('button', { type: 'button', class: 'gm-sty', 'data-style': q[0], 'aria-pressed': 'false', onclick: () => setOrder({ style: q[0] }, _('Shots: {name}: {fx}', { name: _(q[1]), fx: _(STYLE_FX[q[0]]) })) }, _(q[1])));
+    hud.styleBtns.forEach((b, i) => tip(b, _('Shots: {name}', { name: _(STYLE_UI[i][1]) }), cap(_(STYLE_FX[STYLE_UI[i][0]])), 'P'));
     hud.style = h('div', { class: 'gm-style' }, h('div', { class: 'gm-sty-row' }, hud.styleBtns), h('span', { class: 'gm-lab2' }, _('Shots')));
     hud.midBtns = MID_UI.map(q => h('button', { type: 'button', class: 'gm-sty gm-mid', 'data-mid': q[0], 'aria-pressed': 'false', onclick: () => setMid(q[0] === '' ? undefined : +q[0]) }, _(q[1])));
+    hud.midBtns.forEach((b, i) => tip(b, _('Middle balls: {who}', { who: _(MID_UI[i][1]) }), _(MID_FX[i]), 'V'));
     hud.mid = h('div', { class: 'gm-style' }, h('div', { class: 'gm-sty-row' }, hud.midBtns), h('span', { class: 'gm-lab2' }, _('Middle balls')));
-    const moment = (id, svg, title, fn) => { const b = h('button', { type: 'button', class: 'gm-mo', id: id, title: title, 'aria-label': title, onclick: fn }); b.innerHTML = svg + '<span class="gm-badge" hidden></span>'; return b; };
-    hud.go = moment('gm-go', IC.go, _('Go for it: your next winning chance becomes a swipe shot (QTE)'), () => { const Q = mod('qte'); if (!Q) return; const on = Q.arm(); API.toast(on ? _('Go for it: you take the next winning chance') : (Q.mode === 'off' ? _('QTE shots are off (pause menu)') : _('Go for it cancelled')), { kind: 'info', ms: 1800 }); updateHud(true); }); hud.go.setAttribute('aria-pressed', 'false');
-    hud.aim = moment('gm-aim', IC.aim, _('Aim your next shot'), () => API.toggleAim()); hud.aim.setAttribute('aria-pressed', 'false');
-    hud.tmo = moment('gm-timeout', IC.timeout, _('Timeout'), () => { API.callTimeout(); updateHud(true); });
-    hud.chal = moment('gm-challenge', IC.challenge, _('Challenge (Eagle Eye)'), () => { API.doChallenge(); updateHud(true); });
+    const moment = (id, svg, title, fn) => { const b = h('button', { type: 'button', class: 'gm-mo', id: id, onclick: fn }); b.innerHTML = svg + '<span class="gm-badge" hidden></span>'; return b; };
+    hud.go = moment('gm-go', IC.go, '', () => goForIt()); hud.go.setAttribute('aria-pressed', 'false');
+    hud.aim = moment('gm-aim', IC.aim, '', () => API.toggleAim()); hud.aim.setAttribute('aria-pressed', 'false');
+    hud.tmo = moment('gm-timeout', IC.timeout, '', () => { API.callTimeout(); updateHud(true); });
+    tip(hud.go, _('Go for it'), _('The next ball you get becomes a swipe shot'), 'F', 'F');
+    tip(hud.aim, _('Aim'), _('Place your next shot yourself'), 'A', 'A');
+    tip(hud.tmo, _('Timeout'), _('A breather after this point to rethink your strategy. One per match'), 'O', 'O');
     hud.fab = h('button', { type: 'button', class: 'gm-fab', id: 'gm-fab', 'aria-expanded': 'false', 'aria-label': _('Strategy'), onclick: () => { const o = hud.coach.classList.toggle('open'); hud.fab.setAttribute('aria-expanded', String(o)); } });
     hud.fab.innerHTML = '<span class="gm-chev">' + IC.chev + '</span><span>' + _('Strategy') + '</span>';
     hud.hintTxt = h('span', null);
@@ -424,22 +464,36 @@
       h('button', { type: 'button', class: 'gm-hint-go', onclick: () => { if (hs.cur) togglePlan(hs.cur[0], true); hideHint(); } }, _('Apply')),
       h('button', { type: 'button', class: 'gm-hint-x', 'aria-label': _('Dismiss hint'), onclick: () => hideHint() }, '×'));
     hud.tag = h('div', { class: 'gm-tag', hidden: true });
+    hud.tipName = h('b'); hud.tipDesc = h('span'); hud.tipKey = h('kbd', { class: 'keycap' });
+    hud.tip = h('div', { class: 'gm-tip', role: 'tooltip', hidden: true }, hud.tipName, hud.tipDesc, hud.tipKey);
     hud.sheet = h('div', { class: 'gm-sheet' }, hud.mind, hud.plans, hud.style, hud.mid);
-    hud.coach = h('div', { class: 'gm-dock' }, hud.hint, hud.tag, h('div', { class: 'gm-dockrow' }, hud.sheet, h('div', { class: 'gm-moments' }, hud.fab, hud.go, hud.aim, hud.tmo, hud.chal)));
+    hud.coach = h('div', { class: 'gm-dock' }, hud.hint, hud.tag, h('div', { class: 'gm-dockrow' }, hud.sheet, h('div', { class: 'gm-moments' }, hud.fab, hud.go, hud.aim, hud.tmo)));
     hud.ticker = h('div', { class: 'gm-ticker', hidden: true });
-    hud.skip = h('button', { type: 'button', class: 'btn small gm-skip', id: 'gm-skip', onclick: () => { API.skipCeremony(); } }, _('Skip intro ▸'));
+    hud.skip = h('button', { type: 'button', class: 'btn small gm-skip', id: 'gm-skip', onclick: () => { const rp = mod('replay'); if (rp && rp.active) rp.stop(); else API.skipCeremony(); updateHud(true); } }, _('Skip intro ▸'));
     hud.watchBar = h('div', { class: 'gm-watchbar' }, h('button', { type: 'button', class: 'btn primary', id: 'gm-watch-play', onclick: () => showCreateOrSetup() }, _('Play with Annetta')));
     hud.labels = h('div', { class: 'gm-labels' });
     hud.labYou = h('div', { class: 'gm-lab you' }, _('YOU')); hud.labAn = h('div', { class: 'gm-lab an' }, _('ANNETTA'));
     hud.labels.append(hud.labYou, hud.labAn);
-    // chevron tab on the left edge: the scoreboard stays, the chevron opens the full match centre (score, stats, players, feed) under it
-    hud.sbTab = h('button', { type: 'button', class: 'gm-sbtab', id: 'gm-sbtab', 'aria-expanded': 'false', 'aria-controls': 'gm-drawer', 'aria-label': _('Open match centre'), title: _('Match centre'), onclick: () => toggleSb() });
-    hud.sbTab.innerHTML = CHEV;
+    // expand icon in the scoreboard's bottom-right corner: it grows the scoreboard into the full match centre (score, stats, players, feed)
+    hud.sbTab = h('button', { type: 'button', class: 'gm-sbx', id: 'gm-sbtab', 'aria-expanded': 'false', 'aria-controls': 'gm-drawer', 'aria-label': _('Open match centre'), title: _('Match centre'), onclick: () => toggleSb() });
+    hud.sbTab.innerHTML = EXPAND;
+    if (EL.sbCard) EL.sbCard.appendChild(hud.sbTab);
     hud.drawer = h('div', { class: 'gm-drawer', id: 'gm-drawer', hidden: true });
     ['pointerdown', 'wheel', 'touchstart'].forEach(ev => hud.drawer.addEventListener(ev, e => e.stopPropagation(), { passive: true }));
-    hud.root.append(hud.labels, hud.sbTab, hud.drawer, hud.icons, hud.pop, hud.skip, hud.ticker, hud.coach, hud.watchBar);
+    hud.root.append(hud.labels, hud.drawer, hud.icons, hud.pop, hud.skip, hud.ticker, hud.coach, hud.tip, hud.watchBar);
+    bindTips(hud.coach);
     EL.stage.appendChild(hud.root);
     hud.root.hidden = true;
+  }
+  function cycleCam() {
+    const R = mod('render'); let i = CAM_CYCLE.findIndex(c => c[0] === (R && R.cameraMode)); i = (i + 1) % CAM_CYCLE.length;
+    API.setCam(CAM_CYCLE[i][0]); G.camPref = CAM_CYCLE[i][0]; API.toast(_('Camera: {name}', { name: _(CAM_CYCLE[i][1]) }), { ms: 1400 }); updateHud(true);
+  }
+  // Go for it: the button and the F key both toggle
+  function goForIt(on) {
+    const Q = mod('qte'); if (!Q) return;
+    const set = Q.arm(on);
+    API.toast(set ? _('Go for it: you take the next ball you get') : (Q.mode === 'off' ? _('QTE shots are off (pause menu)') : _('Go for it cancelled')), { kind: 'info', ms: 1800 }); updateHud(true);
   }
   function toggleMix(force) {
     const open = force === undefined ? hud.pop.hidden : !!force;
@@ -464,6 +518,7 @@
     EL.app.classList.toggle('gm-sb-open', G.sbOpen);
     hud.sbTab.setAttribute('aria-expanded', G.sbOpen ? 'true' : 'false');
     hud.sbTab.setAttribute('aria-label', G.sbOpen ? _('Close match centre') : _('Open match centre'));
+    hud.sbTab.innerHTML = G.sbOpen ? COLLAPSE : EXPAND;
   }
   function showCreateOrSetup() { const s = S.saved && S.saved.length; if (s) { G.player = G.player || S.saved[S.saved.length - 1]; showSetup(); } else showCreate(); }
   function updateVisibility() {
@@ -527,6 +582,23 @@
     else if (byDef[1].attrs.defense - byDef[0].attrs.defense >= 10) sg = ['hunt', _('{name} defends worst: hunt them', { name: nm(byDef[0]) })];
     if (sg && sg[0] !== o.plan) showHint(sg);
   }
+  // Keys: 1-5 mindset (fortress to all-in), Q W E R T Y the six plans in dock order, P shots, V middle balls, F go for it, O timeout (A, aim, lives in 19_ui.js). Each one presses the button it names.
+  const PLAN_KEY = {}; PLAN_UI.forEach(q => { PLAN_KEY[q[3].toLowerCase()] = q[0]; });
+  function hotkey(k, e) {
+    const Q = mod('qte');
+    if (G.mode !== 'play' || G.st !== 'playing' || G.scr || pauseEl || (Q && Q.open)) return false;
+    const o = API.orders('A'), pressBtn = b => { if (b && !b.disabled) b.click(); };
+    let b = null;
+    if (PLAN_KEY[k]) b = hud.planBtns.find(x => x.dataset.plan === PLAN_KEY[k]);
+    else if (k >= '1' && k <= '5' && k.length === 1) b = hud.steps[+k - 1];
+    else if (k === 'p') b = hud.styleBtns[(STYLE_UI.findIndex(q => q[0] === (o.style || 'mix')) + 1) % STYLE_UI.length];
+    else if (k === 'v') b = hud.midBtns[(MID_UI.findIndex(q => q[0] === (o.middlePriority === 0 || o.middlePriority === 1 ? String(o.middlePriority) : '')) + 1) % MID_UI.length];
+    else if (k === 'f') { if (!e.repeat) goForIt(); return true; }
+    else if (k === 'o') { if (!e.repeat) API.callTimeout(); updateHud(true); return true; }
+    else return false;
+    if (!e.repeat) pressBtn(b);
+    return true;
+  }
   function setMid(i) {
     const Ai = mod('ai'); if (!Ai || !Ai.setOrders) return;
     S.coachTeam = 'A'; API.claimCoach();
@@ -554,14 +626,22 @@
     const tg = [mi ? _(MIND[mi + 2]) : '', pl ? _(PLAN_UI.find(q => q[0] === pl)[1]) + (hs.planN ? ' x' + hs.planN : '') : '', st !== 'mix' ? _(st) : '', mid !== '' ? _('middle: {who}', { who: mid === '0' ? _('you') : 'Annetta' }) : ''].filter(Boolean);
     hud.tag.hidden = !tg.length; if (tg.length) hud.tag.textContent = _('Your strategy: {list}', { list: tg.join(' · ') });
     if (Rl && Rl.state) {
-      const st = Rl.state, tl = st.timeouts ? st.timeouts.A : 0, cl = st.challenges ? st.challenges.A : 0;
+      const st = Rl.state, tl = st.timeouts ? st.timeouts.A : 0;
       const canT = tl > 0 && M && M.phase === 'play' && !st.over;
       hud.tmo.disabled = !canT; badge(hud.tmo, tl);
-      const canC = Rl.canChallenge ? Rl.canChallenge('A', 0) : false;
-      hud.chal.disabled = !canC; badge(hud.chal, cl); hud.chal.classList.toggle('ready', canC);
     }
-    hud.skip.hidden = !(G.st === 'playing' && M && PRE[M.phase]);
+    // one skip button: a replay is skipped, otherwise the intro
+    const rep = mod('replay'), replaying = !!(rep && rep.active);
+    hud.skip.hidden = !(replaying || (G.st === 'playing' && M && PRE[M.phase]));
+    const lab = replaying ? _('Skip replay ▸') : _('Skip intro ▸'); if (hud.skip.textContent !== lab) hud.skip.textContent = lab;
     void force;
+  }
+  // the dock grows (strategy sheet, hint, tag) and the commentary line wraps; everything stacked above them reads these two sizes from CSS
+  let dockH = -1, tickH = -1;
+  function dockMetrics() {
+    const dh = hud.coach.hidden ? 12 : hud.coach.offsetHeight + 20, th = hud.ticker.hidden ? 0 : hud.ticker.offsetHeight + 6;
+    if (dh !== dockH) { dockH = dh; EL.stage.style.setProperty('--dock-h', dh + 'px'); }
+    if (th !== tickH) { tickH = th; EL.stage.style.setProperty('--tick-h', th + 'px'); }
   }
   function clearHighlights() {
     const A = mod('actors'), P = mod('players');
@@ -573,7 +653,7 @@
   function update(dt) {
     if (!hud.root) return;
     acc += dt;
-    if (acc > 0.25) { acc = 0; updateHud(); hintTick(0.25); }
+    if (acc > 0.25) { acc = 0; dockMetrics(); updateHud(); hintTick(0.25); }
     if (hud.root.hidden || G.st !== 'playing') return;
     const P = mod('players'), A = mod('actors'), R = mod('render'), rp = mod('replay');
     if (!P || !P.list || !G.player) return;
@@ -591,7 +671,7 @@
     if (!p) { el.hidden = true; return; }
     if (!tmpV) tmpV = new R.THREE.Vector3();
     const rig = A && A.rigOf ? A.rigOf(p.id) : null;
-    if (rig && rig.root) tmpV.set(rig.root.position.x, 2.35, rig.root.position.z); else tmpV.set(p.pos.x, 2.35, p.pos.z);
+    if (rig && rig.root) tmpV.set(rig.root.position.x, 3.05, rig.root.position.z); else tmpV.set(p.pos.x, 3.05, p.pos.z);
     const s = R.project(tmpV);
     if (!s || !s.visible) { el.hidden = true; return; }
     el.hidden = false; el.style.transform = 'translate(' + Math.round(s.x) + 'px,' + Math.round(s.y) + 'px) translate(-50%,-100%)';

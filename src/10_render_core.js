@@ -512,10 +512,11 @@
       v.yawK += dir > 0 ? 1 : -1; R.yawIndex = ((v.yawK % 4) + 4) % 4;
       if (R.cameraMode === 'free') v.yawT = YAW0 + v.yawK * Math.PI / 2;
     },
-    camSnapshot() { const v = R.view; return { mode: R.cameraMode, zoom: v.zoom, followId: R.followId, followBall: R.followBall, freeBase: v.freeBase, t: { x: v.tTarget.x, y: v.tTarget.y, z: v.tTarget.z } }; },
+    camSnapshot() { const v = R.view; return { mode: R.cameraMode, zoom: v.zoom, yawT: v.yawT, yawK: v.yawK, followId: R.followId, followBall: R.followBall, freeBase: v.freeBase, t: { x: v.tTarget.x, y: v.tTarget.y, z: v.tTarget.z } }; },
     camRestore(s) { // a free camera cannot be restored through setCameraMode (same mode, no-op): put its target and zoom back by hand
       if (!s) return; const v = R.view;
-      if (s.mode === 'free') { R.setCameraMode('free'); if (s.freeBase) v.freeBase = s.freeBase; v.tTarget.set(s.t.x, s.t.y, s.t.z); if (s.zoom) v.zoom = s.zoom; }
+      if (s.yawK !== undefined) { v.yawK = s.yawK; R.yawIndex = ((s.yawK % 4) + 4) % 4; }   // the QTE camera turned the view; a free camera keeps its own yaw (below)
+      if (s.mode === 'free') { R.setCameraMode('free'); if (s.freeBase) v.freeBase = s.freeBase; v.tTarget.set(s.t.x, s.t.y, s.t.z); if (s.zoom) v.zoom = s.zoom; if (s.yawT !== undefined) v.yawT = s.yawT; }
       else { R.followId = s.followId || null; R.followBall = s.followBall !== false; R.setCameraMode(s.mode || 'club'); if (s.zoom) v.zoom = s.zoom; }
     },
     zoom(d) { R.view.zoom = U.clamp(R.view.zoom * Math.pow(1.12, d), 0.45, ZOOM_MAX); }, // delta > 0 zooms IN

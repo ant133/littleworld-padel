@@ -144,7 +144,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
 .mbar .t{height:6px;background:#12395414}
 .mbar .t i{display:block;height:100%;background:var(--blue)}
 .mbar.live .t i{background:var(--good)}
-.mbar.fat .t i{background:var(--coral)}
+.mbar.en .t i{background:var(--blue)}
 .pcard .mini{grid-column:1/-1;font-size:11.5px;display:flex;gap:12px;flex-wrap:wrap;opacity:.9}
 .feedbar{display:flex;gap:6px;margin-bottom:8px}
 .feed{max-height:340px;overflow:auto;border:1px solid var(--hair);background:#fff;scrollbar-width:thin}
@@ -157,9 +157,10 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
 
 /* ---------- TV scoreboard overlay ---------- */
 #sb{position:absolute;left:12px;top:12px;z-index:6;max-width:calc(100% - 24px);pointer-events:none;font-family:var(--head)}
-.sb-card{position:relative;display:inline-block;min-width:210px;background:#fffaf0f2;border:1px solid var(--ink);box-shadow:5px 6px 0 #1264992e}
+.sb-card{position:relative;display:inline-block;min-width:210px;max-width:100%;background:#fffaf0f2;border:1px solid var(--ink);box-shadow:5px 6px 0 #1264992e}
 .sb-top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:3px 8px;background:var(--ink);color:var(--cream);font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;white-space:nowrap}
 .sb-top .ph{color:var(--hl)}
+.sb-top .ph{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .sb-row{position:relative;display:flex;align-items:stretch;border-top:1px solid var(--hair);min-height:40px}
 .sb-row:first-of-type{border-top:0}
 .sb-row::before{content:'';flex:none;width:5px;background:var(--blue)}
@@ -204,7 +205,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
 .sb-row .stk .sticker{position:static}
 
 /* floating stage bits */
-#toasts{position:absolute;right:12px;top:12px;z-index:8;display:grid;gap:6px;justify-items:end;pointer-events:none;max-width:min(320px,calc(100% - 24px))}
+#toasts{position:absolute;right:12px;top:12px;z-index:8;display:grid;gap:6px;justify-items:start;pointer-events:none;max-width:min(320px,calc(100% - 24px))}
 .toast{padding:7px 11px;border:1px solid var(--ink);background:var(--cream);box-shadow:3px 4px 0 #1264992e;font-size:12.5px;font-weight:600;animation:toastin .3s ease-out;line-height:1.3}
 .toast.good{border-left:6px solid var(--good)}.toast.warn{border-left:6px solid var(--coral)}.toast.info{border-left:6px solid var(--blue)}
 .toast.out{opacity:0;transform:translateX(12px);transition:.35s}
@@ -337,9 +338,9 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
 .gm-ib.txt{font-size:14px}.gm-ib.sm{font-size:10px;letter-spacing:.12em}
 .gm-ib.snd svg{display:block}
 .gm-ib.snd.off{color:#12395488}
-.gm-ticker{position:absolute;left:50%;bottom:92px;transform:translateX(-50%);max-width:min(640px,calc(100% - 24px));padding:6px 14px;background:#123954e8;color:var(--cream);font-size:13.5px;font-weight:600;text-align:center;line-height:1.3;transition:opacity .5s}
+.gm-ticker{position:absolute;left:50%;bottom:var(--dock-h,92px);transform:translateX(-50%);max-width:min(640px,calc(100% - 24px));padding:6px 14px;background:#123954e8;color:var(--cream);font-size:13.5px;font-weight:600;text-align:center;line-height:1.3;transition:opacity .5s}
 .gm-ticker.fade{opacity:0}
-.gm-skip{position:absolute;right:10px;bottom:98px;pointer-events:auto;background:var(--hl);min-height:36px}
+.gm-skip{position:absolute;right:10px;bottom:calc(var(--dock-h,92px) + var(--tick-h,0px) + 6px);pointer-events:auto;background:var(--hl);min-height:36px}
 .gm-watchbar{position:absolute;left:50%;bottom:14px;transform:translateX(-50%)}
 .gm-watchbar .btn{min-height:46px;font-size:15px;padding:8px 18px}
 .gm-labels{position:absolute;inset:0;overflow:hidden;pointer-events:none}
@@ -352,7 +353,8 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   .gm-card{box-shadow:6px 8px 0 #1264992e;padding:16px 16px}
   .mode-play #title{display:none}
   .mode-play #topbar{justify-content:space-between}
-  .mode-play #toasts{top:auto;bottom:128px;right:10px;left:10px;justify-items:center}
+  .mode-play #toasts{top:auto;bottom:calc(var(--dock-h,92px) + var(--tick-h,0px) + 6px);right:10px;left:10px;justify-items:start}
+  .mode-play #sb{max-width:calc(100% - 72px)}
   .gm-icons{flex-direction:column;top:10px;right:8px;gap:5px}
   .gm-ib{width:44px;height:44px}
   .gm-select{min-height:44px;font-size:13px;padding-right:22px;background-position:right 7px center}
@@ -364,7 +366,6 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   .gm-h{font-size:26px}
   .gm-ib{width:36px;height:36px}
   .gm-select{min-height:36px}
-  .gm-ticker{bottom:64px}
   .sb-card{transform:scale(.85);transform-origin:top left}
   .mode-play #toasts{display:none}
 }
@@ -377,7 +378,6 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
 @media (max-width:899px){.gm-skip{min-height:44px}}
 @media (max-height:520px){.gm-ib{width:40px;height:40px}.gm-select{min-height:40px}}
 
-@media (max-height:520px){.gm-skip{right:58px;top:10px;bottom:auto}}
 
 /* Coach dock (Play mode, docs/QTE.md): annetta.dev cards (cream, ink hairline, hard offset shadow, square corners) with chunky pressable buttons; one coloured lip per function */
 .gm-dock{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);width:min(1240px,calc(100% - 20px));display:flex;flex-direction:column;gap:10px;pointer-events:none}
@@ -394,7 +394,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
 .gm-planrow{display:flex;gap:7px}
 .gm-sty-row{display:flex;gap:5px;height:42px;align-items:center}
 /* the shared button: cream face, ink outline, hard shadow, coloured lip; it pushes in when pressed, and a chosen one goes ink */
-.gm-plan,.gm-mo,.gm-sty,.gm-step,  box-shadow:inset 0 -5px 0 var(--c),3px 3px 0 var(--ink);transition:transform .08s,box-shadow .08s,background .12s}
+.gm-plan,.gm-mo,.gm-sty,.gm-step{position:relative;border:2px solid var(--ink);background:var(--cream);color:var(--ink);cursor:pointer;padding:0;font-family:var(--head);box-shadow:inset 0 -5px 0 var(--c),3px 3px 0 var(--ink);transition:transform .08s,box-shadow .08s,background .12s}
 .gm-plan:hover,.gm-mo:hover,.gm-sty:hover,.gm-step:hover{background:var(--hl)}
 .gm-plan:active,.gm-mo:active,.gm-sty:active,.gm-step:active{transform:translate(2px,2px);box-shadow:inset 0 -5px 0 var(--c),1px 1px 0 var(--ink)}
 .gm-plan[aria-pressed=true],.gm-mo[aria-pressed=true],.gm-sty[aria-pressed=true],.gm-step[aria-pressed=true]{background:var(--ink);color:var(--cream)}   /* chosen = ink; it stays put so rows line up (only a finger press moves a button) */
@@ -407,7 +407,7 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
 .gm-sty{height:32px;padding:0 10px 3px;font:800 12.5px var(--head);letter-spacing:-.01em}
 .gm-mid[data-mid=""]{--c:#8aa3b5}.gm-mid[data-mid="0"]{--c:var(--blue)}.gm-mid[data-mid="1"]{--c:var(--coral)}
 .gm-sty[data-style=spin]{--c:var(--blue)}.gm-sty[data-style=mix]{--c:#8aa3b5}.gm-sty[data-style=flat]{--c:#ff9a3c}
-.gm-mo[id=gm-go]{--c:#e8c800}.gm-mo[id=gm-aim]{--c:var(--blue)}.gm-mo[id=gm-timeout]{--c:#ff9a3c}.gm-mo[id=gm-challenge]{--c:var(--coral)}
+.gm-mo[id=gm-go]{--c:#e8c800}.gm-mo[id=gm-aim]{--c:var(--blue)}.gm-mo[id=gm-timeout]{--c:#ff9a3c}
 .gm-mo:disabled{opacity:.45;cursor:not-allowed;box-shadow:inset 0 -5px 0 #12395433,3px 3px 0 #12395455}
 .gm-mo.ready{animation:pulse 1.2s ease-in-out infinite}
 .gm-badge{position:absolute;right:-7px;top:-8px;min-width:18px;height:18px;padding:0 4px;background:var(--ink);color:var(--cream);font:800 11px/18px var(--head);text-align:center}
@@ -422,8 +422,16 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
 .gm-hint-go{min-height:32px;padding:0 14px;border:2px solid var(--ink);background:var(--ink);color:var(--cream);font:800 12px var(--head);letter-spacing:.14em;text-transform:uppercase;cursor:pointer;box-shadow:2px 2px 0 var(--blue)}
 .gm-hint-go:active{transform:translate(1px,1px);box-shadow:1px 1px 0 var(--blue)}
 .gm-hint-x{width:28px;height:30px;border:0;background:none;font-size:20px;line-height:1;cursor:pointer;color:var(--ink)}
+/* the dock tooltip: name, what it does, and its key; drawn above the button */
+.gm-tip{position:absolute;z-index:12;display:grid;gap:2px;max-width:min(260px,calc(100% - 12px));padding:7px 10px 8px;background:var(--cream);border:2px solid var(--ink);box-shadow:4px 5px 0 #1264992e;pointer-events:none;font-size:12.5px;line-height:1.35;color:var(--ink)}
+.gm-tip[hidden]{display:none}
+.gm-tip b{font:800 13px var(--head);letter-spacing:-.02em}
+.gm-tip .keycap{justify-self:start;margin-top:3px}
+/* the key on each icon button, for people with a keyboard */
+@media (hover:hover) and (pointer:fine){
+  .gm-plan[data-kb]::after,.gm-mo[data-kb]::after{content:attr(data-kb);position:absolute;left:2px;top:1px;font:700 9px/1 var(--mono);opacity:.6;pointer-events:none}
+}
 @keyframes hint-in{0%{transform:translateY(12px) rotate(-1.5deg) scale(.85);opacity:0}100%{transform:rotate(-1.5deg);opacity:1}}
-#gm-hud.hinting .gm-ticker{bottom:140px}
 /* small screens (phones, tablets, short windows): the sheet folds away behind the Strategy button */
 @media (max-width:1179px),(max-height:640px){
   .gm-dock{bottom:8px;width:calc(100% - 16px);gap:8px}
@@ -433,9 +441,8 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
   .gm-moments{justify-content:space-between;gap:8px;padding:8px 10px}
   .gm-fab{display:flex;flex:1;height:46px}
   .gm-plan,.gm-mo{width:42px;height:42px}
-  .gm-ticker{bottom:84px;font-size:12.5px}
-  #gm-hud.hinting .gm-ticker{bottom:128px}
-  .gm-skip{bottom:90px;right:8px}
+  .gm-ticker{font-size:12.5px}
+  .gm-skip{right:8px}
 }
 /* the middle-ball picker */
 .gm-select{appearance:none;-webkit-appearance:none;width:100%;min-height:40px;padding:6px 24px 6px 9px;border:1px solid var(--ink);border-radius:0;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23123954' stroke-width='2'/%3E%3C/svg%3E") no-repeat right 9px center;color:var(--ink);font:800 14px var(--head);letter-spacing:-.03em;cursor:pointer;text-overflow:ellipsis}
@@ -476,25 +483,36 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
 @keyframes hpo-state-in{from{opacity:0;transform:translateX(-50%) scale(.7)}}
 @keyframes hpo-live{to{box-shadow:0 0 0 .22em #e5484d00}}
 
+/* ceremony cards: the intro, introductions and coin toss cards (and the walk-on / warm-up ribbon in Play mode) take the lower third, above the commentary line and the dock, so the players are never covered */
+.hpo-banner{position:absolute;left:50%;top:14%;transform:translateX(-50%)}
+.hpo-banner.lt{left:12px;top:auto;bottom:calc(var(--dock-h,92px) + var(--tick-h,0px) + 6px);transform:none;text-align:left!important;max-width:min(440px,calc(100% - 24px));padding:7px 14px!important;font-size:clamp(15px,1.9vw,22px)!important;line-height:1.15}
+.mode-play .hpo-state{left:12px;top:auto;bottom:calc(var(--dock-h,92px) + var(--tick-h,0px) + 6px);transform:none;padding:.25em .7em .28em}
+.mode-play .hpo-state .dot{font-size:clamp(15px,1.9vw,22px)}
+.mode-play .hpo-state b{font-size:clamp(15px,1.9vw,22px)}
+.mode-play .hpo-state small{font-size:clamp(9px,1.1vw,11px)}
+.mode-play .hpo-state.in{animation:hpo-lt-in .35s cubic-bezier(.2,.9,.3,1) both}
+@keyframes hpo-lt-in{from{opacity:0;transform:translateX(-18px)}}
+.mode-play .hpo-bar{display:none}
+.gm-replaying .gm-ticker,.gm-replaying #toasts,.gm-replaying .gm-tag,.gm-replaying .gm-hint,.gm-replaying #banner{visibility:hidden}   /* a replay shows the court and its badge, nothing else */
+.mode-play .hpo-replay{bottom:auto;top:64px;font-size:clamp(22px,3.4vw,40px);border-width:2px;box-shadow:4px 5px 0 #1264992e;text-shadow:2px 2px 0 var(--ink)}
+@media (max-width:899px){.mode-play .hpo-replay{top:auto;bottom:calc(var(--dock-h,92px) + var(--tick-h,0px) + 6px);font-size:clamp(20px,7vw,30px)}.hpo-banner.lt,.mode-play .hpo-state{max-width:calc(100% - 150px)}}
 .hpo-replay{position:absolute;left:50%;bottom:15%;transform:translateX(-50%) skewX(-8deg);padding:.12em .55em .14em;background:#e5484d;border:3px solid var(--ink);box-shadow:6px 7px 0 #1264992e;color:#fff;font:900 clamp(30px,10.5vw,72px)/1 var(--head);letter-spacing:-.04em;font-style:italic;white-space:nowrap;text-shadow:3px 3px 0 var(--ink);animation:hpo-flash .9s steps(1,end) infinite}
 @keyframes hpo-flash{0%{opacity:1;background:#e5484d;color:#fff}50%{opacity:.18;background:#fff4b3;color:#e5484d}}
 .gm-covered .hpo-callouts{visibility:hidden}
 
-/* Match centre toggle (Play mode) */
-.mode-play #sb{left:30px;transition:transform .28s cubic-bezier(.3,.8,.3,1)}
-.gm-sbtab{position:absolute;left:0;top:12px;width:26px;height:56px;padding:0;display:grid;place-items:center;border:1px solid var(--ink);border-left:0;background:var(--cream);color:var(--ink);box-shadow:3px 3px 0 #12399433;cursor:pointer}
-.gm-sbtab:hover{background:var(--hl)}
-.gm-sbtab svg{transition:transform .28s}
-.gm-sbtab svg{transform:rotate(180deg)}
-.gm-sb-open .gm-sbtab svg{transform:none}
-.gm-drawer{position:absolute;left:30px;bottom:132px;width:min(340px,calc(100% - 44px));overflow-y:auto;background:#fffaf0f5;border:1px solid var(--ink);box-shadow:6px 8px 0 #1264992e;padding:0 12px 10px;z-index:7;pointer-events:auto;overscroll-behavior:contain}
+/* Match centre (Play mode): an expand icon in the scoreboard's bottom-right corner opens the full match centre under it */
+.gm-sbx{display:none;position:absolute;right:0;bottom:0;width:30px;height:24px;padding:0;place-items:center;border:0;border-left:1px solid var(--ink);border-top:1px solid var(--ink);background:var(--cream);color:var(--ink);cursor:pointer;pointer-events:auto}
+.gm-sbx:hover{background:var(--hl)}
+.gm-sbx svg{display:block}
+.mode-play.gm-hud-on .gm-sbx{display:grid}
+.mode-play.gm-hud-on .sb-info{padding-right:36px;min-height:24px}
+.gm-drawer{position:absolute;left:12px;bottom:132px;width:min(340px,calc(100% - 24px));overflow-y:auto;background:#fffaf0f5;border:1px solid var(--ink);box-shadow:6px 8px 0 #1264992e;padding:0 12px 10px;z-index:7;pointer-events:auto;overscroll-behavior:contain}
 .gm-drawer[hidden]{display:none}
 .gm-drawer .sec{border:0;margin:0;box-shadow:none;background:none}
 .gm-drawer .sec>summary{display:none}
 .gm-drawer .sec .body{padding:0;display:block}
 .gm-drawer .tabs{margin-top:8px}
-@media (max-width:520px){.gm-drawer{left:8px;width:calc(100% - 66px);bottom:150px}}
-@media (max-height:520px){.gm-sbtab{height:44px}}
+@media (max-width:520px){.gm-drawer{left:8px;width:calc(100% - 16px);bottom:150px}}
 
 /* Sound + Music choices on the title, setup and pause screens */
 
@@ -581,3 +599,50 @@ details.adv>summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing
 .aimzone{position:absolute;inset:0;width:100%;height:100%;z-index:6;pointer-events:none}
 .aimzone polygon{fill:#fff4b3;stroke:#fff4b3;stroke-width:4;stroke-linejoin:round;animation:aimflash .7s ease-in-out infinite alternate}
 @keyframes aimflash{from{fill-opacity:.12;stroke-opacity:.45}to{fill-opacity:.42;stroke-opacity:1}}
+
+/* player meters: energy bar, concentration bar and the mood buff with its countdown ring (src/26_moodui.js) */
+.mu-layer{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:7}
+.mu{position:absolute;left:0;top:0;display:flex;align-items:center;gap:3px;will-change:transform}
+.mu-bars{width:44px;padding:2px;display:flex;flex-direction:column;gap:2px;background:#123954d9;border:1px solid #fffaf0}
+.mu-bars i{display:block;background:#fffaf033}
+.mu-en{height:7px}.mu-fo{height:3px}
+.mu-bars b{display:block;height:100%;width:100%;transition:width .3s}
+.mu-en b{background:var(--good)}.mu[data-lv=mid] .mu-en b{background:#e0a800}.mu[data-lv=lo] .mu-en b{background:var(--coral)}
+.mu-fo b{background:#7cc4ff}
+.mu-buff{--p:100;--tone:#e0a800;position:relative;flex:none;width:32px;height:32px;padding:3px;border-radius:50%;background:conic-gradient(var(--tone) calc(var(--p)*1%),#12395466 0);box-shadow:0 1px 0 #1239544d}
+.mu-buff[data-tone=good]{--tone:#2fb26b}.mu-buff[data-tone=bad]{--tone:#e5484d}
+.mu-ico{display:block;width:100%;height:100%;border-radius:50%;background:var(--cream) var(--spr) center/24px 24px no-repeat;image-rendering:pixelated}
+.mu-buff::after{content:'';position:absolute;inset:3px;border-radius:50%;pointer-events:none;background:conic-gradient(#0000 calc(var(--p)*1%),#1239548c 0)}   /* cooldown sweep on top of the face: the dark part is the time already used */
+.mu-buff.blink{animation:mu-flash .7s ease-in-out infinite}.mu-buff.blink2{animation:mu-flash .3s ease-in-out infinite}
+@keyframes mu-flash{50%{opacity:.2}}
+.mu-ico[data-mood=angry_partner],.mu-ico[data-mood=irritated]{animation:mu-shake .5s linear infinite}
+.mu-ico[data-mood=nervous]{animation:mu-shake .22s linear infinite}
+.mu-ico[data-mood=fired_up],.mu-ico[data-mood=vengeful]{animation:mu-pulse .8s ease-in-out infinite}
+.mu-ico[data-mood=flow],.mu-ico[data-mood=supportive],.mu-ico[data-mood=cocky]{animation:mu-bob 1.4s ease-in-out infinite}
+.mu-ico[data-mood=self_blame],.mu-ico[data-mood=defeated]{animation:mu-sag 2s ease-in-out infinite}
+@keyframes mu-shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-1.5px) rotate(-6deg)}75%{transform:translateX(1.5px) rotate(6deg)}}
+@keyframes mu-pulse{50%{transform:scale(1.22)}}
+@keyframes mu-bob{50%{transform:translateY(-1.5px)}}
+@keyframes mu-sag{50%{transform:translateY(1.5px) rotate(-8deg)}}
+@media (prefers-reduced-motion:reduce){.mu-ico{animation:none!important}}
+@media (max-width:600px){.mu-bars{width:34px}.mu-buff{width:30px;height:30px}}
+.mu-toast{display:grid;gap:3px}.mu-toast b{font-weight:800}
+.mu-tags{display:flex;flex-wrap:wrap;gap:2px 8px;font:800 11px var(--head);letter-spacing:.08em}
+.mu-tags .up{color:#1b8a4b}.mu-tags .dn{color:#c9262f}
+
+/* game instructions sheet (src/27_guide.js) */
+.modal .card.guide{width:min(660px,100%)}
+.guide .acts{margin:10px 0 0}
+.gd-sec h3{margin:18px 0 6px;padding-top:10px;border-top:1px solid var(--hair);font:700 10px var(--head);letter-spacing:.2em;text-transform:uppercase;color:var(--tag)}
+.guide p{font-size:13px;line-height:1.45;margin:4px 0}
+.gd-how{margin:6px 0}.gd-how b{font:800 14px var(--head);letter-spacing:-.03em}
+.gd-stats{display:grid;grid-template-columns:auto 1fr;gap:5px 12px;margin:8px 0;font-size:13px;line-height:1.4}
+.gd-stats dt{font:800 11px var(--head);letter-spacing:.08em;padding-top:2px;color:var(--ink)}
+.gd-stats dd{margin:0}
+.gd-moods{display:grid;gap:12px;margin-top:10px}
+.gd-mood{display:grid;grid-template-columns:44px 1fr;gap:12px;align-items:start}
+.gd-mood b{font:800 14px var(--head);letter-spacing:-.03em}.gd-mood p{margin:2px 0 4px}.gd-mood i{opacity:.75}
+.gd-ico{--tone:#e0a800;width:44px;height:44px;border:3px solid var(--tone);border-radius:50%;background:var(--cream) var(--spr) center/36px 36px no-repeat;image-rendering:pixelated}
+.gd-ico[data-tone=good]{--tone:#2fb26b}.gd-ico[data-tone=bad]{--tone:#e5484d}
+.icon-btn svg{display:block;margin:auto}
+@media (max-width:600px){.modal .card.guide{padding:14px}}
