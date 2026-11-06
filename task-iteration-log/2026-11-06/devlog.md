@@ -21,18 +21,18 @@
 - **Files:** `src/06_mind.js`, `src/26_moodui.js`, `src/06_players.js`, `src/07_ai.js`, `src/09_match.js`, `src/00_core.js`, `src/19_ui.js`, `src/22_callouts.js`, `src/21_game.js`, `src/shell.css`, `src/00_lang_id_*.js`, `src/23_versions.js`, `tools/mind_tests.js`, `tools/browser.js`, `CONTRACT.md`, `CLAUDE.md`, docs
 - **Decisions:** D-2026-11-06-1131
 - **Follow-ups:** see followups.md
-- **Links:** none (not committed)
+- **Links:** 971f429 (pushed to main)
 ## 13:05 · Visible Skip replay button · claude · padel@main
 - **Status:** done
 - **Done:** Replays had no on-screen skip (only pause/Esc). The `#gm-skip` button now becomes `Skip replay ▸` while a replay plays and stops it; otherwise it stays `Skip intro ▸`. The "Paused / Space to resume" banner is hidden during a replay (the replay pauses the match, and the banner sat on the REPLAY badge). `src/21_game.js`, `src/shell.css`, id dictionary, PLAY_MODE.md, version 2026.11.06.6. Checked in headless Chrome at 1280x800 and 390x844: button shows with the label, a click stops the replay and resumes the match.
 - **Files:** `src/21_game.js`, `src/shell.css`, `src/00_lang_id_play.js`, `docs/PLAY_MODE.md`, `src/23_versions.js`
 - **Decisions:** none
 - **Follow-ups:** none
-- **Links:** none (not committed)
+- **Links:** 971f429 (pushed to main)
 ## 12:35 · Game instructions sheet, keyboard button, tutorial mood steps · claude · padel@main
 - **Status:** done
 - **Done:** The top-right `?` now opens Game instructions (`src/27_guide.js`): How to play cards, the nine player stats, energy and concentration, all ten moods with pixel faces, triggers, effects and green/red tags, a Watch the tutorial button and a Keyboard shortcuts button; it pauses the match while open. Shortcuts got their own keyboard-icon button and the `K` key (`?` key now opens the instructions). Two new tutorial steps (energy and concentration, mood) spotlight the player bars; tutorial is 28 steps. Indonesian strings for all of it. CONTRACT 0.12.1, version 2026.11.06.7, docs/TUTORIAL.md and PLAY_MODE.md. Checked in headless Chrome at 1280x800 and 390x844 (top bar, sheet scrolled through, Esc closes and resumes, keyboard sheet, tutorial reaches the new step); dupcheck, i18n_tests, mind_tests pass. Not run: other suites, features_browser, real phone.
 - **Files:** `src/27_guide.js`, `src/19_ui.js`, `src/21_game.js`, `src/25_tutorial.js`, `src/shell.html`, `src/shell.css`, `src/00_lang_id_play.js`, `src/23_versions.js`, `CONTRACT.md`, `docs/TUTORIAL.md`, `docs/PLAY_MODE.md`
 - **Decisions:** none
 - **Follow-ups:** none
-- **Links:** none (not committed)
+- **Links:** 971f429 (pushed to main)
