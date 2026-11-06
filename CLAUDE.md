@@ -3,7 +3,7 @@
 Read `AGENTS.md` first; it holds the shared rules. This file adds Claude Code specifics.
 
 ## Project
-Web toy for annetta.dev, feature-complete and deployed through GitHub Pages. Working dir: `C:\Hermes\project\annetta\padel`, git repo `ant133/littleworld-padel` (branch `main`). Platform: Windows 11, PowerShell primary, Bash available. Overview and how to play: `README.md`.
+Web toy for annetta.dev, feature-complete and deployed through GitHub Pages. Git repo `ant133/littleworld-padel` (branch `main`). Overview and how to play: `README.md`.
 
 ## Dev commands
 - `node tools/devpage.js` → dev.html (all src/*.js); open via `file:///.../dev.html?cam=club|close|follow|top&tod=day|dusk|night&venue=classicBlue|terracotta|fastBlue|indoor&speed=1&fast=0|1&px=2`. Play mode is the default; add `mode=studio` for the full panel, `title=0` to skip the title.
@@ -11,7 +11,7 @@ Web toy for annetta.dev, feature-complete and deployed through GitHub Pages. Wor
 - Browser (headless Chrome via `tools/browser.js`): `e2e.js` (match sampler), `features_browser.js` (Play-mode journey, saved players, camera, offline render, phone), `visual_matrix.js` (courts × lighting × cameras). Run `node tools/build.js` first for the ones that load `dist/`.
 - Ship: `node tools/build.js [--check]` → dist/littleworld-online.html + -offline.html; `node tools/make_artifact.js` → dist/littleworld-artifact.html (artifact publish).
 - Key docs: CONTRACT.md, docs/PLAY_MODE.md, docs/VISUAL_CONTRACT.md, docs/API_*.md, docs/TESTING.md, docs/GITHUB_PAGES.md.
-- Windows tips: the Bash tool mangles big heredocs with quotes; write files with the Write tool. Node one-liners that match markdown table cells must account for escaped pipes (`\|`).
+- Shell tips: the Bash tool mangles big heredocs with quotes; write files with the Write tool. Node one-liners that match markdown table cells must account for escaped pipes (`\|`).
 
 ## Layout
 - `SPEC.md` — original brief (requirements source; some items superseded, see CONTRACT.md §18)
@@ -35,7 +35,7 @@ Web toy for annetta.dev, feature-complete and deployed through GitHub Pages. Wor
 
 ## Site & hosting (current)
 - Hosting: free GitHub Pages from `ant133/littleworld-padel`, built by the Actions workflow. Intended address `https://padel.annetta.dev` (CNAME `padel` → `ant133.github.io`, custom domain set in the repo's Pages settings); default address `https://ant133.github.io/littleworld-padel/`. Steps: docs/GITHUB_PAGES.md.
-- This supersedes the earlier plan to ship as `padel/index.html` inside `annetta-website` (that repo is a project repo with its own CNAME, so a separate repo cannot inherit `annetta.dev`; the subdomain route avoids touching it). Site source for reference: `C:\Hermes\project\annetta\annetta-website`, which should link to the toy ("Jump in" style CTA) if the user asks.
+- This supersedes the earlier plan to ship as `padel/index.html` inside `annetta-website` (that repo is a project repo with its own CNAME, so a separate repo cannot inherit `annetta.dev`; the subdomain route avoids touching it). The `annetta-website` repo should link to the toy ("Jump in" style CTA) if the user asks.
 - The online page loads three.js r128 from cdnjs; the offline file is published beside it as `littleworld-offline.html`.
 - Reference prior build: artifact EoFoLuqfiLm3q9PiYTTbeD (tennis "Hollybrook Open", ~1.0 MB). Current files: online ~0.75 MB, offline ~1.3 MB.
 
@@ -73,4 +73,5 @@ Apply to: panel chrome, typography, button style, microcopy, loader ("Inflating 
 - Match surrounding code style; minimal comments, explain *why* only.
 - Plain ES2017+ JS, no build-time frameworks; bundle by concatenation/inlining.
 - Never commit/push without being asked.
+- Commit identity: commits and pushes use the repo owner's GitHub account (`ant133`), never the machine's default git identity or hostname-based email. Before the first commit of a session, check `git config user.name` / `user.email` against the author of existing commits in `git log`, and set them in the repo's local config if they differ. Make sure the active `gh` account is the owner's before pushing.
 - When unsure about a product decision, ask; otherwise choose the sensible default and state it.
